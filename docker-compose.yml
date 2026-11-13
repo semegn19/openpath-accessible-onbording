@@ -1,0 +1,54 @@
+# docker compose up -d --build   →  http://localhost:8080/onboard
+#
+# Two containers: nginx serving the three form pages, and a small Node API behind /api.
+# No database, no secrets, no API keys, no outbound calls. Submissions live in a named
+# volume as one append-only JSONL file.
+services:
+  api:
+    build:
+      context: .                # repo root: the API reads schema/ too
+      dockerfile: api/Dockerfile
+    image: openpath-api:local
+    restart: unless-stopped
+    environment:
+      RATE_LIMIT_PER_MIN: "30"
+      # Set this in production: 32 bytes, base64. Encrypts names, phones and ID numbers at rest.
+      #   export DATA_KEY=$(head -c 32 /dev/urandom | base64)
+      DATA_KEY: ${DATA_KEY:-}
+      # "*" because the form is meant to be embedded on another origin (Savanna).
+      # Set it to your own origin if you deploy it somewhere with real traffic.
+      ALLOWED_ORIGIN: "*"
+    volumes:
+      - submissions:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  forms:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: openpath-forms:local
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    # Optional hardening — verified by hand, not by CI (no Docker in the build sandbox):
+    # read_only: true
+    # tmpfs:
+    #   - /var/cache/nginx
+    #   - /var/run
+
+volumes:
+  submissions:
