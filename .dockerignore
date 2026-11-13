@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/screenshots
+**/.git
+**/*.log
+**/tests
+uploads
+docs
+api/data
