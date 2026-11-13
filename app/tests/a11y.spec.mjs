@@ -1,0 +1,227 @@
+// Smoke + axe on every screen of the onboarding flow. `node tests/a11y.spec.mjs`
+import { chromium } from 'playwright';
+import { AxeBuilder } from '@axe-core/playwright';
+
+const URL = process.env.URL || 'http://127.0.0.1:5173/';
+const results = [];
+let failures = 0;
+
+const browser = await chromium.launch();
+const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const page = await context.newPage();
+page.on('pageerror', (e) => { console.log('  PAGE ERROR:', e.message); failures++; });
+page.on('console', (m) => { if (m.type() === 'error') console.log('  console.error:', m.text().slice(0, 200)); });
+
+async function audit(label) {
+  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+  const serious = violations.filter((v) => ['critical', 'serious'].includes(v.impact));
+  const minor = violations.filter((v) => !['critical', 'serious'].includes(v.impact));
+  results.push({ label, serious: serious.length, minor: minor.length, ids: serious.map((v) => v.id) });
+  if (serious.length) failures++;
+  console.log(`${serious.length ? '✗' : '✓'} ${label.padEnd(34)} serious/critical: ${serious.length}  other: ${minor.length}` +
+    (serious.length ? `  → ${serious.map((v) => v.id).join(', ')}` : '') +
+    (minor.length ? `  (${minor.map((v) => v.id).join(', ')})` : ''));
+}
+
+const h1 = () => page.locator('h1').first().innerText();
+const next = () => page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
+
+await page.goto(URL, { waitUntil: 'networkidle' });
+console.log('\n=== 1 language ===');
+console.log('  h1:', (await h1()).trim());
+console.log('  focused:', await page.evaluate(() => document.activeElement?.tagName));
+await audit('1 language');
+
+// error path: continue with nothing chosen
+await next();
+await page.waitForTimeout(150);
+const summaryVisible = await page.locator('.op-error-summary').isVisible().catch(() => false);
+const focusedAfterError = await page.evaluate(() => document.activeElement?.className || document.activeElement?.tagName);
+console.log('  empty submit → summary visible:', summaryVisible, '| focus on:', focusedAfterError);
+await audit('1b error state');
+
+await page.getByRole('radio', { name: /አማርኛ/ }).check();
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 2 accessibility preferences (local only) ===');
+console.log('  h1:', (await h1()).trim());
+await audit('2 accessibility prefs');
+const prefs = page.locator('.op-fieldset').first();
+await prefs.getByRole('checkbox').nth(1).check();          // bigger text
+await page.waitForTimeout(150);
+const bigOn = await page.evaluate(() => document.querySelector('.op-shell')?.getAttribute('data-big'));
+console.log('  prefs→settings wiring (data-big):', bigOn);
+await prefs.getByRole('checkbox').nth(1).uncheck();
+await audit('2b prefs selected');
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 3 assistance (this one IS sent) ===');
+console.log('  h1:', (await h1()).trim());
+await audit('3 assistance');
+await page.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 4 name ===');
+console.log('  h1:', (await h1()).trim());
+await audit('4 name');
+await page.locator('input[type="text"]').first().fill('ሳራ በቀለ ታደሰ');
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 5 phone ===');
+console.log('  h1:', (await h1()).trim());
+await audit('5 phone');
+await page.locator('input[type="tel"]').fill('0912345678');
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 6 identity route (six options, incl. no document) ===');
+console.log('  h1:', (await h1()).trim());
+const routeOptions = await page.locator('.op-fieldset input[type="radio"]').count();
+console.log('  routes offered:', routeOptions);
+await audit('6 id-route');
+await page.getByRole('radio', { name: /የፋይዳ|Fayda/ }).check();
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 7 id number (conditional) ===');
+console.log('  h1:', (await h1()).trim());
+await audit('7 id value');
+await page.locator('input[type="text"]').first().fill('3910028475');
+
+// go back and switch route: the ID number must not survive into the payload
+await page.getByRole('button', { name: /ተመለስ|Back/ }).click();
+await page.waitForTimeout(200);
+await page.getByRole('radio', { name: /ምንም መታወቂያ|do not have any/ }).check();
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 8 referral (consent, no microphone) ===');
+console.log('  h1:', (await h1()).trim());
+const micOnConsent = await page.getByRole('button', { name: /በድምጽ መስጠት|Speak your answer/ }).count();
+const readOnConsent = await page.getByRole('button', { name: /አንብብልኝ|Read the question/ }).count();
+console.log('  voice button on consent (must be 0):', micOnConsent, '| read-aloud (must be 1):', readOnConsent);
+if (micOnConsent !== 0) failures++;
+if (readOnConsent !== 1) failures++;
+await audit('8 referral');
+await page.getByRole('checkbox', { name: /ተስማምቻለሁ|agree/i }).first().check();
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 9 review ===');
+console.log('  h1:', (await h1()).trim());
+const reviewRows = await page.locator('.op-review-row').count();
+const showsIdNumber = (await page.locator('.op-review').innerText().catch(() => '')).includes('3910028475');
+console.log('  review rows:', reviewRows, '| stale ID number shown (must be false):', showsIdNumber);
+if (showsIdNumber) failures++;
+await audit('9 review');
+
+await page.setViewportSize({ width: 320, height: 640 });
+await page.waitForTimeout(150);
+const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+console.log('\n  320px reflow → horizontal scroll:', overflow);
+if (overflow) failures++;
+await audit('9b review @320px');
+
+// 200% zoom — the gate names it explicitly, so it is measured, not assumed. A 1280×800
+// laptop zoomed to 200% lays out at 640×400 CSS pixels; anything that fits here fits there.
+await page.setViewportSize({ width: 640, height: 400 });
+await page.waitForTimeout(200);
+const zoom = await page.evaluate(() => {
+  const clipped = [...document.querySelectorAll('.op-h1, .op-review-row, .op-btn, .op-settingsbar button')]
+    .filter((el) => el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2)
+    .map((el) => `${el.className}: "${(el.textContent || '').trim().slice(0, 24)}"`);
+  return {
+    hScroll: document.documentElement.scrollWidth > window.innerWidth + 1,
+    clipped,
+    h1Visible: (() => { const r = document.querySelector('.op-h1')?.getBoundingClientRect(); return Boolean(r && r.height > 0 && r.top < window.innerHeight); })(),
+    fontPx: getComputedStyle(document.querySelector('.op-h1') ?? document.body).fontSize,
+  };
+});
+console.log('\n  200% zoom (640×400) → horizontal scroll:', zoom.hScroll, '| h1 visible:', zoom.h1Visible, '| h1 size:', zoom.fontPx);
+if (zoom.clipped.length) console.log('  clipped:', zoom.clipped.join(' | '));
+if (zoom.hScroll || !zoom.h1Visible || zoom.clipped.length) failures++;
+await audit('9c review @200% zoom');
+
+// Text spacing (SC 1.4.12): the exact overrides from the Understanding document. If the layout
+// survives these, it survives any user stylesheet that does the same thing.
+await page.setViewportSize({ width: 390, height: 844 });
+await page.addStyleTag({ content: `
+  * { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }
+  p, li, h1, h2, h3, label, .op-progress, .op-review-row { margin-bottom: 2em !important; }
+` });
+await page.waitForTimeout(250);
+const spacing = await page.evaluate(() => {
+  // .op-sr is the visually-hidden live region: clipping is its job, not a defect.
+  const clipped = [...document.querySelectorAll('h1, p, label, button, .op-review-row, .op-hint')]
+    .filter((el) => !el.classList.contains('op-sr')
+                 && getComputedStyle(el).textOverflow !== 'ellipsis'
+                 && (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2))
+    .map((el) => `${el.tagName}.${el.className}: "${(el.textContent || '').trim().slice(0, 20)}"`);
+  return { clipped, hScroll: document.documentElement.scrollWidth > window.innerWidth + 1 };
+});
+console.log('\n  1.4.12 text spacing → horizontal scroll:', spacing.hScroll, '| clipped:', spacing.clipped.length);
+if (spacing.clipped.length) console.log('   ', spacing.clipped.slice(0, 5).join(' | '));
+if (spacing.hScroll || spacing.clipped.length) failures++;
+await audit('9d review @WCAG text spacing');
+// switch the overrides off again instead of reloading, so the walk keeps its place
+await page.evaluate(() => {
+  for (const st of document.querySelectorAll('style')) {
+    if (st.textContent?.includes('0.12em')) st.disabled = true;
+  }
+});
+await page.waitForTimeout(150);
+
+await next();
+await page.waitForTimeout(200);
+console.log('\n=== 10 submit (consent) ===');
+console.log('  h1:', (await h1()).trim());
+await audit('10 submit');
+await page.getByRole('checkbox', { name: /ተስማምቻለሁ|agree/i }).first().check();
+await page.getByRole('button', { name: /ምዝገባውን ጨርስ|Finish/ }).click();
+await page.waitForTimeout(400);
+console.log('\n=== 11 done ===');
+console.log('  h1:', (await h1()).trim());
+await audit('11 success');
+
+const payload = await page.evaluate(() => document.querySelector('.op-payload')?.textContent ?? '');
+const leaksPrefs = payload.includes('accessibility-prefs') || payload.includes('"support"');
+const hasAssistance = payload.includes('assistance');
+console.log('  payload has accessibility choices (must be false):', leaksPrefs);
+console.log('  payload has assistance (must be true):', hasAssistance);
+if (leaksPrefs || !hasAssistance) failures++;
+
+// the offline banner is new UI, so it is audited like the rest. No reload: the dev server is
+// still reachable, we only flip the flag the banner reads.
+await page.goto(URL, { waitUntil: 'networkidle' });
+await page.context().setOffline(true);
+await page.waitForSelector('.op-net', { timeout: 5000 });
+const netText = (await page.locator('.op-net').innerText()).replace(/\s+/g, ' ');
+const netRole = await page.evaluate(() => {
+  const el = document.querySelector('.op-net');
+  return { live: el?.closest('[aria-live]') !== null || el?.getAttribute('aria-live') !== null,
+           content: el?.textContent?.trim().length ?? 0 };
+});
+console.log('  offline banner:', netText);
+if (!netRole.content) failures++;
+await audit('12 offline banner (no connection)');
+await page.context().setOffline(false);
+
+// keyboard-only pass
+await page.goto(URL, { waitUntil: 'networkidle' });
+const order = [];
+for (let i = 0; i < 12; i++) {
+  await page.keyboard.press('Tab');
+  order.push(await page.evaluate(() => {
+    const el = document.activeElement;
+    return `${el?.tagName}${el?.getAttribute('aria-pressed') ? '[pressed]' : ''}`;
+  }));
+}
+console.log('\n  tab order (12):', order.join(' → '));
+
+await browser.close();
+console.log(`\n${failures === 0 ? 'PASS' : 'FAIL'} — ${results.length} axe audits, ${failures} problem(s)`);
+process.exit(failures ? 1 : 0);
