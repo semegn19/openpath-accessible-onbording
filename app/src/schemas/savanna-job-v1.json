@@ -1,0 +1,400 @@
+{
+  "id": "savanna-job-v1",
+  "version": "1.1.0",
+  "kind": "job-application",
+  "contentStatus": "reviewed",
+  "defaultLang": "am",
+  "langs": [
+    "am",
+    "en"
+  ],
+  "calendar": "EC",
+  "title": {
+    "am": "ለሥራ ማመልከቻ",
+    "en": "Apply for a job"
+  },
+  "reuses": "savanna-onboard-v1",
+  "settings": {
+    "progress": true,
+    "autosave": true,
+    "allowResume": true
+  },
+  "steps": [
+    {
+      "id": "job-name",
+      "type": "text",
+      "label": {
+        "am": "ስምዎን ይጻፉ",
+        "en": "Write your name"
+      },
+      "simple": {
+        "am": "ስም",
+        "en": "Name"
+      },
+      "icon": "person",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "prefill": {
+        "from": "profile",
+        "key": "name"
+      },
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "autocomplete": "name"
+    },
+    {
+      "id": "job-phone",
+      "type": "tel",
+      "label": {
+        "am": "ስልክ ቁጥርዎን ይጻፉ",
+        "en": "Write your phone number"
+      },
+      "simple": {
+        "am": "ስልክ",
+        "en": "Phone"
+      },
+      "hint": {
+        "am": "ምሳሌ፦ 0912 345 678",
+        "en": "Example: 0912 345 678"
+      },
+      "icon": "phone",
+      "inputmode": "tel",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "prefill": {
+        "from": "profile",
+        "key": "phone"
+      },
+      "validation": [
+        {
+          "rule": "required"
+        },
+        {
+          "rule": "phone-et"
+        }
+      ],
+      "autocomplete": "tel"
+    },
+    {
+      "id": "years-experience",
+      "type": "number",
+      "label": {
+        "am": "ስንት ዓመት ሠርተዋል?",
+        "en": "How many years have you worked?"
+      },
+      "simple": {
+        "am": "ዓመት",
+        "en": "Years"
+      },
+      "hint": {
+        "am": "ቁጥር ብቻ። ሥራ ካልሠሩ 0 ይጻፉ።",
+        "en": "A number only. Write 0 if you have not worked."
+      },
+      "icon": "clock",
+      "inputmode": "numeric",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "minValue",
+          "value": 0
+        },
+        {
+          "rule": "maxValue",
+          "value": 60
+        }
+      ]
+    },
+    {
+      "id": "experience",
+      "type": "textarea",
+      "label": {
+        "am": "ያደረጉትን ሥራ ይንገሩን",
+        "en": "Tell us about work you have done"
+      },
+      "simple": {
+        "am": "ሥራ",
+        "en": "Work"
+      },
+      "hint": {
+        "am": "አንድ ወይም ሁለት ዓረፍተ ነገር በቂ ነው።",
+        "en": "One or two sentences is enough."
+      },
+      "why": {
+        "am": "ልምድዎ ሥራውን ለማወቅ ይረዳል።",
+        "en": "This helps the employer understand your experience."
+      },
+      "icon": "work",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "maxLength",
+          "value": 600
+        }
+      ]
+    },
+    {
+      "id": "job-email",
+      "type": "email",
+      "label": {
+        "am": "ኢሜይል",
+        "en": "Email"
+      },
+      "simple": {
+        "am": "ኢሜይል",
+        "en": "Email"
+      },
+      "hint": {
+        "am": "ካለዎት ብቻ።",
+        "en": "Only if you have one."
+      },
+      "why": {
+        "am": "አሠሪው በኢሜይል ሊያገኝዎት ይችላል።",
+        "en": "An employer may contact you by email."
+      },
+      "icon": "mail",
+      "inputmode": "email",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "email"
+        }
+      ],
+      "autocomplete": "email"
+    },
+    {
+      "id": "availability",
+      "type": "checkbox",
+      "legend": {
+        "am": "እንዴት መሥራት ይመርጣሉ?",
+        "en": "How would you like to work?"
+      },
+      "simple": {
+        "am": "የሥራ ጊዜ",
+        "en": "Work time"
+      },
+      "icon": "clock",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [],
+      "options": [
+        {
+          "value": "remote",
+          "label": {
+            "am": "ከቤት መሥራት",
+            "en": "From home"
+          },
+          "icon": "home"
+        },
+        {
+          "value": "flexible",
+          "label": {
+            "am": "ተለዋዋጭ ሰዓት",
+            "en": "Flexible hours"
+          },
+          "icon": "clock"
+        },
+        {
+          "value": "onsite",
+          "label": {
+            "am": "በቢሮ መሥራት",
+            "en": "At the office"
+          },
+          "icon": "building"
+        }
+      ]
+    },
+    {
+      "id": "job-support",
+      "type": "checkbox",
+      "legend": {
+        "am": "ለቃለ መጠይቁ እርዳታ ይፈልጋሉ?",
+        "en": "Do you need help at an interview?"
+      },
+      "simple": {
+        "am": "እርዳታ",
+        "en": "Help"
+      },
+      "hint": {
+        "am": "የመረጡት ነገር ለቀጣሪው ይታያል። ስለ ጤናዎ ምንም አንሰጥም።",
+        "en": "What you choose is shown to the employer. We share nothing about your health."
+      },
+      "why": {
+        "am": "ይህ መረጃ ለእርስዎና ለማህበረሰቡ ቡድን ብቻ ነው።",
+        "en": "Only you and the programme team see this."
+      },
+      "icon": "help",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "exclusiveOption",
+          "option": "prefer-not"
+        }
+      ],
+      "options": [
+        {
+          "value": "quiet-room",
+          "label": {
+            "am": "ጸጥ ያለ ክፍል",
+            "en": "A quiet room"
+          },
+          "icon": "door"
+        },
+        {
+          "value": "sign-interpreter",
+          "label": {
+            "am": "የምልክት ቋንቋ አስተርጓሚ",
+            "en": "Sign language interpreter"
+          },
+          "icon": "hands"
+        },
+        {
+          "value": "extra-time",
+          "label": {
+            "am": "ተጨማሪ ጊዜ",
+            "en": "More time"
+          },
+          "icon": "clock"
+        },
+        {
+          "value": "written-questions",
+          "label": {
+            "am": "ጥያቄዎች በጽሑፍ",
+            "en": "Questions in writing"
+          },
+          "icon": "doc"
+        },
+        {
+          "value": "prefer-not",
+          "label": {
+            "am": "መረጃ መስጠት አልፈልግም",
+            "en": "I prefer not to say"
+          },
+          "icon": "none",
+          "exclusive": true
+        }
+      ],
+      "sharing": {
+        "recipient": "employer",
+        "fields": [
+          "job-support"
+        ],
+        "purpose": "interview-accommodation",
+        "consentRequired": false
+      }
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": {
+        "am": "መረጃዎን ይመልከቱ",
+        "en": "Check your information"
+      },
+      "icon": "check"
+    },
+    {
+      "id": "submit",
+      "type": "submit",
+      "label": {
+        "am": "ማረጋገጫ",
+        "en": "Confirmation"
+      },
+      "icon": "check",
+      "submitLabel": {
+        "am": "ማመልከቻውን ላክ",
+        "en": "Send application"
+      },
+      "required": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "consent-employer",
+          "label": {
+            "am": "ስሜንና ስልክ ቁጥሬን ለአሠሪው እንዲሰጥ ተስማምቻለሁ።",
+            "en": "I agree to share my name and phone number with the employer."
+          },
+          "required": true
+        }
+      ],
+      "readAloud": true
+    }
+  ],
+  "errors": {
+    "required": {
+      "am": "ይህን መሙላት ያስፈልጋል።",
+      "en": "This needs an answer."
+    },
+    "phone-et": {
+      "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
+      "en": "That phone number does not look right. Example: 0912345678"
+    },
+    "maxLength": {
+      "am": "በጣም ረጅም ነው።",
+      "en": "That is too long."
+    },
+    "exclusiveOption": {
+      "am": "ይህን ከመረጡ ሌላ ማምረጥ አያስፈልግም።",
+      "en": "If you choose this, you do not need to choose anything else."
+    },
+    "minValue": {
+      "am": "ቁጥሩ በጣም ትንሽ ነው።",
+      "en": "That number is too small."
+    },
+    "maxValue": {
+      "am": "ቁጥሩ በጣም ትልቅ ነው።",
+      "en": "That number is too large."
+    },
+    "email": {
+      "am": "ኢሜይሉ ትክክል አይመስልም።",
+      "en": "That email does not look right."
+    }
+  },
+  "contentReview": {
+    "am": "በአማርኛ ተናጋሪ ተረጋግጧል",
+    "en": "Reviewed by a native Amharic speaker, 13 Nov 2026"
+  },
+  "ui": {
+    "choose": {
+      "am": "ከዝርዝሩ ይምረጡ",
+      "en": "Choose one"
+    }
+  }
+}

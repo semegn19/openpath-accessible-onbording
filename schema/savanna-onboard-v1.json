@@ -1,0 +1,575 @@
+{
+  "id": "savanna-onboard-v1",
+  "version": "1.2.0",
+  "kind": "onboarding",
+  "contentStatus": "reviewed",
+  "defaultLang": "am",
+  "langs": [
+    "am",
+    "en"
+  ],
+  "calendar": "EC",
+  "title": {
+    "am": "የተማሪ ምዝገባ",
+    "en": "Learner sign-up"
+  },
+  "intro": {
+    "am": "አስቀድመው ቋንቋዎንና የሚፈልጉትን እርዳታ ይምረጣሉ። ከዚያ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም።",
+    "en": "First choose your language and any help you need. Then answer a few questions. There is no time limit."
+  },
+  "settings": {
+    "progress": true,
+    "autosave": true,
+    "allowResume": true
+  },
+  "ui": {
+    "next": {
+      "am": "ቀጣይ",
+      "en": "Next"
+    },
+    "back": {
+      "am": "ተመለስ",
+      "en": "Back"
+    },
+    "edit": {
+      "am": "አስተካክል",
+      "en": "Change"
+    },
+    "readAloud": {
+      "am": "ጥያቄውን አንብብልኝ",
+      "en": "Read the question"
+    },
+    "speak": {
+      "am": "በድምጽ መልስ",
+      "en": "Speak your answer"
+    },
+    "weHeard": {
+      "am": "የሰማነው፦",
+      "en": "We heard:"
+    },
+    "accept": {
+      "am": "ትክክል ነው",
+      "en": "That is right"
+    },
+    "retry": {
+      "am": "እንደገና ሞክር",
+      "en": "Try again"
+    },
+    "typeInstead": {
+      "am": "በፊደል መጻፍ",
+      "en": "Type instead"
+    },
+    "optional": {
+      "am": "አስፈላጊ አይደለም",
+      "en": "Optional"
+    },
+    "errorSummary": {
+      "am": "እባክዎ እነዚህን ያስተካክሉ",
+      "en": "Please fix these"
+    },
+    "notShared": {
+      "am": "ይህ መረጃ ወደ ማንም አይላክም።",
+      "en": "This is not sent to anyone."
+    },
+    "stepOf": {
+      "am": "ደረጃ {n} ከ {total}",
+      "en": "Step {n} of {total}"
+    },
+    "choose": {
+      "am": "ከዝርዝሩ ይምረጡ",
+      "en": "Choose one"
+    }
+  },
+  "steps": [
+    {
+      "id": "language",
+      "type": "language",
+      "legend": {
+        "am": "ቋንቋ ይምረጡ",
+        "en": "Choose your language"
+      },
+      "label": {
+        "am": "ቋንቋ ይምረጡ",
+        "en": "Choose your language"
+      },
+      "simple": {
+        "am": "ቋንቋ",
+        "en": "Language"
+      },
+      "hint": {
+        "am": "ይህን በማንኛውም ጊዜ መቀየር ይችላሉ።",
+        "en": "You can change this at any time."
+      },
+      "icon": "people",
+      "required": true,
+      "voice": false,
+      "readAloud": false,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "am",
+          "label": {
+            "am": "አማርኛ",
+            "en": "Amharic"
+          },
+          "icon": "speaker"
+        },
+        {
+          "value": "en",
+          "label": {
+            "am": "English",
+            "en": "English"
+          },
+          "icon": "book"
+        }
+      ]
+    },
+    {
+      "id": "accessibility-prefs",
+      "type": "checkbox",
+      "legend": {
+        "am": "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ?",
+        "en": "How would you like this form to work for you?"
+      },
+      "simple": {
+        "am": "እርዳታ",
+        "en": "Help"
+      },
+      "hint": {
+        "am": "የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ።",
+        "en": "What you choose changes this form straight away. You can change it later."
+      },
+      "why": {
+        "am": "ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል።",
+        "en": "This helps you read the form in the way that suits you."
+      },
+      "icon": "hands",
+      "required": false,
+      "voice": true,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": true,
+      "options": [
+        {
+          "value": "read-aloud",
+          "label": {
+            "am": "ጥያቄዎች እንዲነበቡልኝ",
+            "en": "Read the questions to me"
+          },
+          "icon": "speaker",
+          "applies": "readAloud"
+        },
+        {
+          "value": "large-text",
+          "label": {
+            "am": "ትልቅ ጽሑፍ",
+            "en": "Bigger text"
+          },
+          "icon": "text-large",
+          "applies": "big"
+        },
+        {
+          "value": "simple-words",
+          "label": {
+            "am": "ቀላል ቃላት",
+            "en": "Simple words"
+          },
+          "icon": "simple",
+          "applies": "simple"
+        }
+      ]
+    },
+    {
+      "id": "assistance",
+      "type": "radio",
+      "legend": {
+        "am": "አንድ ሰው እንዲያግዝዎ ይፈልጋሉ?",
+        "en": "Would you like a person to help you?"
+      },
+      "simple": {
+        "am": "እርዳታ በስልክ",
+        "en": "Help by phone"
+      },
+      "hint": {
+        "am": "ስምዎንና ስልክ ቁጥርዎን ብቻ ለአጋር ድርጅት እንሰጣለን። ስለ ጤናዎ ምንም አንሰጥም።",
+        "en": "We give only your name and phone number to a partner organisation. We share nothing about your health."
+      },
+      "why": {
+        "am": "የሚፈልጉት ከሆነ አንድ ሰው ይደውልልዎታል።",
+        "en": "If you want, a person will call you."
+      },
+      "icon": "phone",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "sharing": {
+        "recipient": "partner",
+        "fields": [
+          "name",
+          "phone"
+        ],
+        "purpose": "registration-assistance",
+        "consentRequired": true
+      },
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "call-me",
+          "label": {
+            "am": "አዎ፣ ይደውሉልኝ",
+            "en": "Yes, call me"
+          },
+          "icon": "phone"
+        },
+        {
+          "value": "no-thanks",
+          "label": {
+            "am": "አይ፣ ራሴ እሞላለሁ",
+            "en": "No, I will fill it myself"
+          },
+          "icon": "person"
+        }
+      ]
+    },
+    {
+      "id": "name",
+      "type": "text",
+      "label": {
+        "am": "ስምዎን ይጻፉ",
+        "en": "Write your name"
+      },
+      "simple": {
+        "am": "ስም",
+        "en": "Name"
+      },
+      "hint": {
+        "am": "ስም፣ የአባት ስም፣ የአያት ስም",
+        "en": "Given name, father's name, grandfather's name"
+      },
+      "why": {
+        "am": "ይህ ስም በትምህርት መዝገብዎ ላይ ይታያል።",
+        "en": "This name will appear on your learning record."
+      },
+      "icon": "person",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        },
+        {
+          "rule": "minLength",
+          "value": 2
+        }
+      ],
+      "autocomplete": "name"
+    },
+    {
+      "id": "phone",
+      "type": "tel",
+      "label": {
+        "am": "ስልክ ቁጥርዎን ይጻፉ",
+        "en": "Write your phone number"
+      },
+      "simple": {
+        "am": "ስልክ",
+        "en": "Phone"
+      },
+      "hint": {
+        "am": "ምሳሌ፦ 0912 345 678",
+        "en": "Example: 0912 345 678"
+      },
+      "why": {
+        "am": "የምዝገባ መልእክት በዚህ ስልክ እንልካለን።",
+        "en": "We send your sign-up message to this phone."
+      },
+      "icon": "phone",
+      "inputmode": "tel",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        },
+        {
+          "rule": "phone-et"
+        }
+      ],
+      "autocomplete": "tel"
+    },
+    {
+      "id": "id-route",
+      "type": "radio",
+      "legend": {
+        "am": "ማንነትዎን እንዴት እናውቃለን?",
+        "en": "How can we confirm who you are?"
+      },
+      "simple": {
+        "am": "ማንነት",
+        "en": "Who you are"
+      },
+      "hint": {
+        "am": "መታወቂያ ከሌለዎ ምንም ችግር የለም። የትኛውን መምረጥ እንደሚፈልጉ ካላወቁ እኛ እንረዳዎታለን።",
+        "en": "If you have no document, that is not a problem. If you are not sure which to choose, we will help you."
+      },
+      "why": {
+        "am": "ሰነድ የሌላቸውን ተማሪዎች ላናግር እንፈልጋለን።",
+        "en": "We do not want to turn away learners who have no document."
+      },
+      "icon": "id",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "fayda",
+          "label": {
+            "am": "የፋይዳ ቁጥር",
+            "en": "Fayda number"
+          },
+          "icon": "card"
+        },
+        {
+          "value": "refugee",
+          "label": {
+            "am": "የስደተኛ መታወቂያ",
+            "en": "Refugee ID"
+          },
+          "icon": "card"
+        },
+        {
+          "value": "passport",
+          "label": {
+            "am": "ፓስፖርት",
+            "en": "Passport"
+          },
+          "icon": "book"
+        },
+        {
+          "value": "other",
+          "label": {
+            "am": "ሌላ ሰነድ",
+            "en": "Another document"
+          },
+          "icon": "doc"
+        },
+        {
+          "value": "no-document",
+          "label": {
+            "am": "ምንም መታወቂያ የለኝም",
+            "en": "I do not have any of these"
+          },
+          "icon": "doc"
+        },
+        {
+          "value": "help-choosing",
+          "label": {
+            "am": "የትኛውን እንድመርጥ እርዳታ እፈልጋለሁ",
+            "en": "I need help choosing"
+          },
+          "icon": "help"
+        }
+      ]
+    },
+    {
+      "id": "id-value",
+      "type": "text",
+      "label": {
+        "am": "የመታወቂያ ቁጥር",
+        "en": "ID number"
+      },
+      "simple": {
+        "am": "ቁጥር",
+        "en": "Number"
+      },
+      "hint": {
+        "am": "ቁጥሩን ካላወቁ ይህን ይዝለሉ።",
+        "en": "If you do not know the number, skip this."
+      },
+      "why": {
+        "am": "ይህ ቁጥር ከሰነድዎ ጋር እንዲገጥም ነው።",
+        "en": "We use this number to match your document."
+      },
+      "icon": "card",
+      "inputmode": "numeric",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": false,
+      "showIf": {
+        "step": "id-route",
+        "in": [
+          "fayda",
+          "refugee",
+          "passport",
+          "other"
+        ]
+      },
+      "validation": [
+        {
+          "rule": "maxLength",
+          "value": 32
+        }
+      ]
+    },
+    {
+      "id": "referral",
+      "type": "statement",
+      "label": {
+        "am": "ወደ አጋር መመራት",
+        "en": "Referral to a partner organisation"
+      },
+      "body": {
+        "am": "አጋር ድርጅት ይደውልልዎታል። ስምዎንና ስልክ ቁጥርዎን ብቻ እናጋራለን። ስለ ጤናዎ ምንም አንሰጥም። በስልክ ላይ \"አልፈልግም\" ብለው መሰረዝ ይችላሉ።",
+        "en": "A partner organisation will call you. We share only your name and phone number. We share nothing about your health. You can cancel by saying \"no\" on the call."
+      },
+      "icon": "people",
+      "showIf": {
+        "step": "id-route",
+        "in": [
+          "no-document",
+          "help-choosing"
+        ]
+      },
+      "required": true,
+      "voice": false,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "agree-share",
+          "label": {
+            "am": "ስሜንና ስልክ ቁጥሬን ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።",
+            "en": "I agree to share my name and phone number with a partner organisation."
+          },
+          "required": false
+        }
+      ],
+      "simple": {
+        "am": "አጋር",
+        "en": "Partner"
+      },
+      "sharing": {
+        "recipient": "partner",
+        "fields": [
+          "name",
+          "phone"
+        ],
+        "purpose": "registration-assistance",
+        "consentRequired": true
+      }
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": {
+        "am": "መረጃዎን ይመልከቱ",
+        "en": "Check your information"
+      },
+      "hint": {
+        "am": "ማንኛውንም መስተካከል ይችላሉ።",
+        "en": "You can change anything here."
+      },
+      "icon": "check"
+    },
+    {
+      "id": "submit",
+      "type": "submit",
+      "label": {
+        "am": "ማረጋገጫ",
+        "en": "Confirmation"
+      },
+      "icon": "check",
+      "submitLabel": {
+        "am": "ምዝገባውን ጨርስ",
+        "en": "Finish sign-up"
+      },
+      "required": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "consent-programme",
+          "label": {
+            "am": "መረጃዬ ለትምህርት ፕሮግራሙ እንዲውል ተስማምቻለሁ።",
+            "en": "I agree that my information is used for the learning programme."
+          },
+          "required": true
+        }
+      ],
+      "readAloud": true
+    }
+  ],
+  "errors": {
+    "required": {
+      "am": "ይህን መሙላት ያስፈልጋል።",
+      "en": "This needs an answer."
+    },
+    "phone-et": {
+      "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
+      "en": "That phone number does not look right. Example: 0912345678"
+    },
+    "minLength": {
+      "am": "ቢያንስ {n} ፊደሎች ያስፈልጋሉ።",
+      "en": "Please write at least {n} letters."
+    },
+    "maxLength": {
+      "am": "በጣም ረጅም ነው።",
+      "en": "That is too long."
+    },
+    "exclusiveOption": {
+      "am": "ይህን ከመረጡ ሌላ ማምረጥ አያስፈልግም።",
+      "en": "If you choose this, you do not need to choose anything else."
+    }
+  },
+  "contentReview": {
+    "am": "በአማርኛ ተናጋሪ ተረጋግጧል",
+    "en": "Reviewed by a native Amharic speaker, 13 Nov 2026"
+  },
+  "partner": {
+    "id": "referral-partner",
+    "displayName": {
+      "am": "አጋር ድርጅት",
+      "en": "a partner organisation"
+    },
+    "status": "unconfirmed"
+  }
+}

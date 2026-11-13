@@ -1,0 +1,322 @@
+{
+  "id": "employer-accommodations-v1",
+  "version": "1.0.0",
+  "kind": "employer",
+  "contentStatus": "reviewed",
+  "defaultLang": "am",
+  "langs": [
+    "am",
+    "en"
+  ],
+  "calendar": "EC",
+  "title": {
+    "am": "ድርጅት ምዝገባ",
+    "en": "Employer sign-up"
+  },
+  "intro": {
+    "am": "ድርጅትዎ ምን ዓይነት እርዳታ ይሰጣል?",
+    "en": "What support does your workplace offer?"
+  },
+  "settings": {
+    "progress": true,
+    "autosave": true,
+    "allowResume": true
+  },
+  "generates": "schema.org/JobPosting",
+  "steps": [
+    {
+      "id": "company",
+      "type": "text",
+      "label": {
+        "am": "የድርጅቱ ስም",
+        "en": "Company name"
+      },
+      "simple": {
+        "am": "ድርጅት",
+        "en": "Company"
+      },
+      "icon": "building",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "autocomplete": "organization"
+    },
+    {
+      "id": "role",
+      "type": "text",
+      "label": {
+        "am": "የሥራው ዓይነት",
+        "en": "Job title"
+      },
+      "simple": {
+        "am": "ሥራ",
+        "en": "Job"
+      },
+      "hint": {
+        "am": "ምሳሌ፦ የሽያጭ ሠራተኛ",
+        "en": "Example: Sales assistant"
+      },
+      "icon": "work",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ]
+    },
+    {
+      "id": "job-category",
+      "type": "select",
+      "label": {
+        "am": "የሥራው ክፍል",
+        "en": "Job category"
+      },
+      "simple": {
+        "am": "ክፍል",
+        "en": "Category"
+      },
+      "hint": {
+        "am": "ከዝርዝሩ ይምረጡ።",
+        "en": "Choose one from the list."
+      },
+      "icon": "list",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [],
+      "options": [
+        {
+          "value": "office",
+          "label": {
+            "am": "ቢሮ እና አስተዳደር",
+            "en": "Office and admin"
+          },
+          "icon": "desk"
+        },
+        {
+          "value": "sales",
+          "label": {
+            "am": "ሽያጭ",
+            "en": "Sales"
+          },
+          "icon": "work"
+        },
+        {
+          "value": "teaching",
+          "label": {
+            "am": "ማስተማር",
+            "en": "Teaching"
+          },
+          "icon": "book"
+        },
+        {
+          "value": "it",
+          "label": {
+            "am": "ቴክኖሎጂ",
+            "en": "Technology"
+          },
+          "icon": "screen"
+        },
+        {
+          "value": "hospitality",
+          "label": {
+            "am": "እንግዳ አገልግሎት",
+            "en": "Hospitality"
+          },
+          "icon": "building"
+        },
+        {
+          "value": "other",
+          "label": {
+            "am": "ሌላ",
+            "en": "Other"
+          },
+          "icon": "doc"
+        }
+      ]
+    },
+    {
+      "id": "accommodations",
+      "type": "checkbox",
+      "legend": {
+        "am": "ድርጅትዎ ምን ይሰጣል?",
+        "en": "What does your workplace offer?"
+      },
+      "simple": {
+        "am": "እርዳታ",
+        "en": "Support"
+      },
+      "hint": {
+        "am": "የማይሰጡትን አይምረጡ። ባዶ መተው ይችላሉ።",
+        "en": "Only choose what you offer. You can leave this empty."
+      },
+      "why": {
+        "am": "ተማሪዎች ሥራ ከመመልከታቸው በፊት ምን እንደሚገኝ ያውቃሉ።",
+        "en": "Learners see this before they apply, so nobody has to disclose a disability to ask."
+      },
+      "icon": "help",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [],
+      "options": [
+        {
+          "value": "step-free",
+          "label": {
+            "am": "ያለ ደረጃ መግቢያ",
+            "en": "Step-free entrance"
+          },
+          "icon": "door"
+        },
+        {
+          "value": "remote",
+          "label": {
+            "am": "ከቤት መሥራት",
+            "en": "Remote work"
+          },
+          "icon": "home"
+        },
+        {
+          "value": "flexible",
+          "label": {
+            "am": "ተለዋዋጭ ሰዓት",
+            "en": "Flexible hours"
+          },
+          "icon": "clock"
+        },
+        {
+          "value": "screen-reader",
+          "label": {
+            "am": "የስክሪን አንባቢ ሶፍትዌር",
+            "en": "Screen-reader software"
+          },
+          "icon": "speaker"
+        },
+        {
+          "value": "sign-language",
+          "label": {
+            "am": "የምልክት ቋንቋ አስተርጓሚ",
+            "en": "Sign language interpreter"
+          },
+          "icon": "hands"
+        },
+        {
+          "value": "adapted-desk",
+          "label": {
+            "am": "የተስተካከለ ጠረጴዛ",
+            "en": "Adapted desk"
+          },
+          "icon": "desk"
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "type": "tel",
+      "label": {
+        "am": "የመገኛ ስልክ ቁጥር",
+        "en": "Contact phone"
+      },
+      "simple": {
+        "am": "ስልክ",
+        "en": "Phone"
+      },
+      "hint": {
+        "am": "ምሳሌ፦ 0912 345 678",
+        "en": "Example: 0912 345 678"
+      },
+      "icon": "phone",
+      "inputmode": "tel",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "phone-et"
+        }
+      ],
+      "autocomplete": "tel"
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": {
+        "am": "መረጃዎን ይመልከቱ",
+        "en": "Check your information"
+      },
+      "icon": "check"
+    },
+    {
+      "id": "submit",
+      "type": "submit",
+      "label": {
+        "am": "ማረጋገጫ",
+        "en": "Confirmation"
+      },
+      "icon": "check",
+      "submitLabel": {
+        "am": "ላክ",
+        "en": "Send"
+      },
+      "required": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "confirm-true",
+          "label": {
+            "am": "የሰጠሁት መረጃ እውነት ነው።",
+            "en": "The information I gave is true."
+          },
+          "required": true
+        }
+      ],
+      "readAloud": true
+    }
+  ],
+  "errors": {
+    "required": {
+      "am": "ይህን መሙላት ያስፈልጋል።",
+      "en": "This needs an answer."
+    },
+    "phone-et": {
+      "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
+      "en": "That phone number does not look right. Example: 0912345678"
+    }
+  },
+  "contentReview": {
+    "am": "በአማርኛ ተናጋሪ ተረጋግጧል",
+    "en": "Reviewed by a native Amharic speaker, 13 Nov 2026"
+  },
+  "ui": {
+    "choose": {
+      "am": "ከዝርዝሩ ይምረጡ",
+      "en": "Choose one"
+    }
+  }
+}

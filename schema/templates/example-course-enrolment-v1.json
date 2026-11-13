@@ -1,0 +1,415 @@
+{
+  "id": "example-course-enrolment-v1",
+  "version": "1.0.0",
+  "kind": "template",
+  "contentStatus": "am-draft-unreviewed",
+  "defaultLang": "am",
+  "langs": [
+    "am",
+    "en"
+  ],
+  "calendar": "EC",
+  "title": {
+    "am": "የኮርስ ምዝገባ (ምሳሌ)",
+    "en": "Course enrolment (example)"
+  },
+  "intro": {
+    "am": "ይህ ምሳሌ ነው። እርስዎ የሚፈልጉትን ጥያቄዎች ብቻ ይውሰዱ።",
+    "en": "This is an example. Take only the questions you need."
+  },
+  "settings": {
+    "progress": true,
+    "autosave": true,
+    "allowResume": true
+  },
+  "steps": [
+    {
+      "id": "full-name",
+      "type": "text",
+      "label": {
+        "am": "ሙሉ ስም",
+        "en": "Full name"
+      },
+      "simple": {
+        "am": "ስም",
+        "en": "Name"
+      },
+      "icon": "person",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        },
+        {
+          "rule": "minLength",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "phone",
+      "type": "tel",
+      "label": {
+        "am": "ስልክ ቁጥር",
+        "en": "Phone number"
+      },
+      "simple": {
+        "am": "ስልክ",
+        "en": "Phone"
+      },
+      "hint": {
+        "am": "ምሳሌ፦ 0912 345 678",
+        "en": "Example: 0912 345 678"
+      },
+      "icon": "phone",
+      "inputmode": "tel",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        },
+        {
+          "rule": "phone-et"
+        }
+      ],
+      "autocomplete": "tel"
+    },
+    {
+      "id": "email",
+      "type": "email",
+      "label": {
+        "am": "ኢሜይል",
+        "en": "Email"
+      },
+      "simple": {
+        "am": "ኢሜይል",
+        "en": "Email"
+      },
+      "hint": {
+        "am": "ካለዎት ብቻ።",
+        "en": "Only if you have one."
+      },
+      "icon": "mail",
+      "inputmode": "email",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "email"
+        }
+      ],
+      "autocomplete": "email"
+    },
+    {
+      "id": "date-of-birth",
+      "type": "date-ec-gc",
+      "label": {
+        "am": "የትውልድ ቀን",
+        "en": "Date of birth"
+      },
+      "simple": {
+        "am": "የትውልድ ቀን",
+        "en": "Birth date"
+      },
+      "hint": {
+        "am": "ዓመቱን ብቻ ካወቁ ቅጹ ይፈቅድልዎታል።",
+        "en": "If you only know the year, the form allows that."
+      },
+      "why": {
+        "am": "ዕድሜዎን ለማወቅ ነው። ለሌላ አካል አይላክም።",
+        "en": "We use it to know your age group. It is not shared."
+      },
+      "icon": "clock",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": []
+    },
+    {
+      "id": "course",
+      "type": "select",
+      "label": {
+        "am": "የትኛውን ኮርስ ይመርጣሉ?",
+        "en": "Which course do you want?"
+      },
+      "simple": {
+        "am": "ኮርስ",
+        "en": "Course"
+      },
+      "icon": "book",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "comm",
+          "label": {
+            "am": "የመግባቢያ ክህሎት",
+            "en": "Communication skills"
+          },
+          "icon": "speaker"
+        },
+        {
+          "value": "va",
+          "label": {
+            "am": "ምናባዊ አጋዥ",
+            "en": "Virtual assistant"
+          },
+          "icon": "desk"
+        },
+        {
+          "value": "data",
+          "label": {
+            "am": "ዳታ ሥራ",
+            "en": "Data work"
+          },
+          "icon": "screen"
+        },
+        {
+          "value": "other",
+          "label": {
+            "am": "ሌላ",
+            "en": "Other"
+          },
+          "icon": "doc"
+        }
+      ]
+    },
+    {
+      "id": "study-time",
+      "type": "radio",
+      "legend": {
+        "am": "መቼ ማጥናት ይመርጣሉ?",
+        "en": "When do you prefer to study?"
+      },
+      "simple": {
+        "am": "መቼ",
+        "en": "When"
+      },
+      "icon": "clock",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "morning",
+          "label": {
+            "am": "ጠዋት",
+            "en": "Morning"
+          },
+          "icon": "clock"
+        },
+        {
+          "value": "afternoon",
+          "label": {
+            "am": "ከሰዓት",
+            "en": "Afternoon"
+          },
+          "icon": "clock"
+        },
+        {
+          "value": "evening",
+          "label": {
+            "am": "ማታ",
+            "en": "Evening"
+          },
+          "icon": "clock"
+        }
+      ]
+    },
+    {
+      "id": "support",
+      "type": "checkbox",
+      "legend": {
+        "am": "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ?",
+        "en": "How would you like this form to work for you?"
+      },
+      "simple": {
+        "am": "እርዳታ",
+        "en": "Support"
+      },
+      "hint": {
+        "am": "ይህ መረጃ ወደ ማንም አይላክም።",
+        "en": "This is not sent to anyone."
+      },
+      "icon": "help",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": true,
+      "validation": [],
+      "options": [
+        {
+          "value": "read-aloud",
+          "label": {
+            "am": "ጥያቄዎች እንዲነበቡልኝ",
+            "en": "Read questions to me"
+          },
+          "icon": "speaker",
+          "applies": "readAloud"
+        },
+        {
+          "value": "large-text",
+          "label": {
+            "am": "ትልቅ ጽሑፍ",
+            "en": "Bigger text"
+          },
+          "icon": "text-large",
+          "applies": "big"
+        }
+      ]
+    },
+    {
+      "id": "notes",
+      "type": "textarea",
+      "label": {
+        "am": "ሌላ ማለት የሚፈልጉት?",
+        "en": "Anything else?"
+      },
+      "simple": {
+        "am": "ሌላ",
+        "en": "More"
+      },
+      "hint": {
+        "am": "አንድ ዓረፍተ ነገር በቂ ነው።",
+        "en": "One sentence is enough."
+      },
+      "icon": "doc",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "maxLength",
+          "value": 400
+        }
+      ]
+    },
+    {
+      "id": "certificate",
+      "type": "file",
+      "label": {
+        "am": "የትምህርት ማስረጃ (ካለዎት)",
+        "en": "School certificate (if you have one)"
+      },
+      "simple": {
+        "am": "ማስረጃ",
+        "en": "Certificate"
+      },
+      "hint": {
+        "am": "ሰነድ ከሌለዎ ይህን ይዝለሉ።",
+        "en": "If you have no document, skip this."
+      },
+      "icon": "doc",
+      "accept": "image/*,application/pdf",
+      "required": false,
+      "optional": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": false,
+      "validation": []
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": {
+        "am": "መረጃዎን ይመልከቱ",
+        "en": "Check your information"
+      },
+      "icon": "check"
+    },
+    {
+      "id": "submit",
+      "type": "submit",
+      "label": {
+        "am": "ማረጋገጫ",
+        "en": "Confirmation"
+      },
+      "icon": "check",
+      "submitLabel": {
+        "am": "ምዝገባውን ጨርስ",
+        "en": "Finish enrolment"
+      },
+      "required": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "consent-course",
+          "label": {
+            "am": "መረጃዬ ለኮርሱ እንዲውል ተስማምቻለሁ።",
+            "en": "I agree that my information is used for this course."
+          },
+          "required": true
+        }
+      ],
+      "readAloud": true
+    }
+  ],
+  "errors": {
+    "required": {
+      "am": "ይህን መሙላት ያስፈልጋል።",
+      "en": "This needs an answer."
+    },
+    "phone-et": {
+      "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
+      "en": "That phone number does not look right. Example: 0912345678"
+    },
+    "email": {
+      "am": "ኢሜይሉ ትክክል አይመስልም።",
+      "en": "That email does not look right."
+    },
+    "minLength": {
+      "am": "ቢያንስ {n} ፊደሎች ያስፈልጋሉ።",
+      "en": "Please write at least {n} letters."
+    },
+    "maxLength": {
+      "am": "በጣም ረጅም ነው።",
+      "en": "That is too long."
+    },
+    "exclusiveOption": {
+      "am": "ይህን ከመረጡ ሌላ ማምረጥ አያስፈልግም።",
+      "en": "If you choose this, you do not need to choose anything else."
+    }
+  }
+}
