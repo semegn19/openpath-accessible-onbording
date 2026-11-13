@@ -1,0 +1,44 @@
+{
+  "name": "openpath-widget",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync:schemas": "node scripts/sync-schemas.mjs",
+    "predev": "npm run sync:schemas",
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "prebuild": "npm run sync:schemas",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "validate": "node ../schema/validate.mjs ../schema/*.json ../schema/templates/*.json",
+    "a11y": "node tests/a11y.spec.mjs",
+    "kb": "node tests/kb.mjs",
+    "pages": "node tests/pages.mjs",
+    "announce": "node tests/announce.mjs",
+    "shots": "node tests/shots.mjs",
+    "check": "npm run validate && npm run a11y && npm run pages && npm run api && npm run submit && npm run voice && npm run focus && npm run hosts && npm run build && npm run offline",
+    "voice": "node tests/voice.mjs",
+    "serve:dist": "node tests/nginx-sim.mjs 8081",
+    "csp": "node tests/csp.mjs",
+    "verify:prod": "node tests/nginx-sim.mjs 8081 & SRV=$!; sleep 1; ORIGIN=http://127.0.0.1:8081 node tests/pages.mjs && URL=http://127.0.0.1:8081/ node tests/a11y.spec.mjs && node tests/csp.mjs; RC=$?; kill $SRV 2>/dev/null; exit $RC",
+    "api": "node tests/api.mjs",
+    "submit": "node tests/submit.mjs",
+    "api:dev": "node ../api/server.mjs",
+    "focus": "node tests/focus-obscured.mjs",
+    "hosts": "node tests/no-third-party.mjs",
+    "offline": "node tests/offline.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "playwright": "^1.65.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}

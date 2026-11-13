@@ -1,0 +1,330 @@
+/* ---------------------------------------------------------------------------
+   Savanna theme, adapted for accessibility.
+   Palette and type come from alx-africa/Savanna-static-pages (--savanna-aice-*).
+   Four of their brand colours fail WCAG and are mapped to accessible variants;
+   the brand green #05f283 (1.50:1) is never used for text or focus.
+--------------------------------------------------------------------------- */
+
+:root {
+  --op-text: #212529;
+  --op-muted: #5f6670;          /* Savanna #98a3ae = 2.57:1 → unusable; this passes on white AND on the page tint (4.77:1) */
+  --op-surface: #ffffff;
+  --op-page: #e7e9ec;           /* savanna-aice-light-background */
+  --op-line: #d3d9de;
+  --op-border: #5f6670;         /* 5.80:1 on white — a border must not be #e7e9ec (1.22:1) */
+  --op-primary: #002b56;        /* savanna-aice-primary, 14.19:1 */
+  --op-primary-hover: #335578;
+  --op-primary-tint: #eaf0f6;
+  --op-accent: #5648b7;         /* savanna-aice-accent, 6.99:1 */
+  --op-focus: #002b56;
+  --op-error-brand: #db3e3e;    /* Savanna's exact red. Passes 3:1 as a border/icon (4.40), so it stays verbatim */
+  --op-error-text: #cf3636;     /* same hue, 3% darker — the MINIMUM shift that carries text (4.53 on the tint, 4.96 on white) */
+  --op-error-surface: #fdf2f2;
+  --op-ok: #028749;             /* brand green darkened: 4.60:1 */
+  --op-radius: 10px;
+  --op-radius-pill: 999px;
+  --op-font: 'Poppins', 'Noto Sans Ethiopic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --op-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+}
+
+* { box-sizing: border-box; }
+html { font-size: 100%; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--op-font);
+  font-size: 1rem;
+  line-height: 1.65;                 /* Ge'ez ascenders and descenders */
+  color: var(--op-text);
+  background: var(--op-page);
+  padding-bottom: 3rem;
+}
+
+/* ---- navy band: Savanna's header colour ---------------------------------- */
+.op-band {
+  background: var(--op-primary);
+  color: #ffffff;
+  padding: 0.9rem max(1rem, calc((100% - 46rem) / 2));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.op-brand { margin: 0; font-weight: 600; font-size: 1.05rem; letter-spacing: 0.01em; }
+
+.op-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 50;
+  background: var(--op-primary);
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 0 0 var(--op-radius) 0;
+  font-weight: 600;
+}
+.op-skip:focus { left: 0; outline: 3px solid #ffffff; outline-offset: -6px; }
+.op-root:focus { outline: none; }
+
+/* ---- sticky settings: always reachable, never covers a focused field ----- */
+/* WCAG 2.2 SC 2.4.11: the sticky bar must never sit on top of the focused control, so the
+   browser's scroll-into-view has to know how tall the bar is. App.tsx keeps --op-bar-h honest. */
+html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
+
+.op-settingsbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  max-height: 40dvh;          /* on a short window (or 200% zoom) the bar scrolls itself, not the page */
+  overflow-y: auto;
+  background: var(--op-surface);
+  border-bottom: 1px solid var(--op-line);
+  padding: 0.5rem max(0.75rem, calc((100% - 46rem) / 2));
+  box-shadow: var(--op-shadow);
+}
+
+.op-root {
+  max-width: 46rem;
+  margin: 1rem auto 0;
+  padding: 1.25rem;
+  background: var(--op-surface);
+  border-radius: var(--op-radius);
+  box-shadow: var(--op-shadow);
+}
+.op-shell[data-big='true'] .op-root,
+.op-shell[data-big='true'] .op-settingsbar { font-size: 1.5rem; }
+
+.op-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.op-lang, .op-toggles { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.op-settings .op-btn-chip { min-height: 48px; padding: 0.35rem 0.7rem; font-size: 0.95rem; }
+.op-shell[data-big='true'] .op-root { max-width: 40rem; }
+
+/* ---- headings: focus target on every step -------------------------------- */
+.op-h1 {
+  font-size: 1.45rem;
+  line-height: 1.35;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  scroll-margin-block-start: 7rem;
+}
+.op-h1:focus { outline: 3px solid var(--op-focus); outline-offset: 4px; border-radius: 4px; }
+.op-intro, .op-why { color: var(--op-muted); margin: 0.25rem 0 0.75rem; }
+.op-why { font-size: 0.92rem; }
+.op-progress { color: var(--op-muted); font-size: 0.9rem; margin: 0 0 0.5rem; }
+
+/* ---- fields -------------------------------------------------------------- */
+.op-field { margin: 1rem 0 1.75rem; scroll-margin-block-start: 7rem; }
+.op-fieldset { border: 0; padding: 0; margin: 0; }
+.op-label { display: block; font-weight: 600; margin-bottom: 0.3rem; }
+.op-optional { font-weight: 400; color: var(--op-muted); font-size: 0.9rem; }
+.op-hint { color: var(--op-muted); margin: 0.3rem 0 0.6rem; font-size: 0.95rem; }
+.op-private { color: var(--op-accent); font-size: 0.9rem; margin: 0.6rem 0 0; font-weight: 500; }
+.op-svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex: 0 0 auto;
+  vertical-align: -0.22em;
+  margin-right: 0.4rem;
+  display: inline-block;
+}
+.op-h1 .op-svg { color: var(--op-primary); width: 1.1em; height: 1.1em; margin-right: 0.45rem; }
+.op-error .op-svg, .op-error-summary .op-svg { color: var(--op-error-brand); }
+.op-optional-block { margin: 0 0 0.35rem; }
+
+.op-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.65rem 0.85rem;
+  font: inherit;
+  color: var(--op-text);
+  background: var(--op-surface);
+  border: 2px solid var(--op-border);
+  border-radius: var(--op-radius);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.op-input-sm { width: auto; min-width: 6rem; margin-right: 0.5rem; }
+.op-textarea { min-height: 8.5rem; }
+.op-date { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+/* ---- choice cards: 48px minimum, obvious selected state ------------------ */
+.op-options { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.6rem; }
+.op-option, .op-check {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 52px;
+  padding: 0.65rem 0.9rem;
+  border: 2px solid var(--op-border);
+  border-radius: var(--op-radius);
+  background: var(--op-surface);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.op-option:hover, .op-check:hover { border-color: var(--op-primary); }
+.op-option:has(input:checked) {
+  border-color: var(--op-primary);
+  background: var(--op-primary-tint);
+  box-shadow: inset 0 0 0 1px var(--op-primary);
+}
+.op-option input, .op-check input { width: 1.45rem; height: 1.45rem; flex: 0 0 auto; accent-color: var(--op-primary); }
+.op-option-label { display: flex; align-items: center; gap: 0.45rem; }
+
+.op-input:focus-visible,
+.op-option:focus-within,
+.op-check:focus-within,
+.op-btn:focus-visible,
+.op-input[aria-invalid='true'] { border-color: var(--op-error-brand); box-shadow: inset 0 0 0 1px var(--op-error-brand); }
+
+.op-error { color: var(--op-error-text); font-weight: 600; margin: 0.55rem 0 0; display: block; }
+
+/* ---- error summary: the first thing after a failed Continue -------------- */
+.op-error-summary {
+  border: 3px solid var(--op-error-brand);
+  border-left-width: 6px;
+  background: var(--op-error-surface);
+  padding: 1rem 1.1rem;
+  margin: 0 0 1.25rem;
+  border-radius: var(--op-radius);
+}
+.op-error-summary:focus { outline: 3px solid var(--op-focus); outline-offset: 3px; }
+.op-error-title { margin: 0 0 0.5rem; font-size: 1.1rem; }
+.op-error-summary ul { margin: 0; padding-left: 1.25rem; }
+.op-error-summary a { color: var(--op-error-text); font-weight: 600; }
+
+/* ---- buttons ------------------------------------------------------------- */
+.op-btn {
+  min-height: 52px;
+  padding: 0.65rem 1.15rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--op-primary);
+  background: var(--op-surface);
+  border: 2px solid var(--op-primary);
+  border-radius: var(--op-radius);
+  cursor: pointer;
+}
+.op-btn:hover { background: var(--op-primary-tint); }
+.op-btn-primary { background: var(--op-primary); color: #ffffff; }
+.op-btn-primary:hover { background: var(--op-primary-hover); border-color: var(--op-primary-hover); }
+.op-btn-quiet { border-style: dashed; }
+.op-btn-link {
+  border: 0; background: none; color: var(--op-accent); text-decoration: underline;
+  min-height: 48px; padding: 0 0.4rem;
+}
+.op-btn-voice { margin-top: 0.8rem; border-style: dashed; }
+.op-btn-voice[aria-pressed='true'] { background: var(--op-error-surface); border-color: var(--op-error-brand); }
+.op-readaloud { margin-bottom: 0.4rem; }
+
+.op-nav { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+.op-nav .op-btn-primary { margin-left: auto; }
+.op-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+.op-voice-card {
+  border: 2px solid var(--op-accent);
+  background: #f7f6fd;
+  border-radius: var(--op-radius);
+  padding: 0.85rem;
+  margin-top: 0.8rem;
+}
+.op-voice-heard { margin: 0; }
+
+.op-banner {
+  background: #fff8e1;
+  border: 2px solid #8a6d00;
+  border-radius: var(--op-radius);
+  padding: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+.op-banner p { margin: 0 0 0.6rem; }
+
+/* ---- review -------------------------------------------------------------- */
+.op-review { margin: 0; }
+.op-review-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--op-line);
+}
+.op-review dt { font-weight: 600; flex: 1 1 15rem; }
+.op-review dd { margin: 0; flex: 1 1 15rem; display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; }
+.op-payload {
+  overflow-x: auto;
+  background: #f4f6f8;
+  padding: 0.85rem;
+  border-radius: var(--op-radius);
+  font-size: 0.85rem;
+}
+.op-done { padding: 2rem 1.5rem; }
+
+/* ---- utilities / preferences -------------------------------------------- */
+.op-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.op-source-note { color: var(--op-muted); font-size: 0.85rem; }
+
+@media (forced-colors: active) {
+  .op-option, .op-check, .op-input, .op-btn, .op-error-summary { border: 2px solid ButtonText; }
+  .op-btn-primary { background: ButtonFace; color: ButtonText; }
+  .op-option:has(input:checked) { outline: 3px solid Highlight; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+@media (max-width: 30rem) {
+  .op-root { margin: 0.75rem; padding: 1rem; }
+  .op-input-sm { min-width: 4.5rem; }
+  .op-nav .op-btn-primary { margin-left: 0; flex: 1 1 100%; }
+  .op-h1 { font-size: 1.3rem; }
+}
+
+.op-body {
+  background: #f4f6f8;
+  border-left: 4px solid var(--op-primary);
+  border-radius: 0 var(--op-radius) var(--op-radius) 0;
+  padding: 0.85rem 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+/* The page links got wider when the font went variable, and three of them now wrap on a
+   390 px screen, pushing the question below the fold. Tighten the chrome, keep the text
+   size — Eyob's letters must not get smaller. */
+@media (max-width: 430px) {
+  .op-band .op-brand { font-size: 1.05rem; }
+}
+
+.op-receipt { font-size: 1.05rem; }
+.op-mono {
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  font-size: 1.05rem; letter-spacing: 0.01em;
+  background: var(--op-primary-tint); padding: 0.15rem 0.4rem; border-radius: 4px;
+}
+.op-ref {
+  display: block;
+  margin: 0.4rem 0 0.5rem;
+  font-size: 1.2rem;                 /* this is the one string the user must read back */
+  white-space: nowrap;               /* 21 characters — fits 320px, so never split it */
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---- connection ---------------------------------------------------------
+   Offline is a state of the world, not an error the learner made: navy tint, brand red
+   nowhere near it. The banner sits in normal flow, so it can never cover the focused
+   control (SC 2.4.11) the way a fixed toast would. */
+.op-net {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: var(--op-primary-tint);      /* #eaf0f6 — the "information" surface */
+  border: 2px solid var(--op-primary);     /* 14.19:1 navy edge */
+  border-radius: var(--op-radius);
+  padding: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+.op-net svg { flex: none; margin-top: 0.15rem; color: var(--op-primary); }
+.op-net p { margin: 0; }

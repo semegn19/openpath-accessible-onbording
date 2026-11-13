@@ -1,0 +1,24 @@
+/* Self-hosted, OFL-licensed, fetched 13 Nov 2026.
+   Poppins = Savanna's body font (latin subset only, 7.7 KB each).
+   Noto Sans Ethiopic = Savanna ships NO Ethiopic font at all.
+
+   The Ethiopic face is deliberately NOT subset to our own strings. It covers the whole
+   block (528 fidel, variable 400–700, 136 KB, one file for both weights). Reason: a form
+   accepts text we did not write — a name typed in Amharic, a voice transcript — and a
+   subset built from the UI renders those as tofu boxes. That bug shipped once; it is not
+   coming back. A smaller subset is not worth a learner seeing their own name as squares. */
+@font-face {
+  font-family: 'Poppins'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/fonts/poppins-400-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Poppins'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('/fonts/poppins-600-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Noto Sans Ethiopic'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('/fonts/noto-sans-ethiopic-var.woff2') format('woff2');
+  unicode-range: U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7FE;
+}
