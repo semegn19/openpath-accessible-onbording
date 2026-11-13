@@ -1,0 +1,2581 @@
+
+===== PAGE 1 =====
+# **OpenPath Research and Architecture Report: Designing an Adaptive, Low-Bandwidth
+Accessible Onboarding and Form-Completion System for Ethiopia**
+Building a genuinely accessible onboarding and form-completion platform for **Savanna**
+requires moving beyond superficial WCAG checklists and third-party "accessibility overlay"
+widgets toward a **schema-driven, multimodal, progressively enhanced form engine**1.
+Empirical time-diary research by Lazar et al. (2007) with 100 blind web users found that
+participants lost an average of **30.4% of their web browsing time** to poorly labeled form
+controls, confusing page layouts, missing alternative text, and dynamic updates that conflict with
+screen readers5. Meanwhile, a 2021 study by Deque Systems found that automated testing
+engines such as axe-core detect roughly **57% of WCAG issues by volume** (and Google
+Lighthouse catches only **30% to 40%**), leaving broken screen-reader state announcements,
+keyboard focus traps, and cognitive overload undetected unless verified manually8. In the
+Ethiopian context, these barriers are compounded by low-cost Android hardware, intermittent
+mobile connectivity, diverse literacy profiles across Amharic (*fidel*), Afaan Oromoo, Tigrinya,
+and Ethiopian Sign Language (EthSL), and non-Western demographic structures including
+patronymic naming, dual Ethiopian and Gregorian calendars, Region/Zone/Woreda/Kebele
+administrative addresses, and witness-based identity verification under the Fayda National ID
+Program (NIDP)12.
+To succeed as both a reusable open-source React/TypeScript component library and an
+embeddable product for third-party institutions, **OpenPath** must decouple **canonical form
+semantics and validation logic** from **adaptive presentation and interaction modalities**2. By
+compiling a single declarative JSON/TypeScript form schema into native HTML form primitives
+enhanced via headless accessibility hooks, OpenPath can dynamically adapt its interface—
+switching seamlessly between compact multi-question groups, GOV.UK-style "one-thing-per-
+page" question flows, W3C COGA-aligned Easy-Read layouts, and Cboard-inspired symbol and
+phrase-bank response boards—without losing user state or breaking NVDA, TalkBack,
+keyboard, or switch navigation18. Furthermore, because third-party embedding via Shadow
+DOM breaks cross-boundary ARIA ID references (aria-labelledby, aria-describedby, aria-
+controls) on older browsers22, OpenPath should deploy its standalone \<script\> integration
+using a **Light-DOM Custom Element paired with CSS @scope and @layer isolation** rather
+than an isolated Shadow root22.
+Finally, our technical investigation into Ethiopian speech technologies demonstrates that
+developers cannot assume general-purpose cloud AI APIs support Amharic reliably simply
+because am-ET appears in a documentation table26. An evaluation by dataset.et notes that the
+Ethio-ASR paper measured vanilla OpenAI Whisper and Meta SeamlessM4T at **over 100%
+Word Error Rate (WER)** on Ethiopian languages (inserting more hallucinated words than
+spoken) and scored Meta MMS at **52.0% WER** on Amharic26, while an August 2026
+benchmark published by Addis AI reported a **147.86% WER** for ElevenLabs v3 in Amharic
+text-to-speech28. Consequently, OpenPath must never depend on an external AI API for
+baseline accessibility. Instead, it should implement a **four-tier progressive speech
+
+===== PAGE 2 =====
+architecture**: (1) native screen-reader compatibility and pre-recorded static Opus audio
+prompts for core onboarding labels; (2) low-latency **Microsoft Azure Neural TTS (am-ET-
+AmehaNeural, 1.05 s median request latency)** or **Addis Voice 2 (am-hamen, 4.25/5.0 blind
+listening composite across Amharic, Afaan Oromoo, and Tigrinya)** for dynamic read-aloud28;
+(3) **Addis Scribe Streaming (28.4% WAXAL WER, 30 ms finalization latency)** or open-weight
+**Hohe (wav2vec2-BERT, 25.4% WAXAL WER)** for speech-to-text30; and (4) structured slot-
+filling with mandatory visual and auditory read-back confirmation so recognition errors never
+corrupt official registration records20.
+## **Deliverable A: Executive Summary and Core Findings**
+An onboarding and registration system is genuinely accessible only when a user can
+independently—or with dignified, structured human assistance—understand why information is
+requested, input answers using their preferred sensory and motor modality, recover effortlessly
+from errors or network drops, and verify their submission without cognitive, linguistic, or
+technological exclusion2. Synthesizing evidence from W3C standards (WCAG 2.2 and COGA),
+five major government design systems, thirteen assistive products and component libraries, and
+six empirical research studies yields seven foundational engineering conclusions for OpenPath:
+> 1. **Compliance Floor vs. Usability Ceiling:** Building to **WCAG 2.2 Level AA** (published
+October 2023\) is essential and introduces critical form requirements: **2.4.11 Focus Not
+Obscured (Minimum)**, **2.5.7 Dragging Movements**, **2.5.8 Target Size (Minimum) (24×24
+CSS px)**, **3.2.6 Consistent Help**, **3.3.7 Redundant Entry**, and **3.3.8 Accessible
+Authentication (Minimum)**1. However, empirical studies with users with intellectual disabilities
+(Karreman et al., 2007\) and blind users (Lazar et al., 2007\) show that technical WCAG
+conformance alone does not guarantee user satisfaction or task completion5. True usability
+requires combining WCAG 2.2 AA with **W3C COGA (*Making Content Usable for People with
+Cognitive and Learning Disabilities*)** design patterns and **44×44 to 48×48 CSS px (\~12
+mm)** touch targets validated in empirical touchscreen studies with motor-impaired users20.
+> 2. **Assistive Technology Realities in Africa:** Global accessibility guidance frequently
+centers on Apple VoiceOver and Freedom Scientific JAWS. However, the WebAIM Screen
+Reader User Surveys \#10 (December 2023–January 2024, n=1,539 self-selected respondents)
+and \#11 (July–August 2026, n=1,780) reveal a sharp regional divide: while JAWS leads in
+North America (55.5% in 2024; 72.5% in 2026), free open-source **NVDA dominates among
+respondents in Africa and the Middle East (69.9% primary desktop share in 2024, rising to
+83.0% in 2026\)**40, paired with built-in **Google TalkBack** on Android devices43.
+Furthermore, **16.7% of Survey \#10 respondents reported multiple disabilities**, including
+**5.3% who reported being both deaf/hard-of-hearing and blind**40.
+
+===== PAGE 3 =====
+> 3. **Native HTML Over Custom ARIA Widgets:** The GOV.UK, NHS.UK, and VA.gov design
+systems demonstrate that native HTML elements (\<input\>, \<fieldset\>, \<legend\>, \<label\>,
+\<dl\>) provide far greater cross-screen-reader stability than custom ARIA widgets45. Even
+simple dynamic ARIA patterns can fail in production: GOV.UK Frontend's conditional radio
+reveal (aria-expanded on \<input type="radio"\>) violates the WAI-ARIA specification and failed
+to announce expanded or collapsed states in 2026 tests across JAWS, NVDA, VoiceOver, and
+TalkBack8.
+> 4. **Adaptive Pacing ("One Thing Per Page" vs. Grouped Sections):** Neither single-question
+screens nor long scrolling forms are universally superior. Asking one question per page (with
+\<label\> or \<legend\> wrapped inside \<h1\>) reduces cognitive load, working memory
+demands, and validation complexity18, whereas closely related inputs (such as passport details
+or a three-part Ethiopian name) benefit from same-page grouping12. OpenPath's schema
+engine should allow users and institutions to switch between **Step-by-Step Guided Mode (One
+Question Per Page)** and **Section-Grouped Mode** dynamically2.
+> 5. **Distinguishing Evidence-Supported Dyslexia Interventions from Myths:** Eye-tracking
+research with dyslexic readers by Rello and Baeza-Yates (2013, n=48) and reading-rate studies
+by Wery and Diliberto (2016) found that specialty fonts like **OpenDyslexic did not produce a
+statistically significant improvement in reading speed or accuracy** over clean sans-serif fonts
+(Arial, Helvetica, Verdana), and participants in Rello and Baeza-Yates's study significantly
+preferred Verdana (p \= 0.002) and Helvetica (p \= 0.020) over OpenDyslexic50. Conversely,
+**avoiding italic text** (p \< 0.001), providing **extra-large letter and word spacing** (Zorzi et al.,
+2012; WCAG 1.4.12), offering an **18-point font size option** (Rello et al.), and **reducing
+pronoun co-references** (Fajardo et al.) demonstrated statistically significant benefits for
+reading speed and comprehension51.
+> 6. **Ethiopian Localization Beyond Translation:** Transplanting Western form schemas to
+Ethiopia causes immediate registration friction. OpenPath must natively support: (a) **Ge'ez
+script (*fidel*) rendering** with generous line height; (b) **dual Ethiopian Calendar (EC) and
+Gregorian Calendar (GC)** inputs plus **"Year-Only Declared Birthdates"** permitted by the
+Fayda NIDP12; (c) **patronymic 3-part naming** (First, Middle/Father's,
+Surname/Grandfather's)12; (d) **Region \-\> Zone/Sub-City \-\> Woreda \-\> Kebele** address
+structures12; (e) **over 33 alternative identity proofs and Witness-Based Consent
+workflows**14; and (f) **Ethiopian Sign Language (EthSL)** video hooks rather than assuming
+Deaf Ethiopians have high reading fluency in written Amharic or English16.
+> 7. **Offline-First & Assisted Completion:** Because mobile data in Ethiopia is intermittent and
+many rural or disabled applicants rely on a family member, neighbor, or Organization of Persons
+with Disabilities (OPD) agent, OpenPath should persist form changes locally via IndexedDB
+alongside 1-second debounced autosave (adapting VA.gov's SaveInProgress pattern)4 and
+include a transparent **"Assisted Completion Mode"** that records helper involvement while
+safeguarding applicant consent14.
+
+===== PAGE 4 =====
+## **Deliverable B: Disability-Specific Barrier Analysis**
+People with disabilities are not homogeneous, nor do individuals within any single disability
+category share identical needs40. A congenitally blind university student in Addis Ababa using
+NVDA or TalkBack at high speech rates has different onboarding needs than an older job
+seeker with low vision using screen magnification, or a Deaf applicant from Hawassa whose
+primary language is Ethiopian Sign Language (EthSL)16.
+![][image1]
+### **Comprehensive Cross-Disability Barrier and Solution Matrix**
+The matrix below details how each of the twelve target user groups experiences onboarding and
+form completion, answering all eight analytical questions per group.
+| Target User Group (and Intra-Group Diversity) | 1\. Barriers Encountered & 2\. Excluding Form
+Patterns | 3\. Effective Interaction Methods, 4\. Frequently Missing Features & 5\. Common AT |
+6\. What Developers Should Implement & 7\. What Developers Should Avoid | 8\. Problems
+Frontend Components Cannot Solve Alone |
+| :---- | :---- | :---- | :---- | :---- |
+| **1\. Blind Users** *(Congenitally vs. newly blind; desktop NVDA/JAWS vs. mobile TalkBack;
+Braille readers)* | **Barriers:** Unlabeled inputs; silent dynamic updates; confusing layouts;
+visual CAPTCHAs; unguided camera ID uploads5. **Excluding patterns:** Placeholder-only
+labels; ungrouped radios; custom \<div\> selects; drag-only uploads; keystroke live
+announcements37. | **Effective:** Heading-first navigation (88.8% use headings), explicit
+labels, top Error Summaries42. **Missing:** Audio camera framing, debounced live regions43.
+**AT:** **NVDA** (83% in Africa/ME), **TalkBack** (Android), **JAWS**, **VoiceOver**, **Orbit
+Reader 20** Braille display41. | **Implement:** \<label for\> \+ \<fieldset\>/\<legend\>; \<h1\>
+wrapping single-question labels; \<ErrorSummary tabindex="-1"\>; 1,400 ms autocomplete
+debounce; audio framing cues18. **Avoid:** aria-expanded on radio inputs8; links inside hint
+text18; clearing fields on error67; cross-Shadow-DOM ID references22. | Issuing accessible
+digital credentials (Fayda eSignet); human verification when OCR fails on degraded paper
+certificates13. |
+| **2\. Low-Vision Users** *(Central field loss vs. tunnel vision vs. glare sensitivity; 200%–400%
+zoom users)* | **Barriers:** Horizontal scrolling at 400% zoom; low-contrast input borders; error
+messages far from inputs; right-aligned action links missed in magnifier viewports1. **Excluding
+patterns:** Multi-column side-by-side inputs; faint placeholders; sticky bars covering focused
+
+===== PAGE 5 =====
+fields36. | **Effective:** Single-column reflow, high-contrast borders, left-aligned buttons, two-
+thirds width review lists18. **Missing:** Unobscured focus scroll-padding, customizable color
+polarity36. **AT:** OS/Browser Zoom (up to 400%), **ZoomText/Fusion**, **Dolphin
+SuperNova**, screen readers (19.9% of SR users have low vision)42. | **Implement:** WCAG
+1.4.10 Reflow at 320 CSS px; 3:1 border contrast (1.4.11); scroll-margin for 2.4.11 Focus Not
+Obscured; left-aligned buttons; 2/3-width Summary Lists18. **Avoid:** Relying on color alone for
+errors (1.4.1); fixed pixel widths that clip enlarged text; hover tooltips (1.4.13)54. | High-
+resolution scalable scans of third-party institutional documents. |
+| **3\. Deaf Users** *(Pre-lingually Deaf native EthSL signers vs. post-lingually deafened
+readers)* | **Barriers:** Voice-call OTP verification; audio-only tutorials; complex written
+Amharic or English text assuming second-language reading fluency58. **Excluding patterns:**
+Phone-only help desks; uncaptioned videos; dense bureaucratic text without sign or visual
+support20. | **Effective:** **Ethiopian Sign Language (EthSL)** videos \+ captions (p \< 0.05
+comprehension gain), visual step diagrams, text/video chat support20. **Missing:** EthSL sign
+videos and sign glossary links59. **AT:** **AAU Digital EthSL Dictionary** (ethsl.aau.edu.et),
+video relay, SMS/text chat71. | **Implement:** Synchronized EthSL picture-in-picture video clips
+for core onboarding questions; plain language \+ visual icons; SMS/email/authenticator
+alternatives to voice calls20. **Avoid:** Assuming text captions or written Amharic fully
+substitute for EthSL59; voice-only support20. | Training and staffing EthSL interpreters at
+Savanna partner institutions and employer interview panels70. |
+| **4\. Hard-of-Hearing Users** *(Mild-to-severe bilateral or unilateral loss; hearing aid/cochlear
+implant users)* | **Barriers:** Background noise or poor audio clarity in prompts; missed high-
+frequency audio chimes; lack of synchronized text transcripts during audio playback54.
+**Excluding patterns:** Audio-only error/status alerts; voice-only phone menus (IVR)2. |
+**Effective:** Multi-sensory visual \+ vibration alerts, clean speech audio with synchronized
+highlighted text, adjustable playback rate27. **Missing:** Interactive transcripts for TTS read-
+aloud. **AT:** Bluetooth hearing aids, Android **Live Transcribe**, iOS **Live Captions**,
+**Ava**, **Otter**32. | **Implement:** Synchronized captions (WCAG 1.2.2) \+ highlighted
+transcripts for all TTS/recorded audio; clean 24 kHz mono speech without background audio
+(1.4.7); visual toast \+ haptic vibration27. **Avoid:** Auto-playing audio (1.4.2); voice-only
+menus20. | Acoustic environment in physical registration centers or classrooms. |
+| **5\. Limited Mobility / Dexterity** *(Tremors, cerebral palsy, spinal cord injury, amputation;
+keyboard, switch, or one-handed thumb users)* | **Barriers:** Small, closely spaced buttons;
+accidental "Cancel" taps on bumpy transport; drag-and-drop sliders/uploads; session timeouts
+during slow entry37. **Excluding patterns:** Range sliders; drag-to-reorder lists; small inline
+icons; non-sequential tab order; top-edge mobile targets18. | **Effective:** Large touch cards
+(\~12 mm), single-pointer button alternatives, auto-fill from prior steps/IDs37. **Missing:**
+Up/Down buttons for list ordering, generous target spacing37. **AT:** Full keyboard, **Switch
+Access / Switch Control**, **Voice Control / Voice Access**, **AssistiveTouch**39. |
+**Implement:** **48×48 CSS px (\~12 mm)** touch targets with \>=8 px spacing (exceeding
+WCAG 2.5.8 24×24 px minimum)36; single-pointer button alternatives to dragging (2.5.7);
+autocomplete & 3.3.7 Redundant Entry auto-fill64. **Avoid:** Disabling submit buttons46;
+
+===== PAGE 6 =====
+mismatching visible text and aria-label (breaks 2.5.3 Label in Name for Voice Control)1. |
+Physical wheelchair accessibility of in-person training or employment venues. |
+| **6\. Speech Disabilities** *(Dysarthria, apraxia, stuttering, laryngectomy, cerebral palsy, ALS,
+stroke)* | **Barriers:** Mandatory voice-driven bots; voice biometrics; ASR silence cutoffs
+truncating stammering or slow speech; phone-only support20. **Excluding patterns:** Voice-
+only verification; requiring long typed or spoken answers when motor \+ speech impairments co-
+occur20. | **Effective:** Symbol and phrase-bank selection, tap-to-compose profile builders, text
+chat support19. **Missing:** Non-typing, non-speaking answer composition in job forms19.
+**AT:** **Cboard**, **TD Snap**, **Speech Assistant AAC**, **CoughDrop**, **Live
+Speech**19. | **Implement:** Make voice input strictly optional; provide **Symbol/Phrase-Bank
+Response Composer** (Open Board Format) so users can assemble profile/interview answers
+via taps without typing long essays or speaking19. **Avoid:** Mandatory voice prompts or short
+silence cutoffs in ASR. | Employer bias during live verbal job interviews; requires formal
+accommodation workflows in Savanna. |
+| **7\. Cognitive Disabilities** *(ADHD, traumatic brain injury, dementia, executive function or
+working memory impairments)* | **Barriers:** Multi-step memory load; cluttered headers/footers;
+vague errors ("Invalid entry"); losing work on timeout or accidental navigation2. **Excluding
+patterns:** Password memory puzzles/CAPTCHAs; asking users to re-type data from earlier
+steps; burying instructions in dense paragraphs64. | **Effective:** Minimal page chrome, one
+thing per page, 1-second autosave, passwordless/magic-link login, concrete examples4.
+**Missing:** Automatic session recovery after interruptions4. **AT:** **Apple Assistive Access**,
+**Tiimo**, **Microsoft To Do**, password managers, read-aloud TTS62. | **Implement:**
+Minimal header/footer during form flows (VA.gov pattern)4; 1-second debounced **Autosave**
+(IndexedDB \+ server)4; **WCAG 3.3.8** passwordless/magic-link/Fayda OTP login64; concrete
+format examples34. **Avoid:** Timed sessions without extension (2.2.1/2.2.6); disabled buttons
+that don't explain what is missing46. | Simplifying underlying government statutory eligibility
+rules. |
+| **8\. Intellectual Disabilities** *(Developmental delays, IQ \< 70, non-automatized decoding,
+difficulty with inferential comprehension)* | **Barriers:** Abstract metaphors; nested clauses;
+pronoun co-references; numeric calculations; complex date abstractions20. **Excluding
+patterns:** Dense legal consent walls; double negatives; multi-variable matrix tables20. |
+**Effective:** **Easy-to-Read / Easy Language** paired with pictograms, single-proposition
+lines, persistent giant Back button, human helper mode57. **Missing:** Verified Easy-Read
+consent summaries15. **AT:** **Assistive Access**, Easy-Read picture guides, audio read-
+aloud, caregiver support68. | **Implement:** Human-reviewed **Easy-Read mode** (one
+proposition per line, zero pronoun co-references per Fajardo et al., concrete verbs, paired
+illustrations)20; persistent giant Back button (**Assistive Access** pattern)68. **Avoid:** Auto-
+rewriting legal/consent text with unverified LLMs; abstract icons without text labels20. | Legal
+guardianship and supported decision-making frameworks under Ethiopian law. |
+| **9\. Dyslexia & Reading Difficulties** *(Phonological decoding deficits, visual crowding, line-
+skipping)* | **Barriers:** Dense walls of justified text; italic fonts; narrow letter/line spacing; stark
+
+===== PAGE 7 =====
+black-on-white glare50. **Excluding patterns:** Italicized instructions or errors; long lines
+(\>70–80 characters); CSS that locks line-height or letter-spacing35. | **Effective:** Clean sans-
+serif fonts, extra-large letter/word spacing, 18pt size option, warm off-white backgrounds,
+synchronized TTS51. **Missing:** Parameterized spacing controls and reading rulers83. **AT:**
+**Voice Dream Reader**, **EasyReader**, browser TTS, screen tinting/rulers53. |
+**Implement:** Clean sans-serif defaults (Arial, Verdana, Helvetica, Noto Sans Ethiopic) with
+user-adjustable **extra-large letter/word spacing** (Zorzi et al., 2012), **18pt (24px) size
+option**, off-white background, and synchronized TTS highlighting51. **Avoid:** Forcing
+**OpenDyslexic** as default (no empirical speed/accuracy gain and lower preference)51; italic
+fonts (Arial Italic causes worst fixation duration)51. | Remediation of external PDF textbooks or
+third-party job descriptions uploaded as flat images85. |
+| **10\. Limited Digital Literacy** *(First-time smartphone users, rural applicants, older adults
+unfamiliar with web conventions)* | **Barriers:** Hidden hamburger menus; swipe-only gestures;
+borderless inputs; browser Back button anxiety2. **Excluding patterns:** Floating labels;
+borderless flat boxes; auto-advancing split inputs; complex multi-step progress bars that look
+like tabs18. | **Effective:** High-contrast bordered inputs, explicit Back link \+ Continue button,
+4-key audio navigation (**SENEthiopia Talking Textbook** 18-minute onboarding model), in-
+person helper mode2. **Missing:** Familiar physical button affordances and audio
+walkthroughs20. **AT:** **Talking Textbook** tactile audio player, basic smartphones with
+spoken prompts62. | **Implement:** High-contrast 2px solid input borders (\#111111); explicit
+top **Back link** and bottom **Continue button**; conversational question framing; audio prompt
+toggle18. **Avoid:** Tooltips; custom gestures; assuming users understand icons without text
+labels2. | Device access, SIM card ownership, and electrical/solar charging infrastructure63. |
+| **11\. Limited Literacy or Language Proficiency** *(Non-readers in any script; Afaan
+Oromoo/Tigrinya speakers navigating Amharic/English forms)* | **Barriers:** Text-only
+questions; romanized Amharic (mojibake/guessing); bureaucratic vocabulary; lack of native
+language audio27. **Excluding patterns:** Requiring typed essays for skill assessments;
+English-only date/number formats; lack of audio or visual options20. | **Effective:** Native-
+language audio read-aloud (**Addis Voice 2** / pre-recorded Opus in Amharic, Afaan Oromoo,
+Tigrinya), voice input with read-back, symbol selection27. **Missing:** Multi-language Ethiopian
+audio on every option29. **AT:** **Addis AI Voice/Scribe**, **Lesan AI** translation, IVR/audio
+players29. | **Implement:** Full localization in Ge'ez (*fidel*) and Latin scripts; tap-to-hear
+**Addis Voice 2 / Pre-recorded Opus audio** on every question and radio option; voice/symbol
+skill selection27. **Avoid:** Romanizing Amharic text27; requiring long typed text where
+structured checkboxes or audio suffice. | Multilingual human review of non-standardized local
+credentials or oral work histories. |
+| **12\. Users with Multiple Disabilities** *(16.7% of SR users; Deaf-Blind 5.3%; cerebral palsy
+affecting both motor & speech)* | **Barriers:** Single-modality fallbacks fail (e.g., audio
+CAPTCHA fails Deaf-Blind users; voice input fails motor \+ speech impaired users)32.
+**Excluding patterns:** Any gate offering only one alternative; fixed layouts that break when
+400% zoom and screen readers run together32. | **Effective:** Semantic HTML driving
+refreshable Braille (**Orbit Reader 20**) \+ tactile gestures for Deaf-Blind; Switch Access \+
+
+===== PAGE 8 =====
+AAC symbol boards for Motor \+ Speech32. **Missing:** Coexisting accessibility preferences32.
+**AT:** **Orbit Reader 20** Braille display, **BrailleNote Touch**, Switch \+ AAC boards32. |
+**Implement:** Strict semantic HTML (1.3.1 Info and Relationships) which drives Braille displays
+simultaneously with high-contrast large visual layouts; multi-preference coexistence in the
+adaptive engine32. **Avoid:** Mutually exclusive accessibility modes (e.g., turning on "Easy
+Read" disabling screen reader landmarks or keyboard navigation)68. | Specialized hardware
+distribution (Braille displays, custom switches) via OPDs like **ENADB** and **GAT Center**63.
+|
+### **Deep-Dive Analysis by Disability Domain**
+#### **A. Blindness and Low Vision**
+Empirical time-diary research with 100 blind web users by Lazar et al. (2007) found that
+participants lost an average of **30.4% of their total web use time** working around inaccessible
+page layouts, poorly labeled or unlabeled form controls, missing alternative text, and
+compatibility conflicts between screen readers and web applications5. When designing
+OpenPath, engineers must account for how desktop and mobile screen readers actually parse
+and interact with the DOM:
+* **Screen Reader Navigation & Heading Hierarchy:** According to the WebAIM Screen Reader
+User Survey \#10 (2024, n=1,539), **88.8% of respondents find heading levels (\<h1\>–\<h6\>)
+very or somewhat useful**, and **78% of advanced users navigate primarily by headings**
+(compared to 47% of beginners), whereas only **3.7% cite ARIA landmarks as their primary
+method** for finding content (even though 31.7% use landmarks often or always when
+present)42. Therefore, every OpenPath form step must expose a unique, descriptive \<h1\> (or
+\<h3\> inside a step indicator context, per VA.gov guidelines)18. On single-question pages,
+wrapping the \<label\> or \<legend\> directly inside the \<h1\> (\<h1\>\<label for="full-
+name"\>What is your full name?\</label\>\</h1\>) prevents screen readers from redundantly
+announcing the heading and then repeating the identical prompt when the user tabs into the
+input18.
+* **Comparison of NVDA, JAWS, VoiceOver, and TalkBack:**
+* **NVDA (Windows, Open Source)** and **JAWS (Windows, Commercial)** separate reading
+into **Browse / Virtual Buffer Mode** (where single-letter shortcuts like H jump headings and F
+jumps form fields) and **Focus / Forms Mode** (where keystrokes pass directly into the focused
+control)44. When a user presses Tab to move from input to input inside a multi-question form,
+NVDA and JAWS remain in Focus Mode; any standalone explanatory paragraph placed
+
+===== PAGE 9 =====
+between inputs that is not programmatically associated via aria-describedby or
+\<fieldset\>/\<legend\> is skipped during Tab navigation46.
+* **TalkBack (Android)** and **VoiceOver (iOS/macOS)** rely on touchscreen **Explore by
+Touch** (dragging a finger across the screen) and **Linear Swipe Navigation** (swiping right/left
+to step through elements)32. As VA.gov documentation highlights, disabled buttons (disabled
+attribute) can still be encountered and read aloud by mobile screen readers during touch
+exploration without explaining why the button is inactive, leaving users locked out46.
+* **Regional Usage Realities:** While WebAIM notes its survey respondents are self-selected
+rather than a controlled global census40, the regional contrast across Surveys \#10 (2024) and
+\#11 (2026) is striking: JAWS leads in North America (55.5% vs. 24.0% for NVDA in 2024;
+72.5% vs. 15.6% in 2026), whereas free open-source **NVDA dominates in Africa and the
+Middle East (69.9% vs. 23.3% for JAWS in 2024; 83.0% vs. 13.6% in 2026\)** and Asia (70.8%
+in 2024; 77.4% in 2026\)40. Moreover, VoiceOver on desktop was used by only **5.7% of
+respondents with disabilities in 2026** (8.2% in 2024\) compared to **21.7% of respondents
+without disabilities** (23.7% in 2024), and respondents without disabilities were over four times
+more likely to use macOS than respondents with disabilities40. Testing OpenPath exclusively
+with macOS VoiceOver would miss critical behaviors affecting Windows users on NVDA/JAWS
+with Chrome, Edge, or Firefox (which accounted for 90.7% of primary desktop OS usage in
+2026\) and Android users on TalkBack with Chrome8.
+* **Focus Management, Live Regions, and Conditional Reveals:**
+* When transitioning between steps in a multi-step flow, keyboard focus must move
+programmatically to the new step's unique heading (tabindex="-1") so screen readers announce
+the new step context immediately34.
+* When validation fails on submit, OpenPath must render an **Error Summary** at the top of
+\<main\>, prepend "Error: " to \<title\>, and shift keyboard focus directly to the Error Summary
+container66.
+* **The Conditional Reveal Problem (Evidence from GOV.UK Frontend):** A common pattern
+in government forms is revealing a conditional input when a user selects a radio button (e.g.,
+selecting "Phone" reveals a "Phone number" field) by placing aria-controls and aria-expanded
+on \<input type="radio"\>8. Investigation of alphagov/govuk-frontend Issues \#979, \#1972, and
+\#6010 demonstrates that aria-expanded is **not permitted on the radio role** by the WAI-ARIA
+specification (triggering an aria-allowed-attr error in axe-core 4.13.0), and 2026 contributor tests
+across **JAWS 2026.2603.86 (Chrome 155), NVDA 2026.1.1 (Firefox 157), VoiceOver (Safari
+on macOS 26.6 and iOS 26.0), and TalkBack (Chrome 154 on Android 17\)** confirmed that
+**none of these screen-reader/browser combinations announced expanded or collapsed states
+on GOV.UK radio buttons**8. Earlier tests in Issue \#1972 also showed TalkBack announcing
+*"Double tap to collapse"* on a checked radio button—which fails because a user cannot
+deselect a radio button by double-tapping48. Furthermore, Issue \#6010 documented that
+revealing a nested radio group inside a conditional radio option caused Up/Down arrow keys to
+jump across both radio groups and dynamically altered the announced item count from *"1 of
+
+===== PAGE 10 =====
+3"* to *"1 of 6"*91. **Engineering Solution for OpenPath:** Never put aria-expanded on \<input
+type="radio"\>. Use aria-controls (which ARIA 1.3 notes is sufficient to indicate that checking a
+radio reveals additional controls8) only when revealing a single simple input placed immediately
+next in the tab order, and route any multi-field or nested-radio branch to a **separate follow-up
+Question Page**8.
+* **Accessible Autocomplete Debouncing:** In alphagov/accessible-autocomplete, announcing
+filtered suggestion counts on every keystroke causes the aria-live region to read outdated
+counts and talk over the user's typing65. OpenPath should adopt GOV.UK's **1,400-millisecond
+debounce** after the last keystroke before updating its status region (with progressive
+enhancement for ariaNotify where supported)65.
+* **Accessible Document Capture & OCR:** Uploading identity or educational certificates is a
+major hurdle for blind users. Studying **Microsoft Seeing AI** (created with blind Microsoft
+engineer Saqib Shaikh) and **Google Lookout** (available on Android 6+ devices with 2 GB+
+RAM and deeply integrated with TalkBack) demonstrates the solution: during document capture,
+the interface provides real-time spoken positioning feedback (*"Move top left… hold steady…
+capturing"*) before running OCR and reading the extracted text aloud43.
+* **Low Vision, Magnification, and Reflow:** Low-vision users require strict adherence to
+**WCAG 1.4.10 Reflow** (single-column layout at 320 CSS px width without horizontal
+scrolling), **1.4.11 Non-text Contrast** (at least 3:1 contrast for input borders and focus
+indicators), and **2.4.11 Focus Not Obscured (Minimum)** (applying CSS scroll-margin so
+sticky headers or footers never cover focused elements)36. On desktop "Check Your Answers"
+pages, GOV.UK recommends a two-thirds screen width layout for short answers so "Change"
+action links stay close to their data values inside a screen magnifier's viewport35.
+#### **B. Deafness and Hearing Loss**
+In Ethiopia, roughly up to **1 million people live with hearing impairments** (Wakuma, 2015,
+cited in Ayalew, 2022\)98, represented nationally by the **Ethiopian National Association of the
+Deaf (ENAD)**90.
+* **Why Captions Are Not a Complete Substitute for Sign Language:** Developers frequently
+assume that text captions or written instructions make an interface fully accessible to Deaf
+users. Empirical research demonstrates why this assumption fails. **Ethiopian Sign Language
+(EthSL)** is a natural visual-manual-gestural language with its own grammatical structures
+(incorporating hand shape, movement, location, palm orientation, and facial expressions) and a
+**34-handshape manual alphabet representing the Ge'ez alphabet**16. Studies of Deaf
+education across Ethiopian towns (Jimma, Nekemte, Addis Ababa, Hawasa, and North Showa
+Zone primary schools) document that Special Needs Education (SNE) units often lack EthSL
+
+===== PAGE 11 =====
+textbooks and trained sign linguists, relying instead on Signed Amharic or spoken local
+languages, which leaves many pre-lingually Deaf students with barriers in reading written
+Amharic or English58. Furthermore, empirical studies of Deaf and hard-of-hearing students in
+online learning found that presenting procedural tutorials in **sign language (or sign language
+combined with captioning)** significantly improved content comprehension (p \< 0.05) compared
+to other methods, and noted that non-syntactically segmented subtitles increase cognitive
+load70.
+* **Realistic Incorporation of EthSL into OpenPath:** While real-time 3D avatar generation for
+EthSL is not yet production-ready for low-end mobile browsers (current Ethiopian computer-
+vision research focuses on recognizing static Amharic alphabet signs via SVM/ANN or skeleton-
+based EthSL recognition via MediaPipe Holistic58), OpenPath can realistically incorporate
+EthSL through three practical mechanisms:
+1. **Schema-Level Sign-Language Video Hooks (ethslVideoUrl):** Because core registration
+prompts (*"Enter your full name"*, *"What is your date of birth?"*, *"Do you have a Fayda ID?"*,
+*"Consent to share information"*) are finite and standardized, OpenPath's form schema can
+attach short, pre-compressed WebM/MP4 video clips of a human EthSL interpreter signing each
+question, toggleable via a Sign Language button next to the question heading.
+2. **Linking to the AAU Digital EthSL Dictionary:** Launched in December 2023 by Addis
+Ababa University with U.S. government support (https\://ethsl.aau.edu.et), this free online and
+offline-downloadable PDF dictionary provides standardized EthSL signs that OpenPath can
+integrate for key onboarding and employment terms71.
+3. **Text/Video Relay Support & Non-Voice Authentication:** OpenPath must never require
+voice phone calls for OTP verification or customer assistance; all notifications must pair visual
+banners with vibration alerts, and human support escalation must offer text chat or video relay
+with EthSL interpreters trained through programs like AAU's B.A. in Ethiopian Sign Language
+and Deaf Culture64.
+#### **C. Motor Disabilities and Limited Dexterity**
+Users with motor impairments—such as hand tremors, cerebral palsy, ALS, or spinal cord
+injuries—navigate forms via full keyboard, single/dual **Switch Access**, **Voice Control / Voice
+Access**, or one-handed thumb touch on mobile devices37.
+* **Target Size Evidence (Parhi et al., 2006 & Motor-Impaired Studies vs. WCAG 2.5.8):** While
+**WCAG 2.2 SC 2.5.8 Target Size (Minimum) (Level AA)** requires interactive targets to be at
+least **24×24 CSS pixels** (or have a 24 px spacing circle)36, empirical mobile HCI research
+shows that larger targets are vital for thumb and motor-impaired accuracy. Parhi, Karlson, and
+
+===== PAGE 12 =====
+Bederson (2006) found that one-handed thumb use on small touchscreens requires **9.2 mm to
+9.6 mm** targets to avoid degrading performance and preference39. Extending this to **motor-
+impaired touchscreen users**, empirical evaluation across 7 mm, 12 mm, and 17 mm targets
+found a statistically significant effect of target size on task errors (F(1,42) \= 6.56, p \< 0.01),
+identifying **12 mm (\~45–48 CSS pixels)** as the optimal design commitment and revealing
+significantly higher error rates in top screen targets compared to bottom targets (p \< 0.05)39.
+OpenPath should therefore enforce a **minimum 48×48 CSS pixel touch target** with generous
+spacing between controls (aligning with Apple/Google mobile guidelines and WCAG 2.5.5 Level
+AAA), preventing a user with hand tremors on a bumpy bus from accidentally hitting "Cancel"
+instead of "Submit"36.
+* **Eliminating Dragging and Redundant Entry:** Per **WCAG 2.2 SC 2.5.7 Dragging
+Movements**, every drag action must have a single-pointer alternative: file uploads need a
+click/tap "Browse / Choose file" button, sortable lists need explicit Up and Down arrow buttons,
+and range sliders should be avoided or paired with button steppers18. Per **WCAG 2.2 SC
+3.3.7 Redundant Entry**, information entered in an earlier step must auto-populate or offer a
+single-tap reuse checkbox64.
+* **Voice Control & Switch Compatibility:** Voice Control users activate controls by speaking
+their visible labels. To satisfy **WCAG 2.5.3 Label in Name**, the programmatic accessible
+name (\<label\> or aria-label) must contain the exact visible text string1. For Switch Access
+users, keeping pages uncluttered via VA.gov's minimal header/footer pattern reduces sequential
+scanning steps4.
+#### **D. Speech Disabilities**
+Users with cerebral palsy, ALS, stroke-related speech differences, dysarthria, or severe
+stuttering are excluded whenever an application requires spoken commands or telephone
+verification20.
+* **Lessons from Cboard and AAC Systems:** Our investigation of **Cboard** (cboard-
+org/cboard, an open-source React browser AAC system backed by the UNICEF Innovation
+Fund) alongside **TD Snap**, **Speech Assistant AAC**, and **CoughDrop** illustrates how
+Augmentative and Alternative Communication (AAC) supports non-speaking users19. Cboard
+displays navigable boards of pictographic symbols (such as **ARASAAC** and **Mulberry**
+symbols using the **Open Board Format**) that users tap to build phrases and optionally speak
+aloud via TTS19.
+* **Completing Registration Without Speaking or Typing Long Responses:** When an
+employment or learner onboarding form asks open-ended questions (e.g., *"Describe your past
+work experience and any workplace accommodations you need"*), users who have combined
+
+===== PAGE 13 =====
+speech and motor disabilities cannot easily dictate via voice or type long paragraphs62.
+OpenPath addresses this through an **Alternative Response Composer
+(\<AlternativeResponseComposer /\>)**: alongside any \<Textarea /\>, users can switch to a
+structured **Symbol & Phrase-Bank Selector** where tapping visual category tiles (e.g.,
+\[ Tailoring & Garments \] \+ \[ 3+ Years Experience \] \+ \[ Prefers Text Communication \] \+
+\[ Flexible Break Schedule \]) composes a structured bilingual response in Amharic and English
+without requiring speech or extended typing19.
+#### **E. Cognitive Disabilities, Intellectual Disabilities, and Learning Difficulties**
+Cognitive and learning disabilities span conditions affecting memory, attention, executive
+function, language processing, and intellectual development (where intellectual disability is
+clinically characterized by standardized IQ scores below 70 alongside adaptive behavior
+limitations and non-automatized reading decoding)2.
+* **Distinguishing Simplified Presentation, Plain Language, Easy-to-Read, and Easy
+Language:**
+OpenPath's architecture distinguishes four complementary approaches documented in the
+research literature:
+1. **Simplified Presentation (Interface Streamlining):** Reducing extraneous visual clutter while
+preserving core functionality. Exemplary implementations include **VA.gov's Minimal Form-Step
+Template** (which replaces the full site header and footer with minimal chrome during form
+steps)4 and **Apple's Assistive Access** (introduced in iOS 17 and updated through iOS 26,
+which offers distilled high-contrast Grid or Row layouts, customizable essential actions, and a
+prominent, consistent Back button)68.
+2. **Plain Language (General Usability Standard):** Writing clear, succinct, active-voice text
+with familiar words and descriptive headings, as mandated by GOV.UK, NHS.UK, VA.gov, and
+**W3C COGA Objective 3**20.
+3. **Easy-to-Read / Easy Read (Adapted Content with Visual Scaffolding):** A method
+evaluated empirically by Karreman, van der Geest, and Buursink (2007) and Hurtado et al.
+(2014) that adapts web content into short, concrete text blocks paired with supporting pictures
+or symbols to improve comprehension for people with intellectual disabilities38.
+4. **Easy Language (*Leichte Sprache* / *selkokieli*, Bredel & Maaß; Hansen-Schirra & Maaß,
+2020):** A systematically rule-governed, modified variety of a natural language simplified across
+vocabulary, syntax, and text structure79. Crucially, an empirical multiple-regression study of
+students with intellectual disabilities by **Fajardo et al.** (57) found that **the number of co-
+references (pronouns or terms referring back to earlier entities) accounted for 14% of the
+
+===== PAGE 14 =====
+variance in literal reading comprehension (Adjusted R² \= 0.14, p \< 0.01, negative Beta)**, while
+**the number of propositions in a text negatively predicted inferential comprehension (p \<
+0.01)**57. Accordingly, Easy Language rules require stating one proposition per sentence,
+repeating explicit nouns instead of using pronouns, avoiding double negatives or nested
+clauses, and using literal language20.
+* **Why Important Legal, Identity, or Consent Instructions Must Not Be Automatically Rewritten
+Without Human Review:** While recent research explores Automatic Text Adaptation (ATA)78,
+general-purpose language models frequently misinterpret or hallucinate meaning in
+morphologically complex languages like Amharic—where verbs fuse subject, object, and tense
+into single words82. Automatically rewriting legal declarations, identity requirements, or privacy
+consent clauses with an unverified LLM could alter legal rights or mislead applicants. In
+OpenPath, all Easy-Read and Easy-Language adaptations for consent and identity prompts
+must be **authored and reviewed by human specialists and local OPDs (such as ENAID)** and
+stored deterministically in the form schema15.
+* **Accessible Authentication (WCAG 2.2 SC 3.3.8):** Remembering passwords, transcribing
+text CAPTCHAs, or solving puzzles are "cognitive function tests" restricted under WCAG 2.2
+Level AA64. OpenPath must support password managers (autocomplete="current-password"),
+copy-paste into verification fields, email/SMS one-time codes or magic links, device biometrics
+(fingerprint/face unlock), and **Fayda eSignet** authentication20.
+#### **F. Dyslexia and Reading Difficulties**
+Around 10% of people globally experience dyslexia, which affects reading accuracy, speed, and
+word decoding55. However, popular web widgets often emphasize specialized "dyslexia fonts"
+over typographic parameters that have stronger empirical backing.
+![][image2]
+* **Evidence-Supported Interventions vs. Popular Unsubstantiated Claims:**
+* **Evaluating Specialty Dyslexia Fonts (OpenDyslexic and Dyslexie):** In the eye-tracking
+study *"Good Fonts for Dyslexia"* (ASSETS 2013, n=48 participants with dyslexia ages 11–50
+reading 12 texts across 12 fonts), Rello and Baeza-Yates found that **OpenDyslexic (23.81 s
+median / 29.17 ± 15.79 s mean) did not lead to any statistically significant improvement in
+reading time over standard sans-serif fonts such as Arial (24.22 s median / 28.35 ± 12.39 s
+mean) or Helvetica**50. Furthermore, in pairwise preference comparisons, participants
+**significantly preferred Verdana (p \= 0.002) and Helvetica (p \= 0.020) over OpenDyslexic**,
+and preferred Arial over OpenDyslexic Italic (p \= 0.050)51. A subsequent controlled study with
+dyslexic elementary students by **Wery and Diliberto (2016/2017, *Annals of Dyslexia*, 67(2),
+
+===== PAGE 15 =====
+114–127)** confirmed that OpenDyslexic yielded **no improvement in reading rate or
+accuracy**, and no students preferred it52. Studies on the commercial **Dyslexie** font similarly
+concluded that it *"neither benefits nor impedes the reading process of children with and without
+dyslexia"*55. OpenPath can offer OpenDyslexic as an *optional user toggle* for English text
+(under its free SIL Open Font License), but must use clean sans-serif fonts (Arial, Verdana,
+Helvetica, and Noto Sans Ethiopic for Ge'ez) as the default50.
+* **Interventions Backed by Empirical Evidence:**
+1. **Eliminating Italic Styles:** Rello and Baeza-Yates (2013) demonstrated that sans-serif,
+monospaced, and roman font styles significantly improved reading performance over serif,
+proportional, and italic fonts, with Arial Italic producing the longest reading time and highest
+fixation duration (p \< 0.001 vs. Courier, Helvetica, and Arial)50. OpenPath should avoid italic
+styles across all form labels, hints, and error messages.
+2. **Extra-Large Letter, Word, and Line Spacing:** **Zorzi et al. (2012, *PNAS*)**
+demonstrated in a large sample of Italian and French dyslexic children that **extra-large letter
+spacing** substantially improved reading performance on the fly without prior training55.
+Combined with **WCAG 1.4.12 Text Spacing**, OpenPath should provide adjustable letter
+spacing (\>= 0.12em), word spacing (\>= 0.16em), line height (\>= 1.5 to 1.8), and paragraph
+spacing (\>= 2em)53.
+3. **18-Point Font Size & Constrained Line Width:** Eye-tracking research by Rello, Pielot,
+Marcos, and Carlini (*"Size matters (spacing not): 18 points for a dyslexic-friendly Wikipedia"*)
+recommends an **18-point (24 CSS px)** font size for web text designed for readers with
+dyslexia55, paired with constrained line widths (such as GOV.UK's two-thirds screen width
+layout35) and short, chunked paragraphs with bulleted lists53.
+4. **Customizable Background Tint, Reading Rulers, and Text-to-Speech:** Providing an off-
+white/warm background option, an optional horizontal **Reading Ruler** guide bar, and
+synchronized **Text-to-Speech (TTS)** supports readers who experience visual fatigue or
+phonological decoding barriers52.
+## **Deliverable C: Best Practices for Accessible Onboarding and Form UX**
+Designing an accessible registration or employment application workflow requires treating the
+form as a structured, supportive conversation from start page to confirmation49. Drawing on the
+**GOV.UK**, **NHS.UK**, **VA.gov**, **USWDS**, and **UK Home Office** design systems,
+below are the evidence-based answers to all fifteen architectural questions:
+### **1\. When to Use One Question Per Page vs. Multiple Questions Per Page**
+
+===== PAGE 16 =====
+* **When to Use One Question Per Page ("One Thing Per Page"):** Recommended by
+GOV.UK, NHS.UK, and VA.gov as the default starting point for form design18. It is most
+effective when: (a) a question requires supporting context or sensitive consideration; (b) the
+answer acts as a filter question that routes users away from irrelevant branches18; (c) users
+have cognitive disabilities, limited digital literacy, or use screen magnification/switch access
+(reducing cognitive load to a single decision)18; or (d) validation is complex, allowing users to
+handle errors for one thing at a time69. On single-question pages, setting the \<label\> or
+\<legend\> inside the page \<h1\> ensures screen readers read the question only once18. (If a
+complex question needs a multi-paragraph explanation first, use a statement \<h1\> like
+*"Interview needs"*, place the explanation below it, and then put the specific question inside the
+\<label\> or \<legend\> above the input18).
+* **When Multiple Questions Should Appear on One Page:** One-question-per-page is not
+always optimal. Splitting tightly coupled micro-fields across separate pages increases page-load
+latency on slow mobile networks and forces repetitive "Continue" clicks. Per GOV.UK Question
+Pages guidance, multiple questions should be grouped on a single page when they are closely
+related parts of a single mental concept (e.g., entering "Passport number" and "Expiry date"
+under a main \<h1\> of *"Passport details"* with styled sub-labels)18. In Ethiopia, this applies
+directly to:
+* **Ethiopian Full Name:** Given Name (ስም) \+ Father's Name (የአባት ስም) \+ Grandfather's
+Name (የአያት ስም)12.
+* **Ethiopian Administrative Address:** Region/City Admin \+ Zone/Sub-City \+ Woreda \+
+Kebele12.
+* **OpenPath's Adaptive Pacing Architecture:** OpenPath structures schemas into Chapters \-\>
+QuestionSteps \-\> Fields. By default, each step renders either a single question or a tightly
+coupled \<FieldGroup /\>. However, if a user enables **"Step-by-Step Focus Mode"** in the
+adaptive bar, OpenPath decomposes multi-field groups into single-input screens; conversely,
+desktop keyboard users can toggle **"Compact Section View"**2.
+### **2\. Question Protocols and Dividing Long Forms into Sections**
+Before building any form, teams should execute the **NHS.UK "Question Protocol"**33: list
+every proposed field and verify (1) that the information is genuinely needed right now to deliver
+the service, (2) why it is needed and who uses it, (3) how accuracy will be checked, and (4)
+what happens if a user cannot provide an answer (such as removing unnecessary signature
+demands or providing an *"I do not know / I'm not sure"* option)18. Necessary questions should
+be ordered logically—starting with essential filter/identity questions and placing optional
+
+===== PAGE 17 =====
+questions later—and divided into clear **Chapters** (e.g., *1\. Personal Details*, *2\. Contact &
+Location*, *3\. Education & Skills*, *4\. Workplace Accommodations*, *5\. Review & Submit*)33.
+### **3\. Backward/Forward Navigation and Communicating Progress**
+* **Navigation Controls:** Always include an explicit **Back link** at the top of the question page
+(or a Back / Continue button pair at the bottom, per VA.gov) because many users do not trust
+browser back buttons18. Never break native browser Back navigation; returning to a previous
+page must restore the user's previous answers in the exact state they left them18. The primary
+button must be explicitly labeled **Continue** (not *"Next"*), left-aligned so screen-magnifier
+users do not miss it, and **never disabled (disabled attribute prohibited)**18.
+* **Communicating Progress:** GOV.UK warns against complex multi-step progress bars that
+list every individual question or allow random jumping across conditional steps18. Instead,
+combine VA.gov's **Segmented Chapter Progress Bar** (which announces step and chapter
+changes to screen readers) with a simple caption (Question 2 of 4 or Step 2 of 4: Contact
+Information)18.
+### **4\. Conditional Questions (Branching Logic)**
+OpenPath distinguishes two branching patterns based on empirical screen-reader findings:
+> 1. **Inline Single-Field Conditional Reveal:** Used *only* when selecting a radio or checkbox
+option reveals a single simple input (e.g., selecting *"Phone"* reveals *"Phone number"*).
+Connect the radio input to the revealed container using aria-controls (per ARIA 1.3), and **do
+not use aria-expanded on \<input type="radio"\>**8.
+> 2. **Filter-Question Step Routing:** Whenever a choice requires asking multiple follow-up
+questions or another radio group, use a **filter question page** (69) that routes the user to a
+separate Question Page upon pressing Continue, avoiding the nested-radio keyboard and
+screen-reader bugs documented in GOV.UK Issue \#601091.
+### **5\. Saving Progress, Resuming Interrupted Registration, and Offline Completion**
+
+===== PAGE 18 =====
+Adapting **VA.gov's SaveInProgress (Autosave) architecture** (4) for low-bandwidth Ethiopian
+environments:
+* **1-Second Debounced Dual-Layer Autosave:** Whenever a user modifies a field, OpenPath
+saves their progress and current step ID **1 second after their last change**, and also saves
+immediately if they select *"Finish this application later"*4. To support unauthenticated and
+offline users in Ethiopia, OpenPath writes first to client-side **IndexedDB** (functioning 100%
+offline) and syncs to the server when online.
+* **Screen-Reader-Friendly Autosave Status:** Following VA.gov's \<Autosave /\> component,
+display an initial notice on the first question page (*"We'll save your application on every
+change"*) and render a non-intrusive status alert showing the last saved date and time4.
+* **Safe Session Resumption (normalizeReturnUrl):** When a user resumes an interrupted
+form, OpenPath returns them to the last step where a change was saved. If an earlier change
+caused the previously saved step to become hidden by conditional logic, normalizeReturnUrl
+redirects the user to the first applicable step so they are never stranded on an orphaned page4.
+### **6\. Validation, Error Summaries, and Review ("Check Your Answers")**
+* **Validation Timing:** Validate required fields when the user activates **Continue** (step-level
+validation) and perform final validation on the review page before submission—never fire
+aggressive required-field errors while the user is still typing34.
+* **Error Summary \+ Inline Error Architecture:** Whenever validation fails (even for a single
+error), GOV.UK and NHS.UK mandate:
+1. Never clear the user's entered form values (34).
+2. Prepend "Error: " to the page \<title\> so screen readers announce the error state
+immediately on page update95.
+3. Render an **\<ErrorSummary /\>** at the top of \<main\> with heading "There is a problem"
+and move keyboard focus directly to it66.
+4. Link every item in the Error Summary directly to the input with the error (or the first
+erroneous field inside a multi-field Date Input) using the **exact same wording** as the inline
+\<FieldError /\> placed after the question/hint text and connected via a red left border66.
+5. Use concise, specific, positive phrasing incorporating the field's label: *"First name must be
+35 characters or less"* or *"Date of birth must be in the past"* rather than *"Invalid input"*34.
+
+===== PAGE 19 =====
+* **Flexible Input Validation (W3C COGA 4.5.8):** Accept common format variations
+automatically (e.g., spaces or hyphens in phone numbers, caseless matching, and Ge'ez
+homophone folding in autocomplete)20.
+* **Check-Your-Answers Review Page:** At the end of the flow, present a **Check Answers /
+Review page** built with a semantic HTML description list (\<dl\>, \<dt\>, \<dd\>) divided into
+chapter sections35. Only display sections relevant to the user's path, show skipped optional
+fields as "Not provided", and provide a "Change" link on every row with visually hidden context
+(Change \<span class="sr-only"\>date of birth\</span\>)35. When a user clicks "Change", pre-
+populate their previous answer and return them **directly to the Check Answers page** upon
+pressing Continue (unless their edit triggers new conditional questions)35.
+### **7\. Optional vs. Required Fields, Instructions, Mobile Behavior, Personal Data Purpose,
+and Consent**
+* **Optional vs. Required:** Never mark required fields with asterisks (\*). Only ask essential
+questions, and mark any optional field by appending (optional) to its \<label\> or \<legend\>18.
+* **Presenting Instructions & Hint Text:** Keep aria-describedby hint text to a single short
+sentence without line breaks, full stops, or hyperlinks (because screen readers read the entire
+hint aloud on input focus and do not reliably announce clickable links inside aria-describedby)4.
+Never use hover tooltips69. Place longer explanations or bulleted lists above the question
+label18.
+* **Explaining Why Personal Information Is Requested & Accessible Consent:** Per NHS.UK
+guidance and the World Bank ID4D study on Ethiopia's Fayda ID rollout (15), answer users'
+questions in context (*"Why do you want this information?"*, *"What will you do with personal
+information?"*, *"What are the consequences of making one choice over another?"*) in local
+languages15. Present final declarations and privacy agreements using clear, plain-language /
+Easy-Read summaries on the review step before the explicit submit button (e.g., *"Submit
+application"*)35.
+## **Deliverable D: Platform, Design-System, and Empirical Study Comparison**
+To ground OpenPath in real-world engineering, we examined **5 major accessible design
+systems**, **13 established accessibility platforms, assistive technologies, and headless React
+libraries**, and **6 empirical research studies involving disabled users**.
+
+===== PAGE 20 =====
+### **1\. Major Accessible Design Systems Comparison Matrix**
+| Design System | Core Architecture & Repo | Keyboard & Screen Reader Strengths | Form &
+Onboarding Patterns | Mobile & Low-Bandwidth Behavior | What They Do Poorly or Omit | Ideas
+OpenPath Should Adopt & Improve |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **1\. GOV.UK Design System** *(UK Government Digital Service)* | Server-first
+HTML/Nunjucks macros \+ progressive enhancement JS (alphagov/govuk-frontend, MIT
+License)8. | \<H1\>\<label\> single-question pattern; top \<ErrorSummary\> auto-focus; \<dl\>
+Summary List with visuallyHiddenText on Change links; 1,400 ms debounced accessible-
+autocomplete18. | Question pages; Check Answers; Memorable 3-field Date Input; Task List;
+Exit This Page35. | Lightweight HTML/CSS; works when JS fails; high-contrast focus ring36. |
+Conditional radio reveals use invalid aria-expanded on \<input type="radio"\>, failing to
+announce in 2026 NVDA/JAWS/VoiceOver/TalkBack8; no native React package. | **Adopt:**
+Error Summary, 3-field Date Input, \<dl\> Check Answers, 1,400 ms autocomplete debounce.
+**Improve:** Replace invalid aria-expanded radio reveals with aria-controls \+ step routing8. |
+| **2\. NHS.UK Design System** *(UK National Health Service)* | Adapted from GOV.UK
+Frontend (nhsuk/nhsuk-frontend, MIT License) for health and vulnerable users86. | Prepends
+"Error: " to \<title\>; explicit rule against clearing invalid inputs; bans tooltips67. | **Question
+Protocol** methodology; sensitive question framing; filter questions; summary lists33. | High
+legibility spacing, large touch targets, progressive enhancement. | Lacks built-in client-side
+offline autosave or multimodal audio/symbol response composition. | **Adopt:** Question
+Protocol governance, "Error: " page title prefix, in-context *"Why we ask this"* patterns33. |
+| **3\. VA.gov Design System** *(U.S. Dept. of Veterans Affairs)* | React form engine
+(RoutedSavableApp) \+ Web Components (design.va.gov, Public Domain)4. | Explicit focus
+management rules (\<h1\>/\<h3\> focus on step change); strict ban on disabled submit buttons;
+screen reader announcement guidelines34. | **Minimal Form-Step Header/Footer**; **1-second
+Autosave (SaveInProgress)** with normalizeReturnUrl; Accordion Review Page4. | Strong
+mobile responsiveness, though React bundle is heavier than GOV.UK. | Autosave requires an
+authenticated session (does not save unauthenticated offline drafts to IndexedDB if session
+ends before save)4. | **Adopt:** Minimal step chrome, ban on disabled buttons, 1-second
+autosave \+ normalizeReturnUrl. **Improve:** Extend autosave to unauthenticated offline
+IndexedDB4. |
+| **4\. US Web Design System (USWDS)** *(U.S. General Services Administration)* | Modular
+Sass/JS progressive enhancement (designsystem.digital.gov, Public Domain)120. |
+**Accessible File Input** (usa-file-input) confirms file count and filenames to screen readers
+(uswds\#4415) and sanitizes XSS (uswds\#4329)121. | Memorable Date; Combo Box; File Input
+with single-pointer \+ drag-and-drop; Character Count120. | Progressive enhancement falls back
+to native \<input type="file"\> if JS fails121. | Lacks built-in cognitive Easy-Read toggle or
+
+===== PAGE 21 =====
+Ethiopian calendar/address patterns. | **Adopt:** USWDS File Input progressive enhancement,
+screen reader file confirmation, and XSS sanitization121. |
+| **5\. UK Home Office Design System** *(UK Home Office)* | Extends GOV.UK for immigration,
+visas, and identity workflows (design.homeoffice.gov.uk)87. | Strong
+Perceivable/Understandable standards for multilingual and stressed applicants87. | Repeatable
+content patterns for **designing for users with limited English**, readability, and inclusive
+language87. | Low-bandwidth HTML first. | Lacks low-resource African language TTS/ASR or
+offline witness-attestation workflows. | **Adopt:** Content patterns for users with limited second-
+language proficiency and non-standard identity evidence15. |
+### **2\. Reverse-Engineering Analysis of 13 Accessibility Platforms, Assistive Tools, and
+Libraries**
+| Platform / Product | Category & License | Core Technical Mechanism & Strengths | Limitations
+& Gaps in the Ethiopian Context | What OpenPath Should Adopt or Integrate |
+| :---- | :---- | :---- | :---- | :---- |
+| **1\. Microsoft Seeing AI** | Visual Assistant App (iOS & Android, Free, Proprietary)96. | Multi-
+channel camera AI (Short Text, Document, Currency, Scene, Color, Light tone) created with
+blind engineer Saqib Shaikh; guides document scanning with spoken cues43. (Note: older
+guides list iOS-only, while recent reviews confirm iOS & Android availability43). | Standalone
+native app rather than an embeddable web form component; lacks verified Amharic (*fidel*)
+form autofill. | **Adopt interaction pattern:** Audio-guided camera framing (*"Hold steady, move
+left"*) inside OpenPath's \<DocumentCaptureAssistant /\>43. |
+| **2\. Google Lookout** | Visual Assistant App (Android 6+, 2 GB+ RAM recommended,
+Free)43. | Deeply integrated with Android **TalkBack**; 7 modes (Text, Documents, Images,
+Currency, Explore, Find); basic text recognition works **offline**; 30+ languages; speaks
+framing instructions (*"Move top left… hold still"*)43. | Android-only; Find mode restricted to
+preset objects; does not inject extracted fields directly into web forms123. | **Adopt:** Design
+OpenPath's Android mobile web workflows to emulate Lookout's spoken document framing
+cues and coexist cleanly with TalkBack43. |
+| **3\. Be My Eyes & Be My AI** | Volunteer \+ AI Visual Assistance (iOS 15+ & Android,
+Free)96. | Connects 1M+ blind/low-vision users with 10M+ sighted volunteers across 150
+countries and 180+ languages via anonymous live video \+ **Be My AI** photo Q\&A in 36
+languages96. | Sharing National IDs, financial receipts, or sensitive personal forms with
+anonymous volunteers poses privacy risks32. | **Innovate beyond:** Build a privacy-preserving,
+scoped \<HumanHelpRequest /\> & Assisted Co-Completion mode for trusted OPD/family
+helpers15. |
+
+===== PAGE 22 =====
+| **4\. Aira (with Aira Verify)** | Professional Visual Interpreter Service (iOS/Android, Free AI \+
+Paid Human Plans)32. | Trained professional visual interpreters \+ **Aira Verify** hybrid system
+where human agents confirm or correct AI responses for high-stakes tasks32. | Paid human
+plans (\~\$99/month) are unaffordable for most Ethiopian job seekers; live video requires stable
+bandwidth32. | **Adopt hybrid verification concept:** Never trust raw AI (ASR/OCR) blindly; use
+\<AnswerConfirmation /\> ("Verify Mode") before committing data32. |
+| **5\. Apple Assistive Access** | OS-Level Cognitive Accessibility Mode (iOS 17–26,
+Proprietary)68. | Streamlines iOS for people with cognitive disabilities; replaces dense chrome
+with high-contrast **Rows or Grid** layouts, large text/buttons, caregiver passcode protection,
+and a prominent Back button while working alongside VoiceOver, Switch Control, and Voice
+Control68. | iOS-only (expensive hardware with low market share among low-income Ethiopian
+learners)41. | **Adopt directly for Web/Android:** Build an "Assistive Access / Easy-Read Mode"
+into OpenPath's Adaptive Engine with large row cards and a persistent bottom Back button68. |
+| **6\. Cboard (cboard-org/cboard)** | Browser AAC Symbol Platform (React Web App, Open
+Source)19. | Graduated from the UNICEF Innovation Fund after 3 field-tested iterations; uses
+symbol boards (**ARASAAC / Mulberry** / **Open Board Format**) with browser/cloud TTS so
+users with speech/motor disabilities can communicate via taps19. | Built for general daily
+conversation boards rather than structured registration or job-application inputs. | **Adapt
+architecture:** Embed an OBF-compatible \<SymbolBasedResponse /\> &
+\<AlternativeResponseComposer /\> widget inside OpenPath for non-speaking and low-literacy
+users19. |
+| **7\. SENEthiopia Talking Textbook & Orbit Reader 20** | Local Ethiopian Assistive
+Technology Program (Non-profit)63. | **Talking Textbook:** Solar-powered digital audio learning
+device navigated by chapter/section via a tactile keypad (blind Ethiopian students learn to
+navigate all subjects in **18 minutes** on average). **Orbit Reader 20:** Portable 20-cell
+refreshable Braille display (Bluetooth/USB)63. | Dedicated hardware devices rather than a web
+form platform. | **Adopt mental model:** Emulate the Talking Textbook's predictable 4-key audio
+navigation (Next, Previous, Repeat Prompt, Select) in OpenPath's \<KeyboardAssistance /\>
+controller63. |
+| **8\. NVDA (NV Access)** | Desktop Screen Reader (Windows, Free Open Source)40. |
+**83.0% primary desktop screen reader in Africa/Middle East (2026)** and **69.9% (2024)**;
+compatible with Chrome, Firefox, Edge, and Orbit Reader 20 Braille displays40. | Relies on
+third-party or robotic eSpeak-NG synthesis for Amharic unless paired with external neural
+TTS126. | **Primary desktop QA target:** Optimize all OpenPath HTML/ARIA semantics for
+NVDA \+ Chrome/Firefox and pair with built-in Amharic Read-Aloud8. |
+| **9\. Android TalkBack** | Mobile Screen Reader (Android built-in, Free)43. | Built into Android
+phones across Ethiopia; supports linear swipe and explore-by-touch; integrates directly with
+Google Lookout and Live Transcribe32. | Older Android WebViews lack newer Cross-Root ARIA
+Reflection APIs and struggle with heavy JS bundles24. | **Primary mobile QA target:** Render
+in Light DOM, use native form elements, and keep core JS under 35 KB gzipped24. |
+
+===== PAGE 23 =====
+| **10\. JAWS & VoiceOver** | Commercial Windows SR (JAWS) & Apple OS SR
+(VoiceOver)40. | Leading screen readers in North America (JAWS 72.5% desktop primary share
+in 2026; VoiceOver standard on iOS/macOS)41. | JAWS licenses and Apple devices are cost-
+prohibitive in Ethiopia; VoiceOver desktop usage among disabled respondents is only 5.7%
+(2026)41. | Test for compatibility, but never assume Ethiopian users have JAWS or iPhones41. |
+| **11\. React Aria (react-aria-components)** | Headless React Accessibility Library (Adobe,
+Open Source)17. | Industry-leading WAI-ARIA hooks & components (ComboBox, DateField,
+Dialog, Modal, RadioGroup, FileTrigger, DropZone); handles focus, keyboard, and screen
+reader announcements across platforms21. | Explicit hooks API has a steeper learning curve
+than compound primitives; unstyled by default128. | **Use selectively:** Use React Aria hooks
+(useComboBox, useDialog, useFocusScope) for complex interactive patterns while keeping
+basic inputs as native HTML21. |
+| **12\. Radix Primitives (@radix-ui/react-\*)** | Headless React UI Primitives (Open Source)21. |
+Provides 28+ unstyled compound components (Dialog, Popover, Accordion, Switch) with the
+asChild composition pattern that merges behavior onto native elements without wrapper
+\<div\>s21. | Lacks stable built-in ComboBox, DateField, or FileTrigger primitives compared to
+React Aria21. | **Adopt asChild slot pattern** for clean DOM composition128. |
+| **13\. Deque axe-core & Microsoft Accessibility Insights** | Automated & Guided QA Tooling
+(Open Source)9. | axe-core (3B+ downloads) catches \~57% of WCAG issues automatically
+with zero false positives; **Accessibility Insights** adds **FastPass** (automated checks \+
+visual Tab Stops) and guided manual assessments for web, Windows, and Android9. |
+Automated scans alone cannot verify user comprehension, dynamic screen-reader speech
+output, or Amharic TTS quality8. | Integrate @axe-core/playwright in CI/CD and mandate
+Accessibility Insights FastPass \+ manual NVDA/TalkBack verification on every PR9. |
+### **3\. Synthesis of 6 Empirical Studies Involving Disabled Users**
+> 1. Lazar, Allen, Kleinman, & Malarkey (2007), *International Journal of Human-Computer
+Interaction*, 22(3), 247–269 (5): A time-diary study of **100 blind web users**. Participants
+recorded losing an average of **30.4% of their web use time** due to frustrating barriers—
+primarily confusing page layouts, poorly designed or unlabeled forms, missing alternative text
+on graphics, and conflicts between screen readers and dynamic applications.
+> 2. WebAIM Screen Reader User Surveys \#10 (2024, n=1,539) & \#11 (2026, n=1,780) (40):
+Global surveys of screen reader users showing that **NVDA is the primary desktop screen
+reader for 83.0% of respondents in Africa/Middle East (2026)** (up from 69.9% in 2024),
+**88.8% find heading levels useful for navigation**, **71.6% use more than one desktop screen
+reader**, **58% prefer mobile apps over mobile websites** for common tasks, and **16.7%
+report multiple disabilities** (including 5.3% who are both deaf/hard-of-hearing and blind).
+
+===== PAGE 24 =====
+> 3. Rello & Baeza-Yates (2013, *ASSETS '13*, n=48 dyslexic participants) (50), Wery &
+Diliberto (2016/2017, *Annals of Dyslexia*) (52), & Zorzi et al. (2012, *PNAS*) (55): Controlled
+eye-tracking and reading studies with dyslexic readers. Rello and Baeza-Yates (2013) and Wery
+and Diliberto (2016) found that OpenDyslexic yielded **no statistically significant improvement in
+reading rate or accuracy** over standard sans-serif fonts (Arial, Helvetica, Verdana) and was
+**significantly less preferred than Verdana (p \= 0.002) and Helvetica (p \= 0.020)**, whereas
+italic fonts (Arial Italic) significantly degraded fixation duration and reading time (p \< 0.001).
+Zorzi et al. (2012) demonstrated that **extra-large letter spacing** substantially improved
+dyslexic reading performance on the fly, and Rello et al. recommended **18-point font size** for
+dyslexic web text.
+> 4. Karreman, van der Geest, & Buursink (2007, *JARID*, 20, 510–518) (38) & Fajardo et al.
+(57): Experimental studies with adults and students with **intellectual disabilities (ID)**.
+Karreman et al. demonstrated that adapting website content using Easy-to-Read guidelines
+significantly improved comprehension for participants with ID. Fajardo et al. found via multiple
+regression that **the number of co-references accounted for 14% of the variance in literal
+comprehension (Adjusted R² \= 0.14, p \< 0.01, negative Beta)** and **the number of
+propositions negatively correlated with inferential comprehension (p \< 0.01)**.
+> 5. Parhi, Karlson, & Bederson (2006, *MobileHCI '06*) & Motor-Impaired Touchscreen Target
+Acquisition Studies (39): Empirical studies of touchscreen target sizes. Parhi et al. (2006)
+established **9.2–9.6 mm** as the minimum thumb target size, while target acquisition
+experiments with **motor-impaired users** across 7, 12, and 17 mm targets found a significant
+effect of target size on task errors (F(1,42) \= 6.56, p \< 0.01), identifying **12 mm (\~45–48
+CSS px)** as the recommended target size and finding significantly higher error rates in top
+screen areas compared to bottom areas (p \< 0.05).
+> 6. Deaf Learner Comprehension Studies & Ethiopian Sign Language Studies (Wakuma, 2015;
+Tsega & Belete) (58): Empirical evaluations showing that Deaf students achieve **significantly
+higher content comprehension (p \< 0.05) when tutorials are delivered with Sign Language (or
+Sign Language \+ Captions)** compared to non-signed methods, alongside Ethiopian
+educational surveys documenting that Deaf students in primary special-needs units often face a
+lack of native EthSL materials and struggle when instruction relies solely on written/spoken
+Amharic.
+## **Deliverable E: Comprehensive Accessible Component Inventory**
+### **1\. Components That Should NOT Be Custom-Built (Use Native HTML)**
+
+===== PAGE 25 =====
+As Google Chrome's Modern Web Guidance and the GOV.UK and VA.gov design systems
+emphasize, **developers must not build custom ARIA widgets when native HTML elements
+already provide superior accessibility and performance**18:
+* **Buttons:** Always use \<button type="button"\> or \<button type="submit"\>. Never re-
+implement buttons using \<div role="button"\> or \<a\> tags25.
+* **Single-Line Text, Email, Tel, and Password Inputs:** Always use native \<input\> elements
+linked to \<label for="..."\>25.
+* **Radio Buttons and Checkboxes:** Always use native \<input type="radio"\> and \<input
+type="checkbox"\> inside \<fieldset\> and \<legend\> styled with CSS, never custom \<div
+role="radio"\> elements25.
+* **Simple Dropdowns (\<= 10 options, no search required):** Use native \<select\> and
+\<option\>, which invoke the operating system's built-in high-contrast wheel or modal picker on
+Android TalkBack and iOS VoiceOver3.
+* **Key-Value Review Summaries:** Use native description lists (\<dl\>, \<dt\>, \<dd\>) per
+GOV.UK's Summary List, never custom ARIA grids47.
+### **2\. Desktop, Mobile, Screen Reader, and Voice Control Implementation Differences**
+* **Date Inputs:** Avoid \<input type="date"\> for memorable dates like Date of Birth, because
+native calendar widgets require tedious scrolling across decades on mobile and do not support
+the 13-month Ethiopian Calendar. Use GOV.UK's 3-field \<fieldset\> pattern (\<input type="text"
+inputmode="numeric" pattern="\[0-9\]\*"\>), which brings up the large numeric keypad on mobile
+while supporting fast typing on desktop45.
+* **Number Inputs:** Avoid \<input type="number"\> for identifiers (such as 16-digit Fayda FCNs
+or phone numbers) because browsers strip leading zeros and accidentally increment values on
+scroll. Use \<input type="text" inputmode="numeric"\> instead45.
+* **Searchable Select / Autocomplete:** On desktop, keyboard users type and press Up/Down
+arrows through options; on mobile touchscreens with TalkBack, users explore suggestions by
+touch or swipe gestures, requiring alphagov/accessible-autocomplete's progressive
+enhancement over a native \<select\> element so the form still works if JavaScript fails3.
+* **Voice Control:** Every control must keep its visible label text at the start of its programmatic
+accessible name (WCAG 2.5.3 Label in Name) so Voice Control / Android Voice Access users
+can say *"Click Continue"* reliably1.
+
+===== PAGE 26 =====
+### **3\. Catalogue of 42 Reusable OpenPath Components**
+The tables below specify all **13 Basic Components**, **14 Form Structural & Workflow
+Components**, and **15 Specialized Accessibility Components** (42 components total),
+detailing the user problem solved, relevant disability groups, interaction/keyboard/screen-
+reader/visual/mobile behaviors, standards, reference implementations, React TypeScript API
+props, complexity, external service dependency, and offline capability.
+#### **Category 1: Basic Form Input Components (1–13)**
+| \# | Component Name | User Problem Solved & Relevant Disability Groups | Interaction,
+Keyboard, Screen Reader, Visual & Mobile Behavior | Standards & Reference Implementations
+| Recommended React/TS API Props | Complexity, External Service & Offline Status |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **1** | \<TextInput /\> | Prevents unlabeled or low-contrast text entry; supports Ge'ez & Latin
+scripts (**Blind, Low Vision, Motor, Cognitive, Dyslexia**)5. | **HTML:** Native \<input
+type="text"\>. **KB:** Standard Tab focus; never traps keys. **SR:** Linked via \<label for\> \+
+aria-describedby="\${hintId} \${errorId}" \+ aria-invalid. **Visual:** 2px \#111111 border (\>3:1
+contrast), min 48px height, 3px \#FCC934/\#111111 focus ring. **Mobile:** Full width, \>=16px
+font, autocomplete support36. | WCAG 1.3.1, 1.3.5, 1.4.11, 2.4.7, 2.5.8, 3.3.2, 3.3.7. **Refs:**
+GOV.UK govukInput, VA.gov va-text-input46. | id, name, label, hint?, error?, value, onChange,
+autocomplete?, required?, optionalText?, lang?, readAloudUrl? | **Low** \| External API: **No**
+\| Offline: **Yes** |
+| **2** | \<EmailInput /\> | Prevents mobile keyboard typos on @ and .; supports magic-link
+authentication (**Motor, Low Digital Literacy, Blind**)20. | **HTML:** \<input type="email"
+inputmode="email" autocomplete="email" spellcheck="false" autocapitalize="none"\>.
+**KB/SR:** Same as TextInput. **Visual:** Clear example hint (e.g., abebe@example.com).
+**Mobile:** Invokes @-optimized keyboard; strips accidental leading/trailing spaces on
+validation20. | WCAG 1.3.5, 3.3.2, 3.3.8, COGA 4.5.8. **Refs:** GOV.UK Email pattern,
+USWDS Text input20. | Extends TextInputProps \+ allowEmptyIfPhoneProvided?: boolean |
+**Low** \| External API: **No** \| Offline: **Yes** |
+| **3** | \<PhoneInput /\> | Eliminates rigid format errors across Ethiopian 09..., 07..., and
+\+251... numbers (**Cognitive, Motor, Blind, Low Literacy**)12. | **HTML:** \<input type="tel"
+inputmode="tel" autocomplete="tel"\>. **KB/SR:** Single field (no auto-jumping split boxes).
+Announces format example (0912 437 158). **Visual:** Optional \+251 / 0 visual prefix badge;
+accepts spaces/hyphens and normalizes automatically12. | WCAG 1.3.5, 3.3.2, 3.3.3, COGA
+4.5.8. **Refs:** GOV.UK Telephone pattern, Fayda NIDP phone field12. | Extends
+
+===== PAGE 27 =====
+TextInputProps \+ defaultCountryCode?: '+251', normalizeOnBlur?: boolean | **Low** \| External
+API: **No** \| Offline: **Yes** |
+| **4** | \<NumberInput /\> | Avoids native \<input type="number"\> scroll/leading-zero bugs
+while offering large steppers for quantities (**Motor, Blind, Low Vision**)37. | **HTML:** \<input
+type="text" inputmode="numeric" pattern="\[0-9\]\*"\>. Optional flanking \- / \+ \<button\>
+steppers (48×48px) for small quantities. **KB:** Number keys; Up/Down arrows if steppers
+enabled. **SR:** Announces value and unit. **Mobile:** Triggers 10-key numeric pad37. |
+WCAG 1.3.1, 2.5.8, 3.3.2. **Refs:** GOV.UK Number input, React Aria NumberField21. | id,
+label, value, onChange, min?, max?, step?, showSteppers?: boolean, isIdentifier?: boolean,
+unitLabel? | **Low** \| External API: **No** \| Offline: **Yes** |
+| **5** | \<DateInput /\> *(Dual EC/GC \+ Year-Only)* | Solves inaccessible calendar popups,
+Ethiopian (EC) vs. Gregorian (GC) confusion, and declared year-only birthdates (**All Groups,
+Ethiopian Context**)12. | **HTML:** \<fieldset\> \+ \<legend\> wrapping 3 numeric inputs (Day,
+Month, Year), a Calendar Toggle (ኢትዮጵያዊ (EC) / Gregorian (GC)), and an *"I only know the
+birth year"* checkbox (per Fayda NIDP rules, hiding Day/Month when checked). **KB:** Tab
+between Day/Month/Year. **SR:** Prioritized single error message12. | WCAG 1.3.1, 3.3.1,
+3.3.2, 3.3.3. **Refs:** GOV.UK govukDateInput, USWDS Memorable date, Fayda NIDP spec12.
+| id, legend, isPageHeading?, calendarMode: 'EC' \| 'GC', onCalendarChange, allowYearOnly?:
+boolean, value: {day?, month?, year, calendar}, error? | **Medium** \| External API: **No**
+(deterministic EC/GC math) \| Offline: **Yes** |
+| **6** | \<Textarea /\> | Prevents silent character-limit truncation and provides accessible multi-
+line entry with debounced character count (**Blind, Cognitive, Low Vision**)65. | **HTML:**
+\<textarea\> auto-expanding vertically so inner scrollbars do not trap touch users. **KB:**
+Standard text navigation. **SR:** Debounced aria-live="polite" character/word counter (updates
+1,400 ms after typing stops). **Mobile:** Full width, \>=48px min height65. | WCAG 1.3.1,
+1.4.10, 4.1.3. **Refs:** GOV.UK CharacterCount, USWDS Character count119. | id, label, hint?,
+error?, value, onChange, maxLength?, maxWords?, rows?: number,
+showAlternativeComposer?: boolean | **Low** \| External API: **No** \| Offline: **Yes** |
+| **7** | \<Select /\> | Provides reliable single-option selection for short lists (\<=10 items) using
+OS-native pickers (**Blind, Motor, Low Digital Literacy**)3. | **HTML:** Native \<select\> \+
+\<option\>. Never custom-built for short lists. **KB:** Space/Alt+Down opens; Up/Down selects;
+Enter confirms. **SR:** Announces label, selected value, and position (1 of 5). **Visual:** 48px
+height, explicit chevron icon. **Mobile:** Opens native Android/iOS high-contrast picker3. |
+WCAG 1.3.1, 2.1.1, 2.5.8, 4.1.2. **Refs:** GOV.UK Select, VA.gov va-select3. | id, label, hint?,
+error?, options: Array\<{value, label}\>, value, onChange, placeholderOption? | **Low** \|
+External API: **No** \| Offline: **Yes** |
+| **8** | \<RadioGroup /\> | Enables clear mutually exclusive choices (2–7 options) with large
+targets and optional audio/symbol cues (**All Groups**)45. | **HTML:** \<fieldset\> \+
+\<legend\> (can wrap in \<h1\> on single-question pages) \+ native \<input type="radio"\>.
+**KB:** Tab enters group; Up/Down arrows cycle options; Tab exits to next control. **SR:**
+Never puts aria-expanded on radio; uses aria-controls only for 1-field reveal8. **Visual/Mobile:**
+
+===== PAGE 28 =====
+Full-width 48px+ touch card per radio item39. | WCAG 1.3.1, 2.1.1, 2.5.8, 4.1.2. **Refs:**
+GOV.UK govukRadios (minus \#979 bug), VA.gov va-radio8. | id, name, legend,
+isPageHeading?, hint?, error?, options: Array\<{value, label, hint?, iconUrl?, audioUrl?,
+conditionalInput?}\>, value, onChange | **Low–Med** \| External API: **No** \| Offline: **Yes** |
+| **9** | \<CheckboxGroup /\> | Enables multi-select choices with explicit *"Select all options that
+are relevant to you"* hint and optional *"None"* exclusivity (**All Groups**)46. | **HTML:**
+\<fieldset\> \+ \<legend\> \+ native \<input type="checkbox"\>. **KB:** Tab moves between
+checkboxes; Space toggles checked state. **SR:** Announces legend on group entry, then
+each label \+ checked/unchecked state. **Visual/Mobile:** 48px+ full-width clickable row; "or"
+divider before exclusive *"None"* option39. | WCAG 1.3.1, 2.1.1, 2.5.8, 3.3.2. **Refs:** GOV.UK
+govukCheckboxes, NHS.UK Checkboxes69. | id, name, legend, isPageHeading?, hint?, error?,
+options: Array\<{value, label, hint?, exclusiveNone?: boolean}\>, values: string\[\], onChange |
+**Low–Med** \| External API: **No** \| Offline: **Yes** |
+| **10** | \<FileUpload /\> | Replaces drag-only dropzones with progressive enhancement,
+single-pointer buttons, and SR file confirmation (**Blind, Motor, Low Vision**)37. | **HTML:**
+Progressive enhancement over \<input type="file"\>. **KB/Pointer:** Prominent 48px "Choose
+file or take photo" button (satisfies WCAG 2.5.7 Dragging Movements) alongside drag-and-drop.
+**SR:** aria-live="polite" announces total file count and filenames upon selection
+(uswds\#4415); sanitizes filenames against XSS (uswds\#4329)37. **Mobile:** Invokes Android
+camera/file picker. | WCAG 2.1.1, 2.5.7, 2.5.8, 4.1.3. **Refs:** USWDS usa-file-input, React
+Aria FileTrigger \+ DropZone21. | id, label, hint?, error?, accept: string\[\], maxSizeMB?:
+number, compressImages?: boolean, onFilesChange, openCameraAssistant?: boolean |
+**Medium** \| External API: **No** (queues in IndexedDB until online) \| Offline: **Yes (Local
+queue)** |
+| **11** | \<SearchableSelect /\> | Allows filtering medium lists (10–200 items, e.g., Ethiopian
+Woredas or institutions) with fallback to native \<select\> if JS fails (**Blind, Motor,
+Cognitive**)3. | **HTML:** Progressively enhances a \<select\> using alphagov/accessible-
+autocomplete (enhanceSelectElement). **KB:** Type to filter; Down/Up arrows cycle
+role="listbox" options; Enter selects; Escape closes. **SR:** **1,400 ms debounce** before
+announcing result count via aria-live (65). Includes Ge'ez homophone & synonym matching3. |
+WCAG 1.3.1, 2.1.1, 4.1.2, 4.1.3. **Refs:** alphagov/accessible-autocomplete, USWDS Combo
+box, React Aria ComboBox3. | id, label, hint?, error?, options: Array\<{value, label, synonyms?:
+string\[\]}\>, value, onChange, debounceMs?: 1400 | **Med–High** \| External API: **No** \|
+Offline: **Yes** |
+| **12** | \<Autocomplete /\> | Suggests free-text entries (e.g., job titles, skills) from large
+datasets while permitting unlisted custom entries (**All Groups**)21. | **HTML:** \<input
+type="text" role="combobox" aria-autocomplete="list" aria-expanded\> \+ \<ul role="listbox"\>.
+**KB/SR:** Same 1,400 ms debounced status announcement as SearchableSelect, plus
+server/local caseless fuzzy matching if the user types a valid string without clicking the
+dropdown (confirmOnBlur)3. | WCAG 1.3.1, 2.1.1, 4.1.2, 4.1.3. **Refs:** alphagov/accessible-
+autocomplete (DfT custom entry pattern)3. | id, label, source: (query: string) \=\>
+
+===== PAGE 29 =====
+Promise\<Option\[\]\>, allowCustomValue?: boolean, confirmOnBlur?: boolean, value,
+onChange | **Med–High** \| External API: **Optional** (caches dictionary in IndexedDB) \|
+Offline: **Yes (Cached)** |
+| **13** | \<PasswordInput /\> *(+ Accessible Auth OTP)* | Prevents cognitive memory lockouts
+and masked-typing errors (**Cognitive, Motor, Blind, Dyslexia**)20. | **HTML:** \<input
+type="password" autocomplete="current-password"\> with an explicit \<button type="button"\>
+"Show password" toggle. **KB/SR:** Never blocks paste (onPaste allowed per WCAG 3.3.8);
+announces "Password shown" / "Password hidden" via live status. Paired with OTP / magic-link
+/ Fayda sign-in options20. | WCAG 1.3.5, 3.3.8 (Accessible Authentication Minimum), COGA
+4.7.1. **Refs:** GOV.UK Password input, Radix Preview PasswordToggleField20. | id, label,
+value, onChange, mode: 'login' \| 'create' \| 'otp', onMagicLinkRequest?, onFaydaSignIn? |
+**Low–Med** \| External API: **Auth API when online** \| Offline: **UI works offline** |
+#### **Category 2: Form Structural & Workflow Components (14–27)**
+| \# | Component Name | User Problem Solved & Relevant Disability Groups | Interaction,
+Keyboard, Screen Reader, Visual & Mobile Behavior | Standards & Reference Implementations
+| Recommended React/TS API Props | Complexity, External Service & Offline Status |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **14** | \<FormFieldWrapper /\> | Enforces deterministic DOM ordering and ARIA wiring across
+Label, Hint, Error, and Control (**All Groups**)67. | **HTML:** \<div class="op-form-group"\>
+(adds op-form-group--error left red border 4px solid \#D93025 on error). Generates deterministic
+IDs (\${id}-label, \${id}-hint, \${id}-error) and injects aria-describedby in exact order (hintId
+errorId) into the child control67. | WCAG 1.3.1, 1.4.1, 3.3.1, 3.3.2. **Refs:** GOV.UK govuk-
+form-group, NHS.UK Form group67. | id, label, isPageHeading?, optional?: boolean, hint?,
+whyWeAsk?, error?, audioUrl?, ethslVideoUrl?, children | **Low–Med** \| External API: **No** \|
+Offline: **Yes** |
+| **15** | \<FieldInstructions /\> | Prevents screen readers from reading overly long aria-
+describedby strings or missing inline links (**Blind, Cognitive, Deaf**)4. | Splits guidance into
+two parts: (1) Short \<div id="\${id}-hint"\> (1 sentence, no links, read automatically on input
+focus)4; and (2) Rich \<div class="op-instructions"\> or expandable *"Why we ask this"* placed
+*above* the input label in normal reading order, with optional EthSL video and Easy-Read
+bullets18. | WCAG 1.3.1, 3.3.2, COGA 4.5.7. **Refs:** GOV.UK Question pages, VA.gov Hint
+text rules4. | id, shortHint?, detailedInstructions?, formatExample?, whyWeAsk?,
+easyReadBullets?: string\[\] | **Low** \| External API: **No** \| Offline: **Yes** |
+| **16** | \<FieldError /\> | Connects error messages visually and programmatically directly to
+the offending input (**Blind, Low Vision, Cognitive**)67. | **HTML:** \<p id="\${id}-error"
+class="op-error-message"\> placed immediately above the input (after hint text). Includes
+
+===== PAGE 30 =====
+\<span class="sr-only"\>Error: \</span\> ("ስህተት፦ " in Amharic) \+ high-contrast warning icon \+
+specific remediation text matching the Error Summary word-for-word67. | WCAG 1.4.1, 3.3.1,
+3.3.3. **Refs:** GOV.UK govukErrorMessage, NHS.UK error-message67. | id, fieldId, message,
+visuallyHiddenPrefix?: string | **Low** \| External API: **No** \| Offline: **Yes** |
+| **17** | \<ErrorSummary /\> | Eliminates hunting for validation errors across a page after hitting
+Continue (**Blind, Low Vision, Motor, Cognitive**)34. | **HTML:** \<div role="alert" aria-
+labelledby="error-summary-title" tabindex="-1"\> rendered at the top of \<main\>. **Behavior:**
+Automatically receives .focus() on submit failure; prepends "Error: " to document.title; renders
+\<h2 id="error-summary-title"\>There is a problem\</h2\> and a \<ul\> of \<a href="\#field-id"\>
+links that jump focus directly to the offending input66. | WCAG 2.4.3, 3.3.1, 3.3.3, 4.1.3.
+**Refs:** GOV.UK govukErrorSummary (v5.4.1+), NHS.UK error-summary66. | errors:
+Array\<{fieldId: string, message: string}\>, titleText?: string, autoFocus?: boolean | **Low–Med**
+\| External API: **No** \| Offline: **Yes** |
+| **18** | \<FieldGroup /\> | Semantically groups related multi-field concepts (e.g., Full Name,
+Address) under a shared topic legend (**Blind, Cognitive**)18. | **HTML:** \<fieldset\> \+
+\<legend\> wrapping related inputs (Given Name, Father's Name, Grandfather's Name).
+Ensures screen readers announce the group context when entering the first field inside the
+group18. | WCAG 1.3.1, 2.4.6, 3.3.2. **Refs:** VA.gov Fieldsets, legends, and labels46. | id,
+legend, isPageHeading?, hint?, error?, children | **Low** \| External API: **No** \| Offline:
+**Yes** |
+| **19** | \<QuestionPage /\> | Implements the distraction-free "One Thing Per Page" layout with
+automatic focus management (**All Groups**)4. | Renders minimal header/footer (VA.gov
+pattern)4, top \<BackLink\>, \<ErrorSummary\> (if errors), chapter progress caption, unique
+\<h1\> (wrapping \<label\>/\<legend\> for single inputs)18, \<AutosaveStatus\>, primary left-
+aligned Continue button (never disabled)18, and consistent bottom \<HumanHelpRequest /\>
+(WCAG 3.2.6)36. | WCAG 2.4.2, 2.4.6, 3.2.6, COGA Objective 5\. **Refs:** GOV.UK Question
+pages, VA.gov form-step-minimal4. | stepId, title, isSingleQuestionHeading?: boolean,
+chapterTitle, currentStepIndex, totalChapters, onContinue, onBack, errors?, children |
+**Medium** \| External API: **No** \| Offline: **Yes** |
+| **20** | \<MultiStepForm /\> | Schema-driven state machine orchestrating branching,
+validation, autosave, and adaptive presentation (**All Groups**)4. | Evaluates declarative JSON
+Form Schema; manages step routing, History API sync, 3.3.7 Redundant Entry auto-fill across
+steps, focus shifts to new step \<h1\> on transition, and switching between One-Question-Per-
+Page and Grouped Section modes without losing state4. | WCAG 2.4.3, 3.3.7, COGA Objective
+6\. **Refs:** VA.gov RoutedSavableApp4. | schema: OpenPathFormSchema, initialData?,
+onStepSave, onSubmit, adaptiveProfile?: AdaptivePreferences | **High** \| External API:
+**Optional sync API** \| Offline: **Yes (IndexedDB)** |
+| **21** | \<ProgressIndicator /\> | Communicates current orientation without overwhelming
+cognitive or screen reader users (**Cognitive, Blind, Low Vision**)18. | Combines VA.gov's non-
+clickable **Segmented Chapter Bar** (Chapter 2 of 4: Contact Details) with GOV.UK's simple
+text caption (\<span class="op-caption"\>Step 2 of 4\</span\>). **SR:** Announces chapter
+
+===== PAGE 31 =====
+change on step transition; hides decorative segment \<div\>s with aria-hidden="true"18. |
+WCAG 1.3.1, 2.4.8, COGA 4.2.4. **Refs:** VA.gov va-segmented-progress-bar, GOV.UK
+Question pages18. | currentChapter: number, totalChapters: number, chapterName: string |
+**Low** \| External API: **No** \| Offline: **Yes** |
+| **22** | \<CheckYourAnswers /\> | Prevents submission mistakes by allowing structured review
+and direct single-step editing (**All Groups, WCAG 3.3.4**)35. | **HTML:** Grouped by chapter
+using \<dl class="op-summary-list"\>. Each row has \<dt\> (Question), \<dd\> (Formatted Value
+or *"Not provided"*), and \<dd\>\<a href="\#edit-step"\>Change \<span class="sr-only"\>\[field
+name\]\</span\>\</a\>\</dd\>. Constrained to 2/3 width on desktop so magnifier users see
+values and "Change" links together; editing returns directly to Review unless branching
+changes35. | WCAG 2.4.4 (Link Purpose), 3.3.4 (Error Prevention), COGA 4.5.5. **Refs:**
+GOV.UK govukSummaryList & Check answers, VA.gov Review page35. | chapters:
+ReviewChapter\[\], formData, onEditField: (stepId: string, fieldId: string) \=\> void,
+onConfirmSubmit | **Medium** \| External API: **No** \| Offline: **Yes** |
+| **23** | \<ConditionalField /\> | Safely reveals a single follow-up field or routes complex
+branches without breaking screen readers (**Blind, Cognitive**)8. | Enforces OpenPath's
+**Conditional Reveal Rule**: if the child is a single input, renders an indented left-bordered
+container linked via aria-controls on the trigger radio/checkbox (never aria-expanded on radio8);
+if the child contains multiple inputs or nested radios, registers a conditional next-page route in
+\<MultiStepForm /\>8. | WCAG 1.3.1, 4.1.2 (ARIA 1.3 aria-controls). **Refs:** GOV.UK \#979 /
+\#1972 / \#6010 resolution8. | triggerFieldId, whenValue, mode: 'inline-single' \| 'next-page',
+children | **Medium** \| External API: **No** \| Offline: **Yes** |
+| **24** | \<FormRecovery /\> | Recovers interrupted sessions after battery loss, browser crash,
+or network drop (**All Groups, Ethiopian Context**)4. | On mount, checks IndexedDB and server
+session state. If an unsubmitted draft exists, presents a high-contrast banner: *"You have a
+saved registration from \[Date/Time\] at Step \[X\]. Continue where you left off, or start a new
+form."* Applies normalizeReturnUrl so hidden conditional steps are never loaded4. | WCAG
+2.2.6 (Timeouts), 3.3.7, COGA 4.5.9 (Avoid Data Loss). **Refs:** VA.gov SaveInProgress
+recovery4. | formId, onResume: (savedState) \=\> void, onDiscard: () \=\> void | **Medium** \|
+External API: **No** (reads IndexedDB first) \| Offline: **Yes** |
+| **25** | \<SaveAndResume /\> | Lets users pause intentionally and resume later without
+memorizing passwords (**Cognitive, Motor, Low Bandwidth**)4. | Renders the inline
+\<AutosaveStatus /\> badge (*"Saved 1 second ago"*) plus a "Finish this application later"
+button. Clicking generates (a) an SMS/email recovery link when online, or (b) a
+downloadable/shareable encrypted offline state token (QR code / .openpath file) when offline4. |
+WCAG 2.2.1, 3.3.8, COGA 4.5.9. **Refs:** VA.gov SaveStatus & Finish application later4. |
+lastSavedAt: Date, syncState: 'local' \| 'synced' \| 'offline', onFinishLater | **Medium** \| External
+API: **Optional SMS/Cloud sync** \| Offline: **Yes (Local \+ QR)** |
+| **26** | \<AccessibleConfirmationDialog /\> | Prevents accidental destructive actions (e.g.,
+discarding a saved form) (**Cognitive, Motor, Blind**)21. | **HTML:** Native \<dialog\> or React
+Aria Modal/Dialog with role="alertdialog", aria-modal="true", aria-labelledby, and aria-
+
+===== PAGE 32 =====
+describedby. **KB:** Traps Tab focus inside dialog; Escape cancels and restores focus to
+triggering button (FocusRecovery). Explicit action labels ("Yes, delete my draft" vs. "No, keep
+editing")21. | WCAG 2.1.2, 2.4.3, 3.3.4. **Refs:** React Aria Dialog, Radix AlertDialog21. |
+isOpen, title, description, confirmLabel, cancelLabel, onConfirm, onCancel, triggerRef |
+**Low–Med** \| External API: **No** \| Offline: **Yes** |
+| **27** | \<EthiopianAddressSelector /\> | Replaces Western Street/ZIP forms with Ethiopia's
+administrative hierarchy and landmarks (**All Groups, Ethiopian Context**)12. | Cascading
+\<FieldGroup\> containing: (1) Region / City Admin (ክልል / ከተማ አስተዳደር) \<Select\>; (2) Zone /
+Sub-City (ዞን / ክፍለ ከተማ) \<SearchableSelect\>; (3) Woreda (ወረዳ) \<TextInput\>/\<Select\>; (4)
+Kebele & Local Landmark (ቀበሌ እና ልዩ የቦታ መጠሪያ, e.g., Hayahulet, Jemo) \<TextInput\>12.
+Bundles Ethiopian administrative hierarchy JSON offline. | WCAG 1.3.1, 3.3.2, 3.3.7. **Refs:**
+Fayda NIDP address schema (id.et)12. | id, value: {region, zoneOrSubCity, woreda, kebele,
+landmark?}, onChange, error? | **Medium** \| External API: **No** (static JSON bundled) \|
+Offline: **Yes** |
+#### **Category 3: Specialized Accessibility & Multimodal Components (28–42)**
+| \# | Component Name | User Problem Solved & Relevant Disability Groups | Interaction,
+Keyboard, Screen Reader, Visual & Mobile Behavior | Standards & Reference Implementations
+| Recommended React/TS API Props | Complexity, External Service & Offline Status |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **28** | \<GuidedQuestion /\> | Wraps any question with synchronized Audio, EthSL Video,
+Easy-Read, and Example scaffolds (**Deaf, Blind, Cognitive, Intellectual, Low Literacy**)20. |
+Provides a unified multimodal header bar above the question input: \[ 🔊 Listen
+(Amharic/Oromo/English) \], \[ 🤟 EthSL Sign Video \], \[ 📖 Easy-Read Explanation \]. Never
+auto-plays audio unless user enabled "Audio-Guided Mode" in preferences (WCAG 1.4.2)29. |
+WCAG 1.2.2, 1.2.6 (Sign Language), 1.4.2, COGA Objective 3 & 7\. **Refs:** SENEthiopia
+Talking Textbook, AAU EthSL Dictionary20. | questionId, audioSrc?, ethslVideoSrc?,
+easyReadSummary?, children | **Medium** \| External API: **No** (plays cached media or TTS)
+\| Offline: **Yes (Cached media)** |
+| **29** | \<VoiceInput /\> | Enables optional spoken answers in Amharic, Afaan Oromoo,
+Tigrinya, or English without locking out speech/deaf users (**Motor, Blind, Low Literacy,
+Dyslexia**)29. | Explicit push-to-talk \<button\> (48×48px, aria-pressed) next to text inputs.
+Streams 0.32 s / 1.12 s audio chunks to **Addis Scribe Streaming** (or offline batch/Web
+Speech fallback); displays live waveform \+ transcript; never overwrites existing input without
+\<AnswerConfirmation /\>30. | WCAG 2.1.1, 2.5.3, 3.3.4, COGA Objective 4\. **Refs:** Addis
+Scribe Streaming (addisassistant.com)29. | targetFieldId, lang: 'am' \| 'om' \| 'ti' \| 'en',
+
+===== PAGE 33 =====
+expectedSlotType: 'name' \| 'phone' \| 'date' \| 'free', onConfirmedTranscript | **High** \| External
+API: **Yes (Addis Scribe / Cloud ASR) or Local** \| Offline: **Degrades gracefully** |
+| **30** | \<ReadAloudController /\> | Reads question labels, hints, options, and errors aloud
+with word/sentence highlighting (**Dyslexia, Low Literacy, Low Vision, Cognitive**)28. |
+Compact play/pause/speed (0.75x, 1.0x, 1.25x) bar. Plays pre-recorded Opus audio first (0 API
+cost, 100% offline); falls back to **Azure am-ET-AmehaNeural / Addis Voice 2** when online, or
+local **Meta MMS / Web Speech API** offline28. Highlights spoken sentence visually in
+\#FCC934 (3:1+ contrast)62. | WCAG 1.4.2 (Audio Control), COGA 3.3.1. **Refs:** Voice
+Dream Reader, Addis Voice 2, Azure Neural TTS28. | text, lang: 'am' \| 'om' \| 'ti' \| 'en',
+prerecordedAudioUrl?, highlightElementRef? | **Medium** \| External API: **Hybrid (Pre-
+recorded \-\> Cloud TTS \-\> Local)** \| Offline: **Yes (Pre-recorded / Local)** |
+| **31** | \<AnswerConfirmation /\> | Prevents Amharic ASR homophone/spacing errors
+(\~25–28% WER) from corrupting official records (**All Voice/Assisted Users**)26. | Whenever
+an answer is populated via \<VoiceInput /\> or \<DocumentCaptureAssistant /\>, displays a high-
+contrast confirmation card: *"We heard: \[ አበበ ከበደ ተሰማ \]. Is this correct?"* with \[ 🔊 Hear it
+read back \], \[ ✅ Yes, keep this \], and \[ ✏️ Edit by hand / Speak again \] buttons20. | WCAG
+3.3.3, 3.3.4 (Error Prevention), COGA 4.5.4. **Refs:** Aira Verify hybrid confirmation pattern20.
+| proposedValue, rawConfidence?, fieldLabel, onAccept, onRetryVoice, onManualEdit |
+**Low–Med** \| External API: **No** \| Offline: **Yes** |
+| **32** | \<AlternativeResponseComposer /\> | Lets users with speech or motor/literacy barriers
+answer open-ended profile/interview questions without typing essays or speaking (**Speech,
+Motor, Intellectual, Low Literacy**)19. | Renders structured category tabs (Skills, Experience
+Duration, Work Environment, Accommodations) containing tap-to-select chips/tiles. As the user
+taps tiles, a live sentence builder composes a natural Amharic and English paragraph into the
+target \<Textarea /\> with one-tap Undo19. | WCAG 2.1.1, 2.5.8, COGA Objective 4 & 6\.
+**Refs:** Cboard phrase bar, TD Snap, Speech Assistant AAC19. | questionTopic, phraseBank:
+PhraseCategory\[\], lang, onComposeChange: (composedText: string) \=\> void | **Medium** \|
+External API: **No** \| Offline: **Yes** |
+| **33** | \<SymbolBasedResponse /\> | Provides pictographic symbol boards (Open Board
+Format) for users with intellectual disabilities or severe aphasia (**Speech, Intellectual,
+Cognitive**)2. | Renders a high-contrast grid (2×2 or 3×3, 64×64px+ cards) of **ARASAAC /
+Mulberry** SVG symbols paired with literal Easy-Language labels and tap-to-speak audio.
+Compatible with W3C COGA Personalization (data-symbol) and Cboard's Open Board Format
+JSON2. | WCAG 1.1.1, 2.5.8, COGA 3.1.3 (Symbols), W3C Personalization/Adapt. **Refs:**
+Cboard (cboard-org/cboard)2. | boardSchema: OBFBoard, selectedIds: string\[\], multiSelect?:
+boolean, onSelect | **Medium** \| External API: **No** (SVG symbols bundled) \| Offline:
+**Yes** |
+| **34** | \<EasyReadRenderer /\> | Transforms complex instructions and legal consent into
+verified Easy-Language layouts (**Intellectual, Cognitive, Limited Literacy**)38. | Renders
+human-verified Easy-Read content in a two-column card: left column shows a clear pictographic
+
+===== PAGE 34 =====
+illustration (80×80px); right column shows short, single-proposition sentences (1 sentence per
+line, zero pronoun co-references per Fajardo et al., bold key terms, 18pt font)55. | W3C COGA
+Objective 3, Inclusion Europe / Maaß (2020) Easy Language rules20. | blocks: Array\<{id,
+illustrationSvg, simpleSentences: string\[\], audioUrl?}\> | **Low–Med** \| External API: **No** \|
+Offline: **Yes** |
+| **35** | \<DocumentCaptureAssistant /\> | Guides blind, low-vision, and non-standard ID
+holders through capturing valid identity or witness documents (**Blind, Low Vision,
+Rural/Refugee Users**)13. | Step 1: Lets user pick from **NIDP's 33+ accepted evidence
+types** (Fayda QR/FCN, Kebele ID, School ID, Disability Association ID, or **Witness
+Attestation Form**)13. Step 2: Camera viewfinder runs lightweight client-side
+brightness/blur/edge detection and speaks framing instructions (*"Hold steady, move left"*)
+inspired by **Google Lookout / Seeing AI**43. | WCAG 1.1.1, 2.5.7, 3.3.4. **Refs:** Google
+Lookout Document mode, Seeing AI, Fayda NIDP evidence rules13. | acceptedDocTypes:
+DocType\[\], enableAudioFraming: boolean, onCaptureComplete: (file, metadata) \=\> void |
+**High** \| External API: **Optional server OCR / Fayda QR decode** \| Offline: **Yes (Client
+edge/blur check)** |
+| **36** | \<HumanHelpRequest /\> *(+ Assisted Mode)* | Provides consistent access to human
+support (WCAG 3.2.6) and transparent co-completion with a local helper (**All Groups,
+Ethiopian Context**)15. | Fixed in a consistent bottom-right/footer location across every page
+(satisfying **WCAG 2.2 SC 3.2.6 Consistent Help**)36. Offers two modes: (1) **Remote Help**
+(Text chat, EthSL video relay request, or callback request); (2) **Local Helper / Co-Completion
+Mode** (logs that a family member or OPD agent is assisting the applicant and records dual
+applicant/witness consent)14. | WCAG 3.2.6 (Consistent Help), COGA 4.8.1 (Provide Human
+Help), Fayda Witness Consent pattern14. | currentStepId, supportChannels: Channel\[\],
+isAssistedMode: boolean, onToggleAssistedMode | **Medium** \| External API: **Support
+webhook when online** \| Offline: **Assisted Mode works offline** |
+| **37** | \<ReadingRuler /\> | Prevents line-skipping and visual crowding for dyslexic and low-
+vision readers (**Dyslexia, Low Vision, Cognitive**)52. | Renders a horizontal shaded guide bar
+(height: 2.2em) across the viewport that follows either the mouse pointer, touch drag, or
+currently focused DOM element (focusin listener for keyboard users), dimming surrounding lines
+gently (opacity: 0.35)83. | WCAG 1.4.8 (Visual Presentation), COGA Objective 5\. **Refs:**
+Dyslexia browser extensions2. | enabled: boolean, followMode: 'pointer-and-focus' \| 'focus-
+only', tintColor?: string | **Low** \| External API: **No** \| Offline: **Yes** |
+| **38** | \<FocusRecovery /\> | Prevents focus loss to \<body\> when steps change, modals
+close, or conditional fields unmount (**Blind, Motor, Low Vision**)34. | Invisible lifecycle
+manager hook/component (useFocusRecovery). Tracks focus history stack; when a modal
+closes, returns focus to trigger; when a step transitions, shifts focus to the new \<h1 tabindex="-
+1"\>; enforces scroll-margin-block: 96px so focused elements are never obscured by sticky bars
+(**WCAG 2.4.11**)34. | WCAG 2.4.3 (Focus Order), 2.4.7 (Focus Visible), 2.4.11 (Focus Not
+Obscured Minimum)34. | activeStepId, errorSummaryRef, headingRef | **Low–Med** \| External
+API: **No** \| Offline: **Yes** |
+
+===== PAGE 35 =====
+| **39** | \<AccessibleNotification /\> | Announces autosave, offline/online transitions, and
+background status without stealing keyboard focus (**Blind, Deaf, Cognitive**)65. | Dual-region
+polite/assertive live announcer (role="status" aria-live="polite" and role="alert" aria-
+live="assertive") paired with a high-contrast visual toast and optional device vibration
+(navigator.vibrate(100)) for Deaf/Deafblind users32. Uses progressive enhancement for
+ariaNotify where supported65. | WCAG 4.1.3 (Status Messages), COGA 4.5.10. **Refs:**
+VA.gov Autosave alert, W3C ARIA2765. | message, politeness: 'polite' \| 'assertive', vibrate?:
+boolean | **Low** \| External API: **No** \| Offline: **Yes** |
+| **40** | \<AccessibilityPreferenceManager /\> | Lets users customize presentation and
+interaction modalities via task-based toggles without medical labels (**All Groups**)2. | Renders
+an accessible drawer/bar offering plain-language task presets (*"Read questions aloud"*,
+*"Larger text & wider spacing"*, *"One question at a time"*, *"Easy-Read & symbols"*, *"High
+contrast / Warm paper"*, *"EthSL Sign Videos"*). Persists to localStorage/IndexedDB and
+portable W3C/GPII JSON profile2. | WCAG 1.4.4, 1.4.12, COGA Objective 8 (Support
+Adaptation and Personalization)2. | preferences: AdaptivePreferences, onChange,
+allowInstitutionalDefaults?: boolean | **Medium** \| External API: **Optional profile sync** \|
+Offline: **Yes** |
+| **41** | \<KeyboardAssistance /\> | Enables effortless navigation for switch users and learners
+trained on 4-key tactile audio players (**Motor, Blind, Low Digital Literacy**)20. | Provides an
+optional high-contrast on-screen & physical keypad mapping modeled on **SENEthiopia's
+Talking Textbook** (\[ ⬅️ Previous \], \[ 🔁 Repeat Audio \], \[ 🔊 Read Choices \], \[ ➡️
+Continue \]) plus a skip-to-main link and keyboard shortcut legend (?) using modifier-guarded
+shortcuts62. | WCAG 2.1.1, 2.4.1 (Bypass Blocks)63. | enabled: boolean, onNext, onPrev,
+onRepeatAudio | **Low–Med** \| External API: **No** \| Offline: **Yes** |
+| **42** | \<VisualInstructionRenderer /\> | Replaces dense text instructions with step-by-step
+numbered diagrams and EthSL video cards (**Deaf, Intellectual, Cognitive, Low Literacy**)16. |
+Renders procedural instructions (e.g., how to locate a 16-digit FCN number on a Fayda ID card
+or how to get a Kebele witness signature) as a sequence of numbered SVG visual cards (1 \-\>
+2 \-\> 3\) with short literal captions and synchronized EthSL/audio playback12. | WCAG 1.1.1,
+1.2.6, COGA 4.5.7 (Use Clear Step-by-Step Instructions)20. | steps: Array\<{stepNumber, title,
+svgDiagram, caption, ethslClipUrl?, audioUrl?}\> | **Low–Med** \| External API: **No** \| Offline:
+**Yes** |
+## **Deliverable F: Adaptive Interaction System Architecture**
+Rather than bolting on a superficial "accessibility settings" overlay, OpenPath makes the **form
+engine itself adaptive**2. A single underlying form state and validation tree can project into
+multiple presentation and interaction modalities in real time.
+
+===== PAGE 36 =====
+![][image3]
+### **Answering the 10 Architectural Questions for Adaptive Interaction**
+> 1. **What Should Always Be Accessible by Default?** Core WCAG 2.2 Level AA compliance
+must never require flipping a setting1. By default, every OpenPath form renders semantic HTML
+(\<h1\>–\<h3\>, \<fieldset\>, \<legend\>, \<label\>, \<dl\>), full keyboard navigation, 48×48 CSS
+px minimum touch targets, \>4.5:1 text contrast and \>3:1 input border contrast, a 3px high-
+visibility focus indicator that is never obscured (WCAG 2.4.11), 1.4.10 Reflow down to 320 CSS
+px, top-of-page \<ErrorSummary\> auto-focus, 1,400 ms debounced screen reader live
+announcements, and 1-second local IndexedDB autosave4. OpenPath also honors OS-level
+CSS media queries (prefers-reduced-motion: reduce, prefers-contrast: more, prefers-color-
+scheme: dark, and forced-colors: active for Windows High Contrast Mode) automatically.
+> 2. **What Should Be Optional?** Features that alter layout density, stream media over
+metered connections, or replace standard inputs with symbol boards should be opt-in2:
+* **Read-Aloud Auto-Play:** Must be opt-in so it never collides with NVDA, JAWS, or
+TalkBack (WCAG 1.4.2 Audio Control)54.
+* **Ethiopian Sign Language (EthSL) Video Picture-in-Picture:** Opt-in per question or
+globally via the preference bar to conserve mobile data70.
+* **One-Question-Per-Page Decomposition vs. Compact Section View:** Configurable step
+pacing18.
+* **Easy-Read & Symbol-Based Response Composer:** Opt-in cognitive and AAC
+scaffolding19.
+* **Reading Ruler & Dyslexia Spacing/Tint Presets:** Opt-in visual reading tools52.
+> 3. **What Should Be Configurable Per User?** Font scale (100%, 125%, 150% / 18pt, 200%),
+text spacing (Standard vs. Expanded Dyslexia Spacing per Zorzi et al., 2012), color theme
+(High-Contrast Light, Warm Cream \#FAF8F5, High-Contrast Dark, Yellow-on-Black), question
+pacing (Grouped vs. One-Thing-Per-Page), language (Amharic አማርኛ, English, Afaan Oromoo,
+Tigrinya ትግርኛ), calendar mode (Ethiopian EC vs. Gregorian GC), audio read-aloud (Off, Tap-to-
+Play, Auto-Play \+ Highlight), EthSL sign video (Show vs. Hide), response modality (Standard
+Text/Select, Voice-Assisted, Symbol/Phrase-Bank Composer), and Assisted Mode (Completing
+with a Helper)12.
+> 4. **What Should Be Configurable Per Institution?** Partner institutions configure: brand
+design tokens (validated so custom colors never drop below WCAG AA 4.5:1 text / 3:1 UI
+contrast), required vs. optional question schemas, accepted identity document types,
+
+===== PAGE 37 =====
+webhook/API endpoints, and default regional language/calendar settings15. Institutions cannot
+disable user-level accessibility overrides.
+> 5. **How Can Several Preferences Coexist?** Preferences are modeled as **orthogonal CSS
+Custom Properties (--op-font-scale, \--op-letter-spacing, \--op-surface-bg) and orthogonal React
+slots** rather than mutually exclusive modes68. A user with both low vision and dyslexia can
+simultaneously enable 150% (18pt) Font Scale \+ Expanded Letter Spacing \+ Warm Cream
+Background \+ Tap-to-Hear Amharic Read-Aloud. If a user enables Auto-Play Read-Aloud,
+OpenPath automatically cancels internal TTS playback immediately on any keyboard Tab or
+Arrow keypress so it never talks over a screen reader54.
+> 6. **How Can Users Switch Interaction Methods Without Losing Answers?** Because
+OpenPath's state store (FormStateStore in IndexedDB) holds canonical data values keyed by
+fieldId, all input components (\<Select /\>, \<RadioGroup /\>, \<SymbolBasedResponse /\>,
+\<VoiceInput /\>) act as **stateless controlled projections** of that canonical store4. Switching
+between Standard, Easy-Read, Voice, and Symbol modes re-renders the view layer against the
+exact same in-memory and IndexedDB state with zero data loss.
+> 7. **How Can Preferences Persist Across Sessions and Follow a User Across Integrated
+Platforms?** Aligned with **W3C COGA Objective 8 (Support Adaptation and Personalization)**
+and the **ISO/IEC 24751 / GPII interoperable preference profile** architecture (2), OpenPath
+serializes a compact JSON preference profile (OpenPathPreferenceProfile, \<1 KB) into
+localStorage/IndexedDB, a portable URL query/hash token (?op\_prefs=...) or scannable QR
+code, and the user's Savanna account profile once authenticated. This allows a learner moving
+from the Savanna Learning Platform to an external Employer Application Portal to carry their
+exact accessibility adaptations automatically without re-configuring settings (**WCAG 3.3.7
+Redundant Entry** applied to preferences)64.
+> 8. **How Should Adaptive Functionality Work When JavaScript or External APIs Fail?**
+Following GOV.UK and USWDS progressive enhancement principles (3), base HTML forms
+render using native \<form\>, \<fieldset\>, \<legend\>, \<label\>, \<input\>, and \<select\>
+elements styled with responsive CSS (rem units, @media (prefers-contrast), @media (prefers-
+reduced-motion)). If external speech APIs (Addis AI / Azure) are unreachable,
+\<ReadAloudController /\> plays cached pre-recorded Opus audio or local synthesis, and
+\<VoiceInput /\> gracefully queues audio or yields to keyboard/touch input without blocking form
+submission3.
+> 9. **How Can the System Avoid Assuming a User's Disability?**
+\<AccessibilityPreferenceManager /\> avoids medical or diagnostic labels (*"Blind Mode"*,
+*"Intellectual Disability Mode"*) and instead presents **capability-focused, plain-language
+choices** (*"Show one question at a time"*, *"Read questions out loud"*, *"Make text larger and
+wider"*, *"Show Ethiopian Sign Language videos"*, *"Answer by tapping pictures and phrases"*)
+so users freely choose what works for their context53.
+> 10. **How Do We Prevent Accessibility Settings from Breaking Standard Keyboard and
+Screen-Reader Functionality?** OpenPath enforces a **Semantic Invariance Rule**: adaptive
+
+===== PAGE 38 =====
+modes only add supportive scaffolding (larger CSS tokens, extra audio/video slots, decomposed
+steps, or phrase-bank buttons) on top of standard HTML \<fieldset\>, \<legend\>, \<label\>,
+\<input\>, and \<button\> elements—never stripping ARIA roles, hijacking keyboard navigation,
+or blocking pinch-to-zoom25.
+## **Deliverable G: Voice, Speech, and Amharic Language Investigation**
+OpenPath aims to support **Amharic (am-ET)** and **English (en-US)** speech-to-text (ASR)
+and text-to-speech (TTS) initially, with expansion to **Afaan Oromoo (om-ET)** and **Tigrinya
+(ti-ET)**29. Our investigation highlights why empirical verification on Ethiopian languages is
+mandatory before selecting a speech stack26.
+### **1\. Linguistic and Technical Challenges of Amharic Speech Processing**
+Amharic—the official working language of the Federal Democratic Republic of Ethiopia and the
+second-largest Semitic language after Arabic—poses four critical challenges for ASR and TTS
+systems27:
+* **Agglutinative Morphology & Word-Boundary Spacing:** Amharic verbs fuse subject, object,
+tense, and prepositions into single complex words26. Because one incorrect suffix on an
+agglutinative word counts as a full word error in Word Error Rate (WER), evaluators such as
+dataset.et emphasize inspecting Character Error Rate (CER) alongside WER26. Furthermore,
+the peer-reviewed study *Semantically Corrected Amharic ASR* (arXiv:2404.13362v131) found
+that existing Amharic ASR benchmarks often ignored word-boundary spacing; when vanilla
+SpeechBrainASR, PhonemeAWav2Vec, and CharacterAWav2Vec models were evaluated on
+spacing-corrected Amharic datasets, **their WER jumped from 24.9%–28.8% to
+96.6%–99.9%** (14.0%–14.3% CER), whereas applying a Transformer Seq2SeqBT5 post-
+correction model reduced errors to **5.5% CER and 23.3% WER**31.
+* **Ge'ez Syllabary (*Fidel*), Homophones, and Punctuation:** Written in a syllabary of over 200
+consonant-vowel characters, Amharic includes historical Ge'ez characters with identical modern
+pronunciation (homophones), requiring homophone folding during evaluation and search26. For
+TTS, engines must accept *fidel* input directly (romanized Amharic forces models to guess and
+compounds errors) and treat Ge'ez punctuation (። full stop, ፣ comma) as sentence boundaries
+rather than reading punctuation symbols aloud27.
+* **Ejectives, Gemination, and Register:** Amharic distinguishes glottalized ejective consonants
+(such as ጸ, ቀ, and ጠ), uses consonant length (gemination) to distinguish word meanings, and
+
+===== PAGE 39 =====
+differentiates formal versus everyday address (እርስዎ vs. አንተ)27. Weak handling of ejectives
+and gemination is the primary giveaway of poor synthetic Amharic TTS27.
+* **Telecommunication Degradation:** The TeleASR-Amharic benchmark study (143) found that
+under severe telecommunication channel degradation typical of mobile voice networks, the
+WER of the best-performing Amharic ASR model increased from **0.23 (23%) to 0.79 (79%)**.
+![][image4]
+### **2\. Comprehensive 12-Factor Comparison of Speech Technologies for OpenPath**
+The table below evaluates all eight candidate speech options across the twelve criteria required
+in Section 7\. Figures from the October–November 2026 WAXAL/FLEURS ASR benchmarks
+and August 2026 TTS benchmarks are published by **Addis AI**
+(addisassistant.com/benchmarks, which includes reproducible evaluation scripts and confidence
+intervals28), alongside evaluations from **dataset.et** (26), **AmiSus** (27), and peer-reviewed
+papers (31).
+| Criterion | 1\. Addis AI (Addis Scribe & Addis Voice 2\) | 2\. Microsoft Azure Speech (am-ET) |
+3\. Google Cloud Speech (Chirp 3 & Gemini TTS) | 4\. Open-Source Hohe (wav2vec2-BERT) &
+Ethio-ASR | 5\. Open-Source Whisper (Vanilla vs. Shook Fine-Tuned) | 6\. Meta MMS (mms-tts-
+amh & MMS ASR) | 7\. Browser Web Speech API & eSpeak-NG | 8\. Pre-Recorded Opus Audio
+Prompts |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **1\. Supported Target Languages** | **All 4+:** Amharic (am), Afaan Oromo (om), Tigrinya
+(ti), English, plus Sidama (sid), Wolaytta (wal), Swahili, Hausa29. | **Amharic (am-ET) &
+English.** *Does not ship production voices for Afaan Oromo or Tigrinya*28. | **ASR (Chirp 3):**
+am-ET & om-ET136. **TTS:** Standard Cloud TTS am-ET reported missing/unreliable in official
+voice lists27; gemini-3.1-flash-tts-preview supports am-ET28. | **Amharic (am-ET)** (Hohe &
+open Addis Scribe Streaming); Ethio-ASR covers Amharic, Sidama (33.0% WER), Wolaytta
+(39.4% WER), and Afaan Oromo26. | **English** (strong); **Amharic** listed in Whisper
+multilingual, Shook fine-tuned for Amharic26. | Covers 1,107 languages including amh, orm, tir,
+eng29. | **English** widely supported; **Amharic** absent on most browsers (eSpeak-NG
+provides basic formant synthesis)126. | **Any language** (Amharic, Afaan Oromoo, Tigrinya,
+English, Sidama, Wolaytta). |
+| **2\. Amharic Dialect & Accent Performance** | Fine-tuned on \>5,000 hrs of quality-checked
+Amharic speech; handles dialect variation and natural conversational WAXAL clips30. | Solid on
+
+===== PAGE 40 =====
+standard urban read speech; less tailored to regional rural dialects. | Evaluated on WAXAL
+natural speech across male (33.5% WER) and female (31.9% WER) speakers30. | Strong
+across both FLEURS read speech (20.2% WER) and WAXAL natural speech (25.4% WER;
+26.3% male, 25.0% female)30. | **Vanilla Whisper fails (\>100% WER per Ethio-ASR paper
+cited by dataset.et)**26. Fine-tuned Shook scores 35.0% WER on WAXAL30. | Poor on natural
+Amharic (52.0% WER reported by dataset.et)26. | Unreliable for Amharic across standard
+Android browsers. | **Authentic** native human speakers for each target region. |
+| **3\. Speech Recognition (ASR) Quality** *(Addis AI & dataset.et benchmarks)* | **WAXAL:**
+28.4% WER / 13.1% CER (0.32 s live) & 27.3% WER / 12.4% CER (1.12 s / upload).
+**FLEURS:** 19.8% WER / 8.2% CER (150 clips) & 20.6% WER / 7.7% CER (all 516). **Afaan
+Oromo:** 21.1% WER30. *Caveat: open streaming model outputs no punctuation*137. |
+Commercial cloud ASR for am-ET and en-US, though general models often struggle with
+Ethiopian proper nouns27. | **Chirp 3 (am-ET):** 32.5% WER / 16.5% CER (live streaming),
+29.2% WER / 13.5% CER (batch). **Gemini 4 Argon:** 25.6% WER / 11.6% CER (batch only).
+**Gemini Flash:** 28.2% WER / 14.8% CER30. | **Hohe (wav2vec2-BERT):** Best overall
+WAXAL accuracy at **25.4% WER / 11.2% CER** and **20.2% WER / 7.3% CER** on
+FLEURS (516 clips)30. **Ethio-ASR 1B:** 10.3% CER with 0/500 badly wrong transcripts on
+dataset.et26. | **Vanilla Whisper:** **\>100% WER**26. **Shook (Whisper Medium):** 35.0%
+WER / 16.6% CER on WAXAL (9.1% CER homophone-folded on dataset.et, 6/500 badly
+wrong)26. | **52.0% WER** on dataset.et Amharic test set26. | Not usable for production
+Amharic form dictation. | N/A (Playback only). |
+| **4\. TTS Voice Quality & Naturalness** *(Addis AI Aug 2026 benchmark, n=100 clips / 87
+prompts)* | **Rank \#1 Blind Listening:** **4.25 / 5.00** composite (Naturalness 4.01,
+Intelligibility 4.80, Quality 3.94). ASR-judge: 4.44% CER / 13.87% WER (non-digits), 5.76%
+CER / 15.80% WER (strict full set), 28.18% WER (numeric-only). 56 voices across 7
+languages28. | **Two documented voices (am-ET-AmehaNeural, am-ET-MekdesNeural):**
+Composite **3.49 / 5.00** (Intelligibility 4.49, Naturalness 2.54). Low ASR-judge error: **3.03%
+CER / 11.16% WER** (Ameha) and **4.15% CER / 13.01% WER** (Mekdes)28. | **Gemini 3.1
+Flash TTS:** Composite **3.84 / 5.00** (Naturalness 3.90, Intelligibility 3.96), lowest ASR-judge
+error **2.89% CER / 11.02% WER** (3.90% / 12.48% full set)28. Standard Cloud TTS am-ET
+unreliable27. | N/A (ASR models only). *(For comparison, OpenAI gpt-4o-mini-tts scored 2.55/5
+& 31.34% WER; **ElevenLabs v3 failed at 2.00/5 & 147.86% WER***28). | N/A (ASR only). |
+**mms-tts-amh:** Composite **3.03 / 5.00** (Naturalness 3.09, Intelligibility 2.84), **7.86% CER
+/ 22.89% WER**28. | **English:** Good OS voices. **Amharic (eSpeak-NG):** Robotic formant
+synthesis126. | **Human studio quality**, accurate ejective & gemination pronunciation, zero
+digit errors27. |
+| **5\. Latency** | **ASR Live:** First words **1.56 s**, final text **30 ms** after speech ends (34
+ms on 1.12 s chunks; upload 1.08 s/min)30. **TTS p50:** **5.401 s** (p95 10.827 s, RTF
+0.444)28. | **TTS p50:** **Fastest in benchmark at 1.045 s – 1.046 s** (p95 1.752 s – 1.871 s,
+RTF 0.106–0.110)28. | **Chirp 3 ASR Live:** First words **6.67 s**, final text **1,411 ms**
+(batch 9.74 s/min). **Gemini 4 Argon ASR:** 47.31 s/min30. **Gemini Flash TTS p50:** **8.941
+s** (p95 17.537 s, RTF 0.700)28. | **Addis Scribe Open:** 30 ms final latency on GPU137.
+
+===== PAGE 41 =====
+**Hohe:** Offline batch only (requires full recording before decoding)30. | **Shook Live
+(WhisperLiveKit):** First words 3.66 s, final text **10,839 ms** because it re-transcribes all
+audio once per second30. | **TTS p50:** **7.014 s** (p95 18.444 s, RTF 0.576) run locally28. |
+**\< 50 ms** for local OS TTS (window.speechSynthesis). | **\< 20 ms** from local Service
+Worker / IndexedDB cache. |
+| **6\. Pricing** | **TTS (Addis Voices 2):** **\$0.016 / min (150 ETB / hr)**. **Realtime
+WebSocket:** \~\$0.082 / min. Free \$3.17 signup credit (no card required)29. | Pay-as-you-go
+cloud billing; requires international credit card / Azure subscription. | Pay-as-you-go cloud billing
+(\~\$2 for 250 test clips in benchmark); requires Google Cloud billing account30. | **\$0 (Free
+open weights)**; requires self-hosted GPU/CPU server infrastructure30. | **\$0 (Free open
+weights)**; high server compute cost due to re-transcription loop30. | **\$0 (Free open
+weights)**28. | **\$0 (Free browser/OS native)**. | **\$0 runtime API cost**; one-time recording
+session for static form prompts. |
+| **7\. API & Infrastructure Requirements** | REST API & single-WebSocket Realtime API
+(docs.addisassistant.com); Enterprise on-prem/VPC available29. | Azure Speech SDK / REST /
+WebSocket via backend token proxy. | Google Cloud Service Account JSON (asia-southeast1
+for Chirp am-ET) or Google AI Studio key30. | Self-hosted Python service (NVIDIA NeMo 3.0,
+numba-cuda\[cu12\] for Addis Scribe Streaming; Hugging Face for Hohe)30. | Self-hosted
+Python / WhisperLiveKit server30. | Local or server Python / ONNX runtime28. | Zero backend;
+standard DOM window.speechSynthesis. | Static CDN / Service Worker .opus files. |
+| **8\. Privacy & Data Sovereignty** | Hosted by Addis AI with **Enterprise On-Prem / VPC
+deployment** for banks, telcos, NGOs, and governments29. | Cloud processing outside
+Ethiopia. | Processed on Google Cloud global regions (asia-southeast1)145. | **Full Data
+Sovereignty:** Runs on Savanna's own servers; zero third-party data transfer137. | **Full Data
+Sovereignty** when self-hosted. | **Full Data Sovereignty** (runs locally)28. | TTS is on-device;
+browser SpeechRecognition sends audio to vendor clouds. | **100% Private** (static downward
+audio only; zero user audio transmitted). |
+| **9\. Offline Capability** | Cloud API requires internet; on-prem works on institutional LAN29. |
+Cloud API requires internet. | Cloud-only (requires internet connection)30. | Runs offline on local
+server (Hohe is offline batch); 0.6B–1B models are too heavy for low-end 2 GB Android
+browsers26. | Too heavy for low-end Android in-browser execution. | Can run offline on local
+desktop/edge server28. | window.speechSynthesis and eSpeak-NG work **offline**126. |
+**100% Offline** via Service Worker Cache API / IndexedDB. |
+| **10\. Client Device Requirements** | Any device with basic audio playback/recording
+(compute happens on server)29. | Any device with basic audio playback/recording. | Any device
+with basic audio playback/recording. | Thin client browser; server needs NVIDIA GPU (for live
+streaming) or CPU (Hohe batch)30. | Thin client browser; server requires GPU. | High
+RAM/CPU if run on client; light on client if run on local server28. | Any browser supporting Web
+Speech API126. | Works on the **lowest-end Android devices** with minimal RAM/CPU
+overhead. |
+
+===== PAGE 42 =====
+| **11\. Integration Complexity** | **Low** (REST/WebSocket SDK with native am, om, ti, sid,
+wal codes)29. | **Low–Medium** (mature SDK, requires backend token exchange). |
+**Medium** (Chirp requires regional endpoint asia-southeast1 and service-account auth)30. |
+**Medium–High** (requires deploying Python/NeMo/Transformers container)137. |
+**Medium–High** (live chunking has growing delay; requires Seq2SeqBT5 spacing post-
+processor)30. | **Medium** (requires text normalization wrapper)28. | **Low** (standard browser
+API). | **Low** (standard HTML5 \<audio\> element \+ manifest mapping questionId to .opus
+URL). |
+| **12\. Licensing & Commercial Use** | Commercial API (\$0.016/min); open weights released
+on Hugging Face for Addis Scribe Streaming29. | Commercial SLA under Microsoft Azure
+terms. | Commercial SLA under Google Cloud terms. | Open weights on Hugging Face (Addis
+Scribe Streaming / Hohe)30. | Open weights (Whisper / Shook)26. | Open weights (Meta
+MMS)28. | Open source (eSpeak-NG) / OS built-in126. | **100% Owned by Savanna /
+OpenPath**. |
+### **3\. Handling Code-Switching, Names, Phone Numbers, Addresses, and Recognition
+Failures**
+* **Addressing Numeric and Proper-Noun Errors in Amharic TTS:** In the August 2026 Addis
+Voice 2 benchmark (28), excluding digits across 87 prompts yielded **4.44% CER and 13.87%
+WER**, whereas evaluating the **13 numeric-only prompts yielded 14.94% CER and 28.18%
+WER** (with the full 100-prompt strict set at 5.76% CER / 15.80% WER). AmiSus's 2026
+Amharic TTS guide likewise notes that synthetic voices slip most on numbers, abbreviations,
+personal names, and place names, recommending spelling out numbers and abbreviations in
+*fidel* and keeping sentences broken cleanly at ።27. OpenPath therefore includes a
+deterministic **Amharic Number-to-Fidel Expander** in @openpath/ethiopia that converts digits
+(such as phone numbers, dates, and ages) into written Amharic words before passing dynamic
+strings to cloud TTS.
+* **Code-Switching, Names, and Post-ASR Normalization:**
+* Because open streaming ASR models like Addis Scribe Streaming had punctuation removed
+from their training text and are trained on Amharic speech (137), raw outputs lack punctuation
+and may struggle with code-switched English technical terms or homophone variations in
+Ethiopian names and Woredas.
+* Following arXiv:2404.13362v1 (31), OpenPath's backend speech pipeline applies
+Seq2SeqBT5 sub-word spacing normalization for free-text dictation.
+* Following dataset.et's empirical finding (26), Shook Medium and Ethio-ASR 1B are
+complementary (Shook was better on 61% of recordings and Ethio-ASR on 29%, with Ethio-
+ASR producing 0/500 badly wrong transcripts); keeping recordings where two models agree
+
+===== PAGE 43 =====
+within 0.10 CER cuts label error nearly in half (from 0.091 to 0.052)26. For asynchronous offline
+voice recordings uploaded when connectivity returns, OpenPath can cross-check Addis Scribe
+and Hohe transcripts and flag any divergence (\> 0.10 CER) for explicit user or human
+review26.
+* For structured fields (\<EthiopianAddressSelector /\>, \<SearchableSelect /\>), OpenPath
+folds Ge'ez homophones (26) and matches the spoken utterance against the valid schema
+options, presenting the top matches inside **\<AnswerConfirmation /\>** so the user confirms
+with a single tap or spoken *"አዎ (Yes)"*31.
+### **4\. Recommended Speech Strategy & Provider Abstraction for React/TypeScript**
+To ensure OpenPath **never depends on an AI API for basic accessibility** while offering a
+natural voice experience when online:
+> 1. **Tier 0 (Pre-Recorded Opus Audio — 100% Offline, \$0 API Cost):** Pre-record all core
+static onboarding questions, hints, and error messages in studio-quality Amharic, Afaan
+Oromoo, Tigrinya, and English .opus files cached via Service Worker.
+> 2. **Tier 1 (Cloud Neural TTS for Dynamic Read-Back):** Use **Addis Voice 2** (\$0.016/min
+or 150 ETB/hr, highest human listening score 4.25/5.0, supports Amharic, Afaan Oromoo, and
+Tigrinya28) and **Microsoft Azure Neural TTS (am-ET-AmehaNeural)** (fastest 1.05 s median
+latency28) behind a backend proxy with number-to-*fidel* expansion, falling back to browser
+window.speechSynthesis for English.
+> 3. **Tier 2 (Live & Batch ASR with Mandatory Confirmation):** Use **Addis Scribe
+Streaming** (28.4% WAXAL WER, 30 ms final latency, supports Amharic, Afaan Oromoo 21.1%
+WER, Tigrinya, Sidama, and Wolaytta30) paired with open-weight **Hohe (wav2vec2-BERT,
+25.4% WAXAL WER)** for batch verification, always gated by \<AnswerConfirmation /\>30.
+TypeScript
+// packages/speech/src/types.ts
+export type SupportedLocale \= 'am-ET' \| 'om-ET' \| 'ti-ET' \| 'en-US';
+export interface TTSRequest {
+text: string;
+
+===== PAGE 44 =====
+locale: SupportedLocale;
+prerecordedUrl?: string; // Tier 0: Static Opus asset URL (offline-first)
+rate?: number; // 0.75 \| 1.0 \| 1.25
+onBoundary?: (charIndex: number, charLength: number) \=\> void;
+}
+export interface ASRResult {
+transcript: string;
+normalizedTranscript: string; // Ge'ez homophones folded \+ Seq2Seq spacing normalized
+confidence: number; // 0.0 to 1.0
+isFinal: boolean;
+providerUsed: 'addis-scribe' \| 'hohe-open' \| 'azure' \| 'web-speech' \| 'offline-queued';
+latencyMs?: number;
+}
+export interface SpeechProviderAdapter {
+readonly id: string;
+supportsLocale(locale: SupportedLocale, mode: 'asr' \| 'tts'): boolean;
+isAvailableOffline(locale: SupportedLocale, mode: 'asr' \| 'tts'): Promise\<boolean\>;
+speak(req: TTSRequest, signal?: AbortSignal): Promise\<void\>;
+startStreamingASR(
+locale: SupportedLocale,
+onPartialOrFinal: (result: ASRResult) \=\> void,
+signal?: AbortSignal
+): Promise\<{ stopAndFinalize: () \=\> Promise\<ASRResult\> }\>;
+transcribeBatchBlob(audioBlob: Blob, locale: SupportedLocale): Promise\<ASRResult\>;
+
+===== PAGE 45 =====
+}
+## **Deliverable H: Ethiopian Context, Low-Bandwidth Design, and Technical Architecture**
+### **1\. Designing for the Ethiopian Technological, Linguistic, and Civic Context**
+OpenPath's architecture incorporates six specific engineering adaptations grounded in
+Ethiopian digital public-service documentation (12):
+> 1. **Android-First, Low-Bandwidth, Offline-Capable Architecture:**
+* Targeting budget Android smartphones (such as Android 6+ devices with 2 GB RAM96) over
+intermittent mobile connections, OpenPath keeps its core JS bundle compact, avoids
+downloading multi-hundred-megabyte ML models to the client browser, and persists all form
+state, administrative dictionaries, and static .opus audio prompts in a **Service Worker \+
+IndexedDB Offline Store**4.
+* When cloud speech services are unreachable, users still hear pre-recorded .opus question
+audio, read high-contrast or Easy-Read text, and complete the entire onboarding flow offline;
+any recorded voice answers or document photos queue in IndexedDB for background
+synchronization once connectivity returns.
+> 2. **Ge'ez Script (*Fidel*) Rendering:**
+* Amharic and Tigrinya use the Ge'ez syllabary (*fidel*)27. OpenPath sets generous vertical
+line spacing (line-height: 1.65 default, 1.9 in Reading Assistance mode), bans font-style: italic
+(51), and pairs system Ethiopic fonts with a subsetted Noto Sans Ethiopic WOFF2 fallback.
+> 3. **Patronymic Three-Part Naming (First, Middle/Father's, Surname/Grandfather's):**
+* Matching the **Fayda National ID card layout** (ሙሉ ስም \| First, Middle, Surname, e.g.,
+ይደርሳል ጌታሁን ካሳነህ / Yidersal Getahun Kassaneh and ኤልያስ ባጫ ሂካ / Eliyas Bacha Hika12),
+OpenPath replaces Western "First Name / Family Surname" fields with **ስም (Given Name)**,
+**የአባት ስም (Father's Name)**, and **የአያት ስም (Grandfather's Name)**.
+> 4. **Dual Ethiopian Calendar (EC) & Gregorian Calendar (GC) \+ Declared Year-Only
+Birthdates:**
+* As printed on Fayda credentials (የትውልድ ቀን \| Date of Birth: 16/08/1990 \| 1998/04/24 and
+03/05/1978 \| 1986/01/1112), Ethiopia uses both the Ethiopian Calendar and Gregorian
+Calendar. Moreover, the **Fayda NIDP Update Centers directive** (id.et/updatecenters13)
+
+===== PAGE 46 =====
+states: *"If any of these documents show only the year and not the date and the month, the
+declared date and month shall be recorded on the update platform."* OpenPath's \<DateInput
+/\> lets users enter dates in either EC or GC and provides an explicit toggle when their
+supporting document lists only the birth year12.
+> 5. **Regional and Administrative Address Hierarchy (Region \-\> Zone/Sub-City \-\> Woreda \-
+\> Kebele \+ Landmark):**
+* Mirroring Fayda ID fields (ክልል/ከተማ አስተዳደር \| Region/City Admin, ዞን/ከተማ አስተዳደር/ክፍለ
+ከተማ \| Zone/City Admin/Sub City, ወረዳ/ከተማ አስተዳደር/ቀበሌ \| Woreda/City Admin/Kebele12) and
+Addis Ababa service center locations (Arada Woreda, Bole Medhanialem Woreda, Hayahulet,
+Jemo, Saris, Kolfe Keranio, Nifas Silk, Yeka Woreda 1213), \<EthiopianAddressSelector /\>
+uses cascading Region, Zone/Sub-City, Woreda, and Kebele/Landmark fields rather than
+Western street/ZIP inputs.
+> 6. **Inclusive Identity Verification (Fayda eSignet \+ 33+ Alternative Documents \+ Witness
+Consent):**
+* Over **30 million** individuals in Ethiopia have registered for the **Fayda ID** as of 2025
+under the Ethiopian Digital ID Proclamation No. 1284/202315. OpenPath supports Fayda
+verification via the National ID Program's open-source **eSignet OIDC/OAuth2** integration
+(National-ID-Program-Ethiopia/fayda-auth-go and fayda-auth-python112) or 16-digit FCN / QR
+code entry12.
+* For vulnerable or rural applicants without a Fayda ID, the World Bank ID4D study across six
+Ethiopian regions notes that the NIDP **accepts over 33 different ID documents** as proof of
+biographic data (such as Resident/Kebele ID, Birth Certificate, School ID, Employment ID,
+Pension ID, Driving License, or a letter from a local authority13) as well as **Witness-Based
+Consent Forms** (Witness Consent Form Main \- With Witness14). OpenPath's
+\<DocumentCaptureAssistant /\> supports all 33+ document categories plus a structured
+Witness Attestation workflow13.
+### **2\. What Must Be Tested Directly With Ethiopian Users**
+Rather than inferring everything from international studies, four areas must be tested directly
+with Ethiopian users in partnership with the **Federation of Ethiopian Associations of Persons
+with Disabilities (FEAPD / FENAPD, a consortium of 38 national and regional OPDs)** and its
+members—**ENAB** (Blind), **ENAD** (Deaf), **ENAID** (Intellectual Disabilities), **ENADB**
+(Deaf-Blind), **ENAPAL**, **ECDD**, **SENEthiopia**, and the **University of Gondar Grand
+Assistive Technology (GAT) Center**63:
+
+===== PAGE 47 =====
+> 1. **Local Comprehensibility of AAC & Easy-Read Pictograms:** International symbol sets
+(ARASAAC, Mulberry75) must be evaluated with **ENAID** members and rural job seekers to
+identify which symbols require Ethiopian cultural adaptation80.
+> 2. **EthSL Regional Sign Variations:** Because sign variations exist across geographic areas
+and Deaf schools in Ethiopia (such as Jimma, Nekemte, Addis Ababa, and Hawasa16), all
+onboarding EthSL video prompts must be reviewed with **ENAD** and Addis Ababa
+University's Ethiopian Sign Language program73.
+> 3. **Amharic and Afaan Oromoo Easy-Language Guidelines:** How European Easy-
+Language principles (avoiding co-references and keeping one proposition per sentence57) map
+onto Amharic's agglutinative verb morphology (82) must be validated with local educators and
+**EthioNLP** researchers149.
+> 4. **Trust and Privacy in Assisted Completion:** Building on the World Bank ID4D
+consultations across six Ethiopian regions (15), testing must verify how applicants prefer to
+disclose sensitive disability or accommodation details when assisted by a family member or
+community agent.
+### **3\. Production Technical Architecture for OpenPath**
+![][image5]
+#### **Monorepo Organization and Package Structure**
+OpenPath is organized as a **Turborepo \+ pnpm** TypeScript monorepo with clean package
+boundaries:
+* **@openpath/core**: Framework-agnostic form schema parser, step router, conditional
+branching engine, 3.3.7 Redundant Entry pre-fill resolver, validation engine, IndexedDB
+persistence manager (SaveInProgress 1-second debounced autosave \+ normalizeReturnUrl),
+and the AdaptivePreferenceStore4.
+* **@openpath/ethiopia**: Deterministic **Ethiopian Calendar (EC) \<-\> Gregorian Calendar
+(GC)** converter, Amharic number-to-*fidel* text normalizer (mitigating TTS numeric errors27),
+Ge'ez homophone folder (26), Region/Zone/Sub-City/Woreda datasets (12), and localized am-
+ET, om-ET, ti-ET, en-US UI strings29.
+
+===== PAGE 48 =====
+* **@openpath/speech**: Pluggable SpeechProviderAdapter implementing the 4-tier speech
+architecture (Pre-recorded .opus \-\> Addis Voice 2 / Azure Neural TTS \-\> Addis Scribe
+Streaming / Hohe Batch \-\> Browser Web Speech API / Offline Queue)28.
+* **@openpath/react**: The 42 accessible React/TypeScript components built on native HTML
+elements \+ selective **React Aria** hooks (useComboBox, useDialog, useFocusScope) \+
+Radix-style asChild slot composition, styled via CSS Custom Properties (--op-\*)21.
+* **@openpath/wc & @openpath/standalone**: Wraps \<OpenPathForm /\> inside a standard
+Custom Element (\<openpath-form\>) bundled with Preact compat (3 KB3) so non-React
+platforms can load it via a single \<script\> tag.
+* **@openpath/server**: Backend API service handling encrypted session sync, speech API
+key/WebSocket proxying (plus the optional self-hosted Hohe / Seq2SeqBT5 container), and
+**Fayda eSignet OIDC** verification (fayda-auth-go / fayda-auth-python112).
+* **@openpath/testing**: Shared Playwright \+ axe-core \+ WCAG 2.2 AA assertion suite9.
+#### **Shadow DOM vs. Light DOM: Solving the Cross-Root ARIA Problem**
+When building Web Components (\<openpath-form\>) for third-party embedding, using granular
+**Shadow DOM** creates severe accessibility hazards (22):
+> 1. **ID Scoping Breaks ARIA Relationships:** In Shadow DOM, element IDs are scoped to
+their shadow root. Any aria-labelledby, aria-describedby, aria-controls, aria-activedescendant, or
+\<label for\> attribute that points across a shadow boundary **fails silently**, leaving inputs
+unlabeled or detaching error messages for screen reader users22.
+> 2. **Limitations of Reflected ARIA Element Properties on Older Browsers:** While W3C
+introduced ElementInternals and reflected JavaScript element references
+(element.ariaLabelledByElements \= \[label\]) to bridge shadow roots, Google Chrome's official
+documentation notes that these properties **only resolve outward** (towards ancestor trees, not
+inward into descendant shadow roots while the Reference Target proposal remains emerging)
+and only reached cross-browser support in **Chrome 135 (April 2025\) and Firefox 136 (March
+2025\)** (with Safari 16.4 in March 2023\)22. Furthermore, Safari has permanently declined
+customized built-in elements (extends HTMLButtonElement with is="...")25. On older Android
+browsers and WebViews common in Ethiopia, cross-root ARIA reflection is unavailable.
+> 3. **OpenPath's Hybrid Light-DOM \+ CSS @scope / @layer Architecture:** Following
+Chrome's and Nolan Lawson's guidance (22), \<openpath-form\> renders its form controls in the
+**Light DOM** (or keeps every label, hint, error, and input within the same DOM tree without
+splitting components across separate shadow roots) and isolates styles using **CSS @layer
+
+===== PAGE 49 =====
+and @scope (.op-root)**22. This preserves 100% compatibility with native \<label for\>, aria-
+describedby, browser password-manager autofill (WCAG 3.3.8), and automated axe-core
+auditing across all Android and desktop browsers22.
+#### **Consuming OpenPath Across All 4 Channels Without Replacing Existing Frontends**
+> 1. **React / npm (@openpath/react):** Imported directly as \<OpenPathForm
+schema={schema} /\> or individual components (\<DateInput /\>, \<EthiopianAddressSelector
+/\>).
+> 2. **Standalone \<script\> Bundle (@openpath/standalone):** Loaded via \<script
+src="https\://cdn.savanna.et/openpath/v1/openpath.iife.js" defer\>\</script\> and mounted into
+any \<div id="openpath-mount"\>\</div\> via OpenPath.mount('\#openpath-mount', config).
+> 3. **Web Component (@openpath/wc):** Declared in any HTML/PHP/Django/Angular
+template via \<openpath-form schema-url="/schemas/onboarding.json" locale="am-
+ET"\>\</openpath-form\>.
+> 4. **REST & WebSocket APIs (@openpath/server):** Provides POST /api/v1/sessions (pre-
+populating known institutional data for **WCAG 3.3.7 Redundant Entry**), PATCH
+/api/v1/sessions/:id (1-second autosave sync), POST /api/v1/auth/fayda (eSignet OIDC
+verification), and WSS /api/v1/speech/stream (Addis Scribe proxy)4.
+#### **Example Component API and Sample Form Schema**
+TypeScript
+// Example 1: Consuming Individual Accessible Components in React/TypeScript
+import {
+QuestionPage,
+DateInput,
+GuidedQuestion
+} from '@openpath/react';
+export function BirthdateStep({ state, onUpdate, onNext, onBack, errors }) {
+
+===== PAGE 50 =====
+return (
+\<QuestionPage
+stepId="dob-step"
+chapterTitle="1. Personal Identity (የግል መረጃ)"
+currentStepIndex={2}
+totalChapters={4}
+errors={errors}
+onContinue={onNext}
+onBack={onBack}
+\>
+\<GuidedQuestion
+questionId="dob"
+audioSrc="/audio/am/dob-question.opus"
+ethslVideoSrc="/video/ethsl/dob-sign.webm"
+easyReadSummary={\[
+"Tell us the day, month, and year you were born.",
+"You can use the Ethiopian Calendar or the Gregorian Calendar.",
+"If your ID card only shows the year, check the box for 'Year only'."
+\]}
+\>
+\<DateInput
+id="applicant-dob"
+legend="የትውልድ ቀንዎ መቼ ነው? (What is your date of birth?)"
+isPageHeading={true}
+calendarMode={state.calendarMode ?? 'EC'}
+allowYearOnly={true}
+
+===== PAGE 51 =====
+hint="ለምሳሌ፦ 16 08 1990 ዓ.ም (For example, 16 08 1990 EC)"
+whyWeAsk="We ask for your birth date to match your training eligibility and Fayda ID."
+value={state.dob}
+error={errors?.dob}
+onChange={(newDob) \=\> onUpdate({ dob: newDob })}
+/\>
+\</GuidedQuestion\>
+\</QuestionPage\>
+);
+}
+JSON
+{
+"\$schema": "https\://openpath.savanna.et/schemas/v1/form-schema.json",
+"formId": "savanna-learner-onboarding-v1",
+"version": "1.0.0",
+"defaultLocale": "am-ET",
+"supportedLocales": \["am-ET", "en-US", "om-ET", "ti-ET"\],
+"autosave": {
+"enabled": true,
+"debounceMs": 1000,
+"offlineStorage": "indexeddb"
+},
+"chapters": \[
+{
+"chapterId": "identity",
+
+===== PAGE 52 =====
+"title": {
+"am-ET": "1. የግል መታወቂያ እና ስም",
+"en-US": "1. Personal Identity and Name"
+},
+"steps": \[
+{
+"stepId": "full-name-step",
+"pacingMode": "group-atomic-adaptable",
+"title": {
+"am-ET": "ሙሉ ስምዎን ያስገቡ",
+"en-US": "Enter your full name"
+},
+"media": {
+"audioOpusUrl": { "am-ET": "/assets/audio/am/full-name.opus" },
+"ethslVideoUrl": "/assets/video/ethsl/full-name.webm"
+},
+"easyRead": {
+"illustrationId": "person-id-card",
+"sentences": {
+"am-ET": \[
+"የእርስዎን ስም፣ የአባትዎን ስም እና የአያትዎን ስም ይጻፉ።",
+"በመታወቂያዎ ላይ እንዳለው አድርገው ይጻፉት።"
+\],
+"en-US": \[
+"Write your given name, your father's name, and your grandfather's name.",
+"Write your name exactly as it appears on your ID card or school paper."
+
+===== PAGE 53 =====
+\]
+}
+},
+"fields": \[
+{
+"fieldId": "givenName",
+"type": "text",
+"autocomplete": "given-name",
+"required": true,
+"voiceSlotType": "name",
+"label": { "am-ET": "ስም (Given Name)", "en-US": "Given Name" },
+"validation": {
+"maxLength": 50,
+"normalizeHomophones": true,
+"errorMessages": {
+"required": {
+"am-ET": "የእርስዎን ስም ያስገቡ",
+"en-US": "Enter your given name"
+}
+}
+}
+},
+{
+"fieldId": "fathersName",
+"type": "text",
+"autocomplete": "additional-name",
+
+===== PAGE 54 =====
+"required": true,
+"voiceSlotType": "name",
+"label": { "am-ET": "የአባት ስም (Father's Name)", "en-US": "Father's Name" }
+},
+{
+"fieldId": "grandfathersName",
+"type": "text",
+"autocomplete": "family-name",
+"required": true,
+"voiceSlotType": "name",
+"label": { "am-ET": "የአያት ስም (Grandfather's Name)", "en-US": "Grandfather's Name" }
+}
+\]
+},
+{
+"stepId": "identity-proof-step",
+"title": {
+"am-ET": "መታወቂያ ወይም ማስረጃ አለዎት?",
+"en-US": "Do you have an ID card or supporting document?"
+},
+"fields": \[
+{
+"fieldId": "idType",
+"type": "radio-group",
+"isPageHeading": true,
+"required": true,
+
+===== PAGE 55 =====
+"options": \[
+{
+"value": "fayda\_fcn",
+"label": { "am-ET": "አዎ፣ የፋይዳ (Fayda) ዲጂታል መታወቂያ አለኝ", "en-US": "Yes, I have a
+Fayda Digital ID" },
+"conditionalInput": {
+"fieldId": "faydaNumber",
+"type": "number-identifier",
+"label": { "am-ET": "ባለ 16 ዲጂት የፋይዳ ቁጥር (FCN)", "en-US": "16-digit Fayda Card
+Number (FCN)" }
+}
+},
+{
+"value": "alternative\_doc",
+"label": { "am-ET": "የቀበሌ፣ የትምህርት ቤት ወይም የማህበር መታወቂያ አለኝ", "en-US": "I have
+a Kebele, School, or Association ID" }
+},
+{
+"value": "witness\_attestation",
+"label": { "am-ET": "መታወቂያ የለኝም — በምስክር ወይም በረዳት መመዝገብ እፈልጋለሁ", "en-
+US": "I do not have an ID — register with a witness or helper" }
+}
+\]
+}
+\],
+"branches": \[
+{
+"when": { "fieldId": "idType", "equals": "witness\_attestation" },
+
+===== PAGE 56 =====
+"gotoStepId": "witness-consent-step"
+}
+\]
+}
+\]
+}
+\]
+}
+## **Deliverable I: Accessibility Testing and Quality Assurance Strategy**
+Passing an automated scan is never sufficient proof of accessibility131. Deque Systems' 2021
+study found that automated testing with **axe-core covers roughly 57% of WCAG issues by
+volume**, while simpler audits like Google Lighthouse catch only **30% to 40%** of issues9.
+### **1\. What Automated Testing Cannot Detect**
+Automated scanners cannot detect:
+> 1. **Actual Screen-Reader Speech Output:** Only manual screen-reader testing reveals
+whether dynamic state changes are actually announced—such as the alphagov/govuk-frontend
+\#979 finding that **JAWS 2026, NVDA 2026.1, VoiceOver, and TalkBack on Android 17 do not
+announce expanded/collapsed states on radio buttons**8.
+> 2. **Live Region Timing Collisions:** Automation checks that aria-live exists, but cannot detect
+whether un-debounced status updates talk over a user's typing (requiring GOV.UK's 1,400 ms
+debounce65).
+> 3. **Linguistic, Sensory, and Cognitive Quality:** Automation cannot verify whether Amharic
+TTS mispronounces digits (28.18% WER on numeric prompts28), whether EthSL sign videos
+match the question meaning, or whether Easy-Read text eliminates confusing pronoun co-
+references57.
+
+===== PAGE 57 =====
+> 4. **WCAG 2.2 Flow & Pointer Criteria:** Criteria such as **2.4.11 Focus Not Obscured**,
+**2.5.7 Dragging Movements**, **3.2.6 Consistent Help**, **3.3.7 Redundant Entry**, and
+**3.3.8 Accessible Authentication** require manual keyboard, pointer, and flow walkthroughs36.
+### **2\. Evaluation of Testing Tooling for OpenPath**
+* **@axe-core/playwright (CI/CD Gate):** Runs headless browser checks across every
+component and form state (initial, focused, validation error, conditional reveal, Check-Your-
+Answers, 320 px mobile viewport) enforcing zero violations on WCAG 2.0, 2.1, and 2.2 AA rules
+(including target-size 2.5.8)9.
+* **Storybook Accessibility Addon (@storybook/addon-a11y):** Provides real-time component-
+level axe-core inspection during development.
+* **Microsoft Accessibility Insights (Web & Android):** Used for **FastPass** (which pairs
+automated checks with visual **Tab Stops** tracing to verify focus order and catch keyboard
+traps) and guided manual WCAG assessments11.
+* **WAVE (WebAIM) & Colour Contrast Analyser (CCA):** Visual structure/heading inspection
+and foreground/background contrast verification9.
+### **3\. Comprehensive Accessibility Test Matrix (Learner Registration Journey)**
+| User Group | Interaction Method & Primary AT | Registration Test Scenario (Savanna Learner
+Onboarding) | Expected System Behavior | Testing Tool / Environment | Strict Pass/Fail Criteria
+|
+| :---- | :---- | :---- | :---- | :---- | :---- |
+| **1\. Blind Desktop Learner** | Keyboard \+ **NVDA 2026.1** on Windows (Chrome/Firefox)8. |
+User navigates from Start Page \-\> enters Full Name \-\> submits empty Date of Birth \-\> fixes
+error \-\> reviews on Check-Your-Answers \-\> edits Father's Name \-\> submits. | On step load,
+focus lands on \<h1\> (announced once). Submitting empty DOB shifts focus to
+\<ErrorSummary\> ("There is a problem"), prepends "Error: " to \<title\>, and Enter on error link
+focuses \#applicant-dob-day. On Check Answers, Change link announces "Change Father's
+Name" (visuallyHiddenText)18. | NVDA Speech Viewer log \+ Accessibility Insights FastPass41.
+| **PASS:** 0 unlabeled controls, 0 duplicate \<h1\>/\<label\> announcements, 100% focus
+recovery on error & back navigation. **FAIL:** Focus lost to \<body\> or generic "Change" link
+announced without context. |
+
+===== PAGE 58 =====
+| **2\. Blind Mobile Job Seeker (Ethiopia)** | Touchscreen Linear Swipe \+ Explore-by-Touch on
+**Android TalkBack \+ Chrome**8. | User selects Region/Sub-City in
+\<EthiopianAddressSelector /\>, captures Kebele ID photo using \<DocumentCaptureAssistant
+/\>, and uses \<VoiceInput /\> in Amharic. | Address combobox announces filtered option count
+**1,400 ms after last character typed**65. Camera assistant speaks framing cues ("Hold
+steady"). Voice input triggers \<AnswerConfirmation /\> card reading back recognized *fidel*
+before saving31. | Android device (2 GB RAM) with TalkBack enabled43. | **PASS:** All
+elements reachable via single right-swipe; zero disabled buttons trapping swipe; radio buttons
+do not falsely announce "Double tap to collapse"46. |
+| **3\. Low-Vision Learner (Magnification & Reflow)** | **400% Browser Zoom** (320 CSS px
+width) \+ High Contrast \+ WCAG 1.4.12 Text Spacing (line-height: 1.8, letter-spacing:
+0.12em)36. | User completes entire 5-chapter registration with 400% zoom and custom text
+spacing on both English and Amharic (*fidel*) screens. | Layout reflows into a single vertical
+column with zero horizontal scrollbars (WCAG 1.4.10). Focused inputs scroll clear of sticky
+preference/help bars (scroll-margin, WCAG 2.4.11). Input borders maintain \>=3:1 contrast
+(WCAG 1.4.11)36. | Chrome DevTools (320×568 viewport at 100% / 1280×1024 at 400%) \+
+CCA Contrast Analyzer64. | **PASS:** document.documentElement.scrollWidth \<=
+window.innerWidth; zero clipped Ge'ez ascenders/descenders; focused element 100% visible.
+**FAIL:** Any horizontal scrollbar or obscured focus ring. |
+| **4\. Motor-Impaired / Tremor / Switch User** | **Keyboard-Only (Tab, Shift+Tab, Space,
+Enter, Arrows)** \+ **Android Switch Access** \+ **Voice Access**37. | User uploads
+educational certificate, selects 4 technical skills, reorders top skill priority, and fixes a phone
+number error while riding a bumpy minibus. | File upload works via single-tap "Choose file"
+button without dragging (WCAG 2.5.7). Skill priority reorders via explicit Up/Down buttons.
+Every interactive target measures **\>= 48×48 CSS px** (\~12 mm) with \>= 8px gap
+(exceeding WCAG 2.5.8). Voice Access "Click Continue" matches visible label (WCAG
+2.5.3)36. | @axe-core/playwright bounding-box test \+ Accessibility Insights Tab Stops \+
+Android Voice Access36. | **PASS:** 100% of standalone targets \>= 48×48px (satisfying
+24×24px AA minimum and 48px motor benchmark); zero keyboard traps. **FAIL:** Any drag-
+only control or mismatched aria-label. |
+| **5\. Deaf Native EthSL Signer** | Visual \+ **Ethiopian Sign Language (EthSL) Video** \+
+Haptic Alerts16. | Pre-lingually Deaf user activates EthSL Sign Mode, views sign video for
+Consent & Identity questions, authenticates account, and requests live support. | Every core
+question displays a toggleable EthSL video with synchronized Amharic/English captions.
+Authentication uses SMS/Email OTP or Fayda eSignet—never mandatory voice call.
+Notifications trigger visual banner \+ navigator.vibrate. Support opens text/EthSL video chat64. |
+Throttled 3G network profile \+ mute audio test. | **PASS:** 100% of registration and help flows
+completable with system audio muted and elementary written literacy. |
+| **6\. Non-Speaking User (Speech Disability)** | Touch/Keyboard \+
+**\<AlternativeResponseComposer /\> / \<SymbolBasedResponse /\>**19. | User completes
+"Work Experience & Accommodation Needs" profile section and verifies identity without
+
+===== PAGE 59 =====
+speaking a single word or typing long paragraphs. | User switches \<Textarea /\> to Alternative
+Composer, taps skill and accommodation tiles, generating a structured bilingual profile entry.
+Voice input is 100% optional19. | Manual walkthrough \+ keyboard/switch test. | **PASS:**
+Open-ended profile questions completable in \< 10 taps with zero speech or free-text typing
+required. |
+| **7\. Intellectual Disability / Low Literacy Learner** | **Easy-Read \+ Audio-Guided Mode** \+
+**Assisted Co-Completion Mode**15. | User enables Easy-Read & Read-Aloud mode, enters a
+Year-Only birth date, drops connection mid-form, reconnects, and finishes with an OPD helper. |
+UI switches to One-Question-Per-Page with giant bottom Back button (Assistive Access
+pattern), single-proposition sentences (zero pronoun co-references per Fajardo et al.), and pre-
+recorded Amharic Opus audio. Network drop preserves 100% of answers in IndexedDB4. |
+Offline DevTools toggle \+ ENAID Easy-Read checklist4. | **PASS:** Zero data lost on
+offline/refresh; zero cognitive puzzle/password memory tests (WCAG 3.3.8); 0 pronoun co-
+references in Easy-Read prompts57. |
+### **4\. Protocol for Usability Testing with People with Disabilities in Ethiopia**
+In line with W3C COGA guidance (*Including Users in Research, Design, and Testing*74) and
+the World Bank ID4D study across six Ethiopian regions (15), OpenPath should conduct
+participatory usability testing with disabled Ethiopians:
+* **Participant Recruitment:** Partner with **FEAPD/FENAPD** (90), **ENAB**, **ENAD** (99),
+**ENAID**, **ENADB**, **SENEthiopia** (63), and the **University of Gondar GAT Center** (89)
+to recruit compensated participants across all target disability groups, genders, and urban/rural
+backgrounds.
+* **Accessible Informed Consent:** Following the World Bank ID4D and Fayda registration
+protocols (14), deliver consent explanations in local languages (Amharic, Afaan Oromoo,
+Tigrinya, and EthSL), offering Easy-Read pictorial guides, spoken audio, Braille/accessible
+digital text, and Witness-Based Consent options where needed14.
+* **Task Design, Observation, and Feedback Collection:** Conduct 40-minute sessions (similar
+to Karreman et al.'s home/field evaluation protocol80) on participants' own Android phones or
+assistive devices. Observe hesitation, backtracking, error recovery, and time lost to interface
+friction (5), followed by structured comprehension checks and subjective preference ratings in
+the participant's preferred communication modality (speech, EthSL, or AAC board)80.
+## **Deliverable J: Ranked Innovation Shortlist (Top 10 Differentiating Features)**
+
+===== PAGE 60 =====
+The table below ranks the **10 highest-impact innovations** for OpenPath, evaluating each
+against the twelve required criteria.
+| Rank & Innovation Feature | User Problem & Evidence That It Exists | Target Users | Existing
+Solutions & OpenPath Differentiation | Technical Feasibility, Effort & Whether AI Is Necessary |
+Risks, Privacy Implications & Offline Feasibility | Competition / Hackathon Value |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **1\. Polymorphous Adaptive Form Engine (*Standard \<-\> One-Thing-Per-Page Easy-Read
+\<-\> Symbol/Audio AAC*)** | Static forms either overwhelm cognitive/low-literacy users or slow
+down power users; switching tools loses progress2. | **All 12 Groups** (especially Cognitive,
+Intellectual, Speech, Blind, Low Literacy). | GOV.UK is static HTML; Apple Assistive Access is
+iOS-only; Cboard is for general chat18. **OpenPath** projects one JSON schema across all 3
+views live with zero data loss. | **High feasibility** \| Effort: **Medium (4 days)** \| AI Needed:
+**No** (Deterministic schema projection). | Zero privacy risk; **100% Offline** via IndexedDB. |
+**10/10 (Flagship Demo):** Live-switching a job application into Assistive Access \+ Symbol
+mode mid-sentence demonstrates architectural depth immediately. |
+| **2\. Four-Tier Ethiopian Speech & Audio-Guided Engine (*Opus Cache \+ Addis Scribe/Voice
+2 \+ Homophone/Number Normalizer \+ Answer Confirmation*)** | Vanilla Whisper fails (\>100%
+WER) and TTS stumbles on Amharic digits (28.18% WER); low-literacy users need spoken
+guidance that works offline26. | **Low Literacy, Blind, Dyslexia, Motor** (Amharic, Afaan
+Oromoo, Tigrinya speakers). | Generic voice widgets paste raw unverified transcripts and fail
+offline. **OpenPath** combines offline Opus prompts, number-to-*fidel* expansion, 30 ms Addis
+Scribe streaming, and mandatory read-back confirmation27. | **High feasibility** \| Effort:
+**Medium (4 days)** \| AI Needed: **Hybrid (ASR/TTS when online \+ deterministic Tier 0 Opus
+offline)**. | Audio proxied without PII; **Graceful Offline Degradation** (Tier 0 Opus works 100%
+offline). | **10/10:** Demonstrates rigorous Ethiopian speech engineering rather than a naive
+browser microphone button. |
+| **3\. Alternative Response & Accommodation Passport Composer (*Cboard OBF Symbol &
+Phrase-Bank Builder*)** | Non-speaking, motor-impaired, and low-literacy applicants are
+excluded by open-ended "Describe your experience/needs" textareas19. | **Speech Disabilities,
+Motor, Intellectual, Deaf, Low Literacy**. | Job portals demand typed essays or verbal
+interviews. **OpenPath** lets users tap structured ARASAAC/Mulberry symbol & phrase tiles to
+compose bilingual profile statements and generate a portable **Workplace Accommodation
+Passport**19. | **High feasibility** \| Effort: **Low–Med (3 days)** \| AI Needed: **No**
+(Deterministic template grammar in Amharic & English). | User controls exact disclosure scope
+per employer; **100% Offline**. | **9.5/10:** Directly serves the Savanna employment
+ecosystem and neglected speech/intellectual disability groups. |
+
+===== PAGE 61 =====
+| **4\. Inclusive Ethiopian Identity, Calendar & Witness Verification Flow (*Fayda eSignet \+ 33+
+Docs \+ Witness Attestation \+ Dual EC/GC Year-Only Date*)** | Marginalized Ethiopians often
+lack passports, use the Ethiopian Calendar or Year-Only birthdates, and rely on Kebele/Witness
+IDs12. | **Rural, Refugee, Blind, Older, and Marginalized Disabled Ethiopians**. | Western
+forms reject EC dates, require day/month, and demand passports. **OpenPath** supports
+Fayda eSignet OIDC, EC/GC conversion, Year-Only toggle, and structured **Witness Co-
+Attestation**13. | **High feasibility** \| Effort: **Low–Med (3 days)** \| AI Needed: **No**. |
+Explicit local-language consent per Proclamation 1284/202315; **Works Offline** (queues
+witness packet). | **9.5/10:** Demonstrates authentic Ethiopian public-service design grounded
+in NIDP and World Bank ID4D evidence. |
+| **5\. Audio-Guided Document Capture Assistant (*Lookout/Seeing AI Framing Cues in the
+Browser*)** | Blind and low-vision applicants cannot frame paper school certificates or Kebele
+IDs in standard \<input type="file"\> pickers43. | **Blind, Low Vision, Motor Tremors**. | Seeing
+AI and Google Lookout are standalone native apps43. **OpenPath** embeds client-side canvas
+brightness/blur/edge checks with spoken Amharic/English framing guidance (*"Hold steady,
+move left"*) directly inside the web form. | **High feasibility** \| Effort: **Medium (3–4 days)** \|
+AI Needed: **No cloud AI required for framing (lightweight client canvas heuristics)**. | Image
+analysis runs 100% on-device in browser memory; **100% Offline framing check**. | **9/10:**
+Compelling live demonstration on an Android phone with TalkBack. |
+| **6\. Transparent "Assisted Co-Completion" & Human Escalation Mode** | In Ethiopia, many
+applicants complete forms with a neighbor, family member, or OPD agent, creating privacy and
+consent ambiguity15. | **Intellectual, Blind, Deaf-Blind, Severe Motor, Low Digital Literacy**. |
+Standard forms assume every user is alone. **OpenPath** provides a formal "Completing with a
+Helper" toggle that adapts question phrasing, logs helper involvement transparently, and
+records dual applicant/witness consent14. | **High feasibility** \| Effort: **Low (2 days)** \| AI
+Needed: **No**. | Protects applicant against unauthorized helper alterations; **100% Offline**. |
+**9/10:** Solves a real socio-cultural barrier that frontend components usually ignore. |
+| **7\. Synchronized Ethiopian Sign Language (EthSL) Picture-in-Picture & Visual Glossary** |
+Written Amharic/English captions do not substitute for EthSL for pre-lingually Deaf Ethiopians (p
+\< 0.05 comprehension gap)58. | **Deaf and Hard-of-Hearing Users**. | Almost no web forms in
+East Africa include sign language. **OpenPath** builds schema-level ethslVideoUrl PiP cards
+and links key civic terms to the **AAU Digital EthSL Dictionary**71. | **High feasibility** \| Effort:
+**Low–Med (2 days code \+ recording demo clips)** \| AI Needed: **No** (Pre-compressed
+WebM clips). | Zero user data transmitted; **Offline-cacheable** via Service Worker. |
+**8.5/10:** Visually memorable and honors ENAD and Addis Ababa University's EthSL work. |
+| **8\. Interruption-Resistant Offline-First Engine (IndexedDB 1s Autosave \+ QR State Hand-
+Off)** | Power cuts, mobile data drops, and shared devices cause form abandonment in low-
+resource settings4. | **All Users on Low-End Android / Intermittent Connectivity**. | VA.gov's
+SaveInProgress requires an authenticated cloud session4. **OpenPath** saves every change to
+IndexedDB in 1s even before login, and can export an encrypted **QR State Token** to resume
+on another device. | **High feasibility** \| Effort: **Low–Med (2.5 days)** \| AI Needed: **No**. |
+
+===== PAGE 62 =====
+Client-side encryption for local drafts; **100% Offline**. | **8.5/10:** Easy to demonstrate live by
+toggling Airplane Mode mid-form and refreshing the browser. |
+| **9\. Portable Cross-Platform Accessibility Preference Token (W3C Adapt / GPII URL & QR
+Profile)** | Disabled users face repetitive fatigue re-configuring font size, spacing, audio, and
+contrast on every new platform2. | **All Disabled Users across Savanna & Partner Portals**. |
+Preferences are trapped per domain. **OpenPath** serializes the user's
+AdaptivePreferenceProfile into a compact portable token/QR that automatically configures any
+OpenPath-enabled site on arrival. | **High feasibility** \| Effort: **Low (1.5 days)** \| AI Needed:
+**No**. | Uses capability settings (fontScale: 1.5), never medical diagnoses53; **100% Offline**.
+| **8/10:** Shows ecosystem-level product thinking across Savanna and partner employers. |
+| **10\. SENEthiopia "Talking Textbook" 4-Key Audio Keypad Mode** | Blind and low-digital-
+literacy students in Ethiopia learn SENEthiopia's tactile keypad audio navigation in **18
+minutes**, but struggle with complex web DOMs63. | **Blind, Low Vision, Motor, and First-Time
+Digital Users**. | Screen readers have steep learning curves68. **OpenPath** offers a 4-key/4-
+button Audio Keypad controller (Prev, Repeat Question, Cycle Option, Select/Continue). |
+**High feasibility** \| Effort: **Low (2 days)** \| AI Needed: **No**. | Zero privacy risk; **100%
+Offline** with Tier 0 Opus audio. | **8/10:** Bridges a proven Ethiopian assistive education
+paradigm (Talking Textbook63) to the web. |
+## **Deliverable K: Implementation Roadmap**
+The roadmap below organizes OpenPath's development into four sequential stages, estimating
+complexity, dependencies, technical risk, user impact, and realistic pre-hackathon achievability.
+| Stage & Task Deliverable | Complexity | Dependencies | Technical Risk | User Impact |
+Achievable Before Hackathon? |
+| :---- | :---- | :---- | :---- | :---- | :---- |
+| **Stage 1: Essential Foundation (Days 1–3)** | | | | | |
+| **1.1** Monorepo setup (@openpath/core, @openpath/react, @openpath/ethiopia) \+ Scoped
+CSS Token System (WCAG 2.2 AA contrast & 48×48px targets)36. | Low | None | Low | Critical
+| **Yes (Mandatory)** |
+| **1.2** Core Native HTML Basic Components (TextInput, EmailInput, PhoneInput,
+NumberInput, Textarea, Select, RadioGroup \[without invalid aria-expanded\], CheckboxGroup,
+PasswordInput)8. | Low–Med | 1.1 | Low (\#979 bug avoided) | Critical | **Yes (Mandatory)** |
+
+===== PAGE 63 =====
+| **1.3** Structural Form Wrappers (FormFieldWrapper, FieldInstructions, FieldError,
+ErrorSummary with auto-focus & \<title\> prefix, FieldGroup, FocusRecovery with scroll-
+margin)34. | Medium | 1.1, 1.2 | Low | Critical | **Yes (Mandatory)** |
+| **1.4** Automated CI/CD Accessibility Gate (@axe-core/playwright \+ Storybook a11y \+ 48px
+target size assertion)9. | Low | 1.2, 1.3 | Low | High | **Yes (Mandatory)** |
+| **Stage 2: Core Product & Ethiopian Localization (Days 4–6)** | | | | | |
+| **2.1** Declarative JSON Form Schema Engine (\<MultiStepForm /\>, \<QuestionPage /\>,
+\<ProgressIndicator /\>, conditional branching, 3.3.7 Redundant Entry auto-fill)4. | High | Stage 1
+| Medium | Critical | **Yes (Mandatory)** |
+| **2.2** Offline-First 1-Second Autosave (IndexedDB \+ \<FormRecovery /\> \+
+\<SaveAndResume /\> with normalizeReturnUrl)4. | Medium | 2.1 | Low–Med | Critical | **Yes
+(Mandatory)** |
+| **2.3** \<CheckYourAnswers /\> Summary List (\<dl\>, visuallyHiddenText on Change links,
+direct return after edit)35. | Medium | 2.1 | Low | Critical | **Yes (Mandatory)** |
+| **2.4** Ethiopian Localization Package: Dual **EC / GC \<DateInput /\> with Year-Only
+toggle**, **Patronymic Name Group**, **\<EthiopianAddressSelector /\>**, and **Ge'ez
+Homophone Normalizer**12. | Medium | 1.2, 2.1 | Low | Critical | **Yes (Mandatory)** |
+| **2.5** \<SearchableSelect /\> & \<Autocomplete /\> with **1,400 ms debounced aria-live** and
+\<FileUpload /\> with single-pointer \+ SR file confirmation3. | Med–High | 1.2 | Medium (SR
+timing) | High | **Yes (Mandatory)** |
+| **Stage 3: Differentiating Features (Days 7–10)** | | | | | |
+| **3.1** **Polymorphous Adaptive Interaction Engine** (\<AccessibilityPreferenceManager /\>,
+live switch between Grouped, One-Thing-Per-Page **Assistive Access / Easy-Read Mode**,
+and Dyslexia Spacing/Ruler)2. | Medium | 2.1 | Low | Transformative | **Yes (Core
+Differentiator)** |
+| **3.2** **Four-Tier Amharic/English Speech Suite** (\<ReadAloudController /\> with Tier 0
+Opus audio \+ **Addis Voice 2 / Azure Neural TTS** \+ Amharic Number Expander;
+\<VoiceInput /\> with **Addis Scribe Streaming** \+ \<AnswerConfirmation /\>)27. | High |
+@openpath/speech, Backend Proxy | Medium (ASR WER mitigated by confirmation) |
+Transformative | **Yes (Core Differentiator)** |
+| **3.3** **\<AlternativeResponseComposer /\> & \<SymbolBasedResponse /\>** (Cboard OBF
+ARASAAC/Mulberry symbol & phrase-bank builder \+ Workplace Accommodation Passport)19. |
+Medium | 2.1, 3.1 | Low | Transformative | **Yes (Core Differentiator)** |
+| **3.4** **\<DocumentCaptureAssistant /\> & Inclusive Identity Flow** (Client-side audio-guided
+camera framing \+ Fayda FCN/QR \+ Witness-Based Attestation flow \+ \<HumanHelpRequest
+
+===== PAGE 64 =====
+/\> Assisted Co-Completion Mode)13. | Med–High | 2.5 | Medium (Camera API on mobile) |
+Transformative | **Yes (Core Differentiator)** |
+| **3.5** **Light-DOM Web Component & Standalone \<script\> Bundle** (@openpath/wc \+
+@openpath/standalone with CSS @scope/@layer isolation) \+ **EthSL Video PiP** on demo
+steps22. | Medium | Stages 2 & 3 | Low (Light DOM avoids Shadow ARIA bugs) | High | **Yes
+(Core Differentiator)** |
+| **Stage 4: Advanced Capabilities (Post-Hackathon Scale-Out)** | | | | | |
+| **4.1** Self-hosted GPU/CPU cluster running open-weight **Addis Scribe Streaming** \+
+**Hohe (wav2vec2-BERT)** \+ **Seq2SeqBT5** two-model agreement filter inside Ethiopia26. |
+High | DevOps / GPU infra | Medium | High | **Post-Hackathon** (Use API \+ cached demo clips
+for hackathon) |
+| **4.2** Full production **Fayda eSignet OIDC** live government production enclave integration
+& full **EthSL** studio video library with ENAD/AAU73. | High | NIDP / ENAD legal MOUs |
+Medium | High | **Post-Hackathon** (Mock eSignet OIDC sandbox \+ 8 real EthSL clips for
+hackathon) |
+| **4.3** Multi-regional usability trials across 6 Ethiopian regions with **FEAPD, ENAB, ENAD,
+ENAID, and University of Gondar GAT Center**15. | Medium | Field logistics | Low | Critical |
+**Post-Hackathon** (Run rapid 5-user local Addis OPD validation before pitch) |
+## **Deliverable L: Sources and References**
+All architectural recommendations, empirical findings, and benchmarks in this report trace
+directly to the following primary documentation, research papers, design systems, and
+repositories:
+> 1. **W3C Standards and Accessibility Guidelines:**
+* **WCAG 2.2 Official Specification (Oct 5, 2023):** https\://www\.w3.org/TR/WCAG22/1
+* **What's New in WCAG 2.2 (SC 2.4.11, 2.5.7, 2.5.8, 3.2.6, 3.3.7, 3.3.8):**
+https\://www\.w3.org/WAI/standards-guidelines/wcag/new-in-22/37
+* **Understanding WCAG 2.2 Documentation:**
+https\://www\.w3.org/WAI/WCAG22/Understanding/54
+* **Guidance on Applying WCAG 2.2 to Mobile (wcag2mobile-22):**
+https\://www\.w3.org/TR/wcag2mobile-22/104
+
+===== PAGE 65 =====
+* **Guidance on Applying WCAG 2.2 to Non-Web ICT (wcag2ict-22):**
+https\://www\.w3.org/TR/wcag2ict-22/111
+* **W3C COGA — *Making Content Usable for People with Cognitive and Learning
+Disabilities*:** https\://www\.w3.org/TR/coga-usable/ and Design Guide
+https\://www\.w3.org/TR/coga-usable/design\_guide.html2
+* **W3C COGA Personalization & Interoperable Preference Profiles:**
+https\://www\.w3.org/TR/coga-gap-analysis/ and https\://www\.w3.org/WAI/PF/cognitive-a11y-
+tf/wiki/Interoperable\_preference138
+> 2. **Government Accessible Design Systems & Open-Source Repositories:**
+* **GOV.UK Design System — Question Pages Pattern:** https\://design-
+system.service.gov.uk/patterns/question-pages/18
+* **GOV.UK Design System — Error Summary & Error Message:** https\://design-
+system.service.gov.uk/components/error-summary/ and https\://design-
+system.service.gov.uk/components/error-message/66
+* **GOV.UK Design System — Date Input:** https\://design-
+system.service.gov.uk/components/date-input/45
+* **GOV.UK Design System — Check Answers & Summary List:** https\://design-
+system.service.gov.uk/patterns/check-answers/ and https\://design-
+system.service.gov.uk/components/summary-list/35
+* **GOV.UK Frontend GitHub Issues on Conditional Radio aria-expanded Failures (\#979,
+\#1972, \#6010):** https\://github.com/alphagov/govuk-frontend/issues/979,
+https\://github.com/alphagov/govuk-frontend/issues/1972, https\://github.com/alphagov/govuk-
+design-system/issues/60108
+* **GOV.UK Accessible Autocomplete Repository:** https\://github.com/alphagov/accessible-
+autocomplete3
+* **NHS.UK Service Manual — How to Write Good Questions for Forms & Error Summary:**
+https\://service-manual.nhs.uk/content/how-to-write-good-questions-for-forms and
+https\://service-manual.nhs.uk/design-system/components/error-summary33
+* **VA.gov Design System — Forms, Minimal Form-Step, Save in Progress (Autosave),
+Review Page, and Accessibility Guidelines:** https\://design.va.gov/templates/forms/,
+https\://design.va.gov/templates/forms/form-step-minimal/,
+https\://design.va.gov/components/form/autosave,
+https\://design.va.gov/templates/forms/review,
+https\://design.va.gov/templates/forms/accessibility-guidelines,
+https\://design.va.gov/components/form/, https\://design.va.gov/accessibility/when-a-screen-
+reader-needs-to-announce-content4
+
+===== PAGE 66 =====
+* **US Web Design System (USWDS) — File Input & Memorable Date:**
+https\://designsystem.digital.gov/components/file-input/ and
+https\://designsystem.digital.gov/components/memorable-date/accessibility-tests/120
+* **UK Home Office Design System — Content Patterns & Perceivable Standard:**
+https\://design.homeoffice.gov.uk/design-and-content/content/content-patterns and
+https\://design.homeoffice.gov.uk/accessibility/standard/perceivable87
+> 3. **Web Components, Shadow DOM ARIA, and Headless React Libraries:**
+* **Google Chrome Modern Web Guidance — Accessible Web Components & Shadow
+DOM:** https\://developer.chrome.com/docs/modern-web-guidance/guides/html/web-
+components and https\://developer.chrome.com/docs/modern-web-
+guidance/guides/html/accessible-web-components24
+* **Nolan Lawson — *Shadow DOM and Accessibility: The Trouble with ARIA*:**
+https\://nolanlawson.com/2022/11/28/shadow-dom-and-accessibility-the-trouble-with-aria/22
+* **Igalia — *Solving Cross-Root ARIA Issues in Shadow DOM*:**
+https\://blogs.igalia.com/mrego/solving-cross-root-aria-issues-in-shadow-dom/150
+* **React Aria vs. Radix Primitives Architectural Comparisons:**
+https\://www\.fellipeutaka.com/blog/radix-ui-vs-react-aria-components and
+https\://usertourkit.com/blog/best-headless-ui-libraries-onboarding21
+* **Cboard Open-Source AAC Symbol Platform:** https\://github.com/cboard-org/cboard and
+https\://www\.cboard.io/en/blog/2019-05-15-unicef-innovation-fund-graduation/19
+> 4. **Peer-Reviewed Empirical Studies & User Surveys:**
+* **Lazar, J., Allen, A., Kleinman, J., & Malarkey, C. (2007):** *"What Frustrates Screen
+Reader Users on the Web: A Study of 100 Blind Users"*, *International Journal of Human-
+Computer Interaction*, 22(3), 247–269.
+https\://www\.researchgate.net/publication/220302591\_What\_Frustrates\_Screen\_Reader\_Us
+ers\_on\_the\_Web\_A\_Study\_of\_100\_Blind\_Users5
+* **WebAIM Screen Reader User Surveys \#10 (2024) & \#11 (2026):**
+https\://webaim.org/projects/screenreadersurvey10/ and
+https\://webaim.org/projects/screenreadersurvey11/40
+* **Rello, L., & Baeza-Yates, R. (2013):** *"Good Fonts for Dyslexia"*, *Proceedings of the
+15th International ACM SIGACCESS Conference on Computers and Accessibility (ASSETS
+'13)*. https\://www\.changedyslexia.org/publications/pdfs/2013-ASSETS-
+Good%20Fonts%20for%20Dyslexia.pdf50
+* **Zorzi, M., et al. (2012):** *"Extra-large letter spacing improves reading in dyslexia"*,
+*PNAS*. https\://blog.dyslexia.com/wider-letter-spacing-helps-dyslexic-children-read/55
+
+===== PAGE 67 =====
+* **Karreman, J., van der Geest, T., & Buursink, E. (2007):** *"Accessible Website Content
+Guidelines for Users with Intellectual Disabilities"*, *Journal of Applied Research in Intellectual
+Disabilities*, 20, 510–518; and **Fajardo et al.** Easy-to-Read linguistic comprehension
+regression study:
+https\://www\.researchgate.net/publication/227692156\_Accessible\_Website\_Content\_Guideli
+nes\_for\_Users\_with\_Intellectual\_Disabilities and https\://scispace.com/pdf/easy-to-read-
+texts-for-students-with-intellectual-disability-51av0psgkr.pdf38
+* **Parhi, P., Karlson, A. K., & Bederson, B. B. (2006) & Motor-Impaired Touchscreen Target
+Studies:** *"Target Size Study for One-Handed Thumb Use on Small Touchscreen Devices"*
+(*MobileHCI '06*) and *"Towards Accessible Touch Interfaces"*:
+https\://scispace.com/pdf/towards-accessible-touch-interfaces-19j607rdij.pdf39
+* **Deaf Learner Comprehension with Sign Language & Captions:**
+https\://www\.researchgate.net/publication/51669191\_The\_Effects\_of\_Captions\_on\_Deaf\_
+Students'\_Content\_Comprehension\_Cognitive\_Load\_and\_Motivation\_in\_Online\_Learning
+70
+> 5. **Amharic Speech Benchmarks, Ethiopian NLP, Fayda NIDP, and Ethiopian Disability
+Organizations:**
+* **Addis AI (Addis Scribe Streaming & Addis Voice 2 2026 Benchmarks & Docs):**
+https\://addisassistant.com/benchmarks/addis-scribe-amharic,
+https\://addisassistant.com/benchmarks/addis-voice-2-amharic,
+https\://addisassistant.com/open-source/addis-scribe-streaming,
+https\://docs.addisassistant.com/28
+* **Dataset.et — *When Two Models Agree* (Shook vs. Ethio-ASR 1B & Whisper/MMS error
+rates):** https\://dataset.et/blog/when-two-models-agree26
+* **Semantically Corrected Amharic ASR (Seq2SeqBT5, arXiv:2404.13362v1) & TeleASR-
+Amharic:** https\://www\.scribd.com/document/893381605/Semantically-Corrected-Amharic-
+Automatic-Speech-Recognition-ASR-2404-13362v1 and
+https\://www\.researchgate.net/publication/416346996\_TeleASR-
+Amharic\_A\_Benchmark\_for\_Robust\_Amharic\_ASR\_in\_Realistic\_Telecommunication\_Co
+nditions31
+* **EthioNLP & Lesan AI:** https\://ethionlp.github.io/ and https\://lesan.ai/88
+* **Fayda National ID Program (NIDP) Update Centers, eSignet Auth Repos, & World Bank
+ID4D Marginalized Groups Study:** https\://id.et/updatecenters, https\://github.com/National-ID-
+Program-Ethiopia/fayda-auth-go, https\://github.com/National-ID-Program-Ethiopia/fayda-auth-
+python,
+https\://documents1.worldbank.org/curated/en/099030824142042717/pdf/P176629109fd9d0d41
+a1641562c9dc749cc.pdf13
+
+===== PAGE 68 =====
+* **Ethiopian Sign Language (EthSL) Digital Dictionary (Addis Ababa University) &
+Research:** https\://ethsl.aau.edu.et/about-the-dictionary/, https\://et.usembassy.gov/free-
+digital-ethiopian-sign-language-dictionary-widens-access-for-ethiopias-deaf-community-with-u-
+s-government-support/,
+https\://www\.researchgate.net/publication/288040240\_Ethiopian\_sign\_language\_and\_educa
+tional\_accessibility\_for\_the\_deaf\_community\_A\_case\_study\_on\_Jimma\_Nekemte\_Addi
+s\_Ababa\_and\_Hawasa\_towns58
+* **Ethiopian Disability Organizations & Assistive Tech Programs (FEAPD/FENAPD, ENAD,
+SENEthiopia, University of Gondar GAT):** https\://feapd.org/wp/,
+https\://www\.enadet.org/projects/, https\://senethiopia.org/programs/assistive-technology/,
+https\://enablementfoundation.org/project/ethiopia/63
+## **Final Question: What Exactly We Should Build to Win the Hackathon**
+If our multidisciplinary team were building **OpenPath** from scratch with limited development
+time to win an accessibility-focused hackathon—and genuinely improve access for disabled
+learners and job seekers in Ethiopia—we would **not** build a generic form builder with a
+microphone button. Competing teams that connect browser webkitSpeechRecognition or vanilla
+OpenAI Whisper to a standard React form will struggle on Amharic (\>100% WER on vanilla
+Whisper26), exclude Deaf and non-speaking applicants, and alienate rural Ethiopians who use
+the Ethiopian calendar or lack standard IDs12.
+Here is the exact blueprint we will build and demonstrate live:
+### **1\. The Product Architecture**
+We will build **OpenPath** as a **3-package TypeScript monorepo (@openpath/core,
+@openpath/react, @openpath/wc) \+ a lightweight Fastify/Node backend proxy
+(@openpath/server)**:
+* **Single Canonical Schema, Polymorphous Rendering:** A single declarative JSON schema
+(savanna-onboarding-v1.json) drives an offline-first IndexedDB state machine (SaveInProgress
+with 1-second debounced autosave and normalizeReturnUrl4).
+* **Dual Distribution from Day 1:** It compiles into both a native React component library
+(@openpath/react) for Savanna's modern frontend and a **Light-DOM Custom Element
+(\<openpath-form\>)** isolated via CSS @layer and @scope (@openpath/wc) so any legacy
+
+===== PAGE 69 =====
+university or employer website can embed it via a single \<script\> tag without Shadow DOM
+breaking aria-labelledby or aria-describedby22.
+### **2\. The Essential 18-Component Inventory**
+Rather than building 40 half-tested widgets, we will build **18 production-grade components**
+that cover the entire Savanna learner and employment onboarding journey:
+> 1. \<MultiStepForm /\> (Schema router \+ 1 s IndexedDB autosave \+ 3.3.7 Redundant Entry
+pre-fill)4.
+> 2. \<QuestionPage /\> (VA.gov minimal header/footer \+ GOV.UK \<H1\>\<label\> single-
+question wrapper \+ never-disabled left-aligned Continue button)4.
+> 3. \<ErrorSummary /\> \+ \<FieldError /\> (Auto-focused top alert \+ "Error: " page title prefix \+
+identical inline message wording)66.
+> 4. \<FormFieldWrapper /\> \+ \<FieldInstructions /\> (Deterministic ARIA ID linker \+ short hint
+vs. rich *"Why we ask this"* separation)4.
+> 5. \<TextInput /\>, \<PhoneInput /\> (Flexible \+251/09 normalizer), and \<PasswordInput /\>
+(with Show/Hide \+ OTP / Fayda eSignet button for WCAG 3.3.8)12.
+> 6. \<RadioGroup /\> & \<CheckboxGroup /\> (48×48px targets, native \<fieldset\>/\<legend\>,
+safe aria-controls 1-field reveal without invalid aria-expanded)8.
+> 7. \<SearchableSelect /\> (alphagov/accessible-autocomplete pattern with **1,400 ms
+debounced aria-live** and Ge'ez homophone matching)3.
+> 8. \<DateInput /\> (GOV.UK 3-numeric-field pattern upgraded with **instant Ethiopian
+Calendar \<-\> Gregorian toggle** and Fayda **"Birth Year Only" toggle**)12.
+> 9. \<EthiopianAddressSelector /\> (Cascading Region \-\> Zone/Sub-City \-\> Woreda \-\>
+Kebele & Landmark selector)12.
+> 10. \<GuidedQuestion /\> (Unified multimodal bar: **Pre-recorded/Cloud Amharic Read-
+Aloud**, **EthSL Sign Video PiP**, and **Easy-Read bullet toggle**)28.
+> 11. \<VoiceInput /\> \+ \<AnswerConfirmation /\> (Push-to-talk streaming to **Addis Scribe**
+with mandatory visual \+ audio read-back verification card)30.
+> 12. \<AlternativeResponseComposer /\> (Cboard-inspired **ARASAAC/Mulberry Symbol &
+Phrase-Bank tile composer** \+ **Workplace Accommodation Passport** generator)19.
+
+===== PAGE 70 =====
+> 13. \<DocumentCaptureAssistant /\> (Client-side camera viewfinder with **Google
+Lookout/Seeing AI-style spoken framing cues** \+ 33+ ID types \+ **Witness Attestation
+Flow**)13.
+> 14. \<CheckYourAnswers /\> (GOV.UK 2/3-width \<dl\> Summary List with visuallyHiddenText
+Change links and direct return after editing)35.
+> 15. \<AccessibilityPreferenceManager /\> \+ \<ReadingRuler /\> (Task-based capability
+toggles \+ portable URL/QR preference profile \+ **Assisted Co-Completion Mode**)15.
+### **3\. The Three Most Valuable Differentiating Features**
+> 1. **Live Polymorphous Mode Switching (Bringing Apple Assistive Access & Cboard Symbol
+AAC to the Web):** During our live demo, we will show a single Savanna Job Application form
+transform in real time—with zero data loss—from a standard multi-field view into: (a) a
+**Cognitive Easy-Read & EthSL Sign Language view** (one question per page, zero pronoun
+co-references, giant bottom Back button), and (b) a **Non-Speaking Symbol & Phrase-Bank
+Composer** that lets a user with speech and motor disabilities compose a work-experience
+statement and **Workplace Accommodation Passport** in 6 taps without speaking or typing19.
+> 2. **Authentic Ethiopian Public-Service & Low-Bandwidth Engineering:** We will demonstrate
+features built specifically for Ethiopia: **Ethiopian Calendar \<-\> Gregorian conversion with
+Year-Only birthdates**, **Fayda eSignet OIDC \+ Witness-Based Attestation for undocumented
+applicants**, **audio-guided camera framing for Kebele/School IDs**, **Assisted Co-Completion
+Mode** for applicants working with an OPD helper, and **instant offline recovery** when we
+toggle Airplane Mode mid-registration4.
+> 3. **Empirically Grounded Amharic Speech Pipeline with Verification:** We will showcase our
+**4-Tier Speech Architecture**: instant zero-cost **pre-recorded Opus audio prompts** offline,
+**Addis Voice 2 / Azure Ameha Neural TTS** with our **Amharic Number-to-Fidel Expander**
+(mitigating the 28.18% numeric WER issue27), **30 ms latency Addis Scribe Streaming ASR**,
+and the **\<AnswerConfirmation /\> verification card** that prevents ASR errors from corrupting
+submitted records28.
+### **4\. Recommended Technology Stack**
+* **Frontend & Packaging:** TypeScript 5.x, React (for @openpath/react), Preact compat (3 KB
+runtime for @openpath/wc & \<script\> bundle3), selective **React Aria** hooks
+(useComboBox, useDialog, useFocusScope21), Vanilla CSS with @layer, @scope, and CSS
+Custom Properties (--op-\*), and IndexedDB for offline persistence.
+
+===== PAGE 71 =====
+* **Speech & Localization:** Static .opus audio assets \+ **Addis AI API (Addis Scribe
+Streaming \+ Addis Voices 2\)** \+ **Microsoft Azure Speech (am-ET-AmehaNeural)** fallback
+\+ custom TypeScript Ge'ez homophone/number normalizer26.
+* **Backend API:** Node.js \+ Fastify (@openpath/server) handling session sync, API key
+proxying, and a sandbox **Fayda eSignet OIDC** Relying Party flow112.
+* **Testing & QA:** Vitest, Playwright \+ @axe-core/playwright, Storybook \+
+@storybook/addon-a11y, Microsoft Accessibility Insights (FastPass), NVDA on Windows, and
+TalkBack on Android8.
+### **5\. Accessibility Standards and Testing Strategy**
+* **Standard:** **WCAG 2.2 Level AA** conformance across all 6 new Level A/AA criteria
+(2.4.11, 2.5.7, 2.5.8 upgraded to **48×48px targets**, 3.2.6, 3.3.7, 3.3.8) plus **W3C COGA**
+design patterns20.
+* **Verification:** Every PR passes automated @axe-core/playwright scans across default,
+error, conditional, and 320 px reflow states, followed by manual verification of the complete
+learner registration flow using **Accessibility Insights FastPass (Tab Stops)**, **NVDA \+
+Chrome**, and **Android TalkBack**9.
+### **6\. The Amharic Language Strategy**
+> 1. Author all UI strings, error messages, and human-reviewed Easy-Read explanations in
+authentic Amharic (*fidel*) and English (with schema hooks ready for Afaan Oromoo and
+Tigrinya)27.
+> 2. Pre-record core onboarding prompts in studio-quality Amharic .opus audio so our
+onboarding demo works **100% offline with natural human pronunciation and zero network
+latency**27.
+> 3. Use **Addis Voice 2 (am-hamen)** and **Azure am-ET-AmehaNeural** (with our
+deterministic number-to-*fidel* expander) for dynamic read-back on the Check-Your-Answers
+page, and **Addis Scribe Streaming** (with Ge'ez homophone normalization and
+\<AnswerConfirmation /\>) for live voice input26.
+### **7\. The Integration Strategy for Savanna**
+
+===== PAGE 72 =====
+We will build a standalone **"Savanna Mock Host Portal"** housing two pages: (1) a modern
+React learner dashboard consuming @openpath/react via npm, and (2) a simulated legacy
+employer job-application page embedding \<openpath-form\> via a single \<script\> tag. When
+the official Savanna starter application and interfaces become available, our adapter maps
+OpenPath's canonical JSON output and PortablePreferenceProfile directly to Savanna's profile
+API with zero UI refactoring required.
+### **8\. Realistic 10-Day Hackathon Development Sequence**
+> 1. **Days 1–2 (Core Engine & Native Primitives):** Scaffold Turborepo; build @openpath/core
+schema state machine \+ IndexedDB 1 s autosave; build native HTML \<FormFieldWrapper /\>,
+\<ErrorSummary /\>, \<QuestionPage /\>, \<TextInput /\>, \<PhoneInput /\>, \<RadioGroup /\>,
+and \<CheckboxGroup /\> with 48×48px targets and zero axe-core violations4.
+> 2. **Days 3–4 (Ethiopian Localization & Review Flow):** Build @openpath/ethiopia (EC/GC
+\<DateInput /\> with Year-Only toggle, Patronymic Name group, \<EthiopianAddressSelector /\>,
+Ge'ez homophone normalizer); build \<SearchableSelect /\> (1,400 ms debounce) and
+\<CheckYourAnswers /\> (\<dl\> with visuallyHiddenText)12.
+> 3. **Days 5–6 (Adaptive Engine, Easy-Read, EthSL & Symbol Composer):** Build
+\<AccessibilityPreferenceManager /\> with live switching between Grouped, One-Thing-Per-
+Page Easy-Read (with giant bottom Back button), and Dyslexia Spacing/Ruler; build
+\<GuidedQuestion /\> with EthSL PiP video and \<AlternativeResponseComposer /\>
+(ARASAAC/Mulberry symbol tiles \+ Accommodation Passport)19.
+> 4. **Days 7–8 (Amharic Speech Pipeline, Document Assistant & Assisted Mode):** Record
+static Amharic .opus prompts; wire @openpath/speech to **Addis Scribe Streaming** and
+**Addis Voice 2 / Azure TTS** with the \<AnswerConfirmation /\> card; build
+\<DocumentCaptureAssistant /\> (spoken camera framing cues \+ Witness Attestation branch)
+and \<HumanHelpRequest /\> Assisted Co-Completion Mode14.
+> 5. **Days 9–10 (Web Component Packaging, Real AT Testing & Pitch Polish):** Compile
+@openpath/wc Light-DOM \<script\> bundle; run full manual QA on **NVDA (Windows)**,
+**TalkBack (Android)**, **400% Zoom Reflow**, and **Offline Airplane Mode**; conduct a rapid
+usability walkthrough with local Addis Ababa OPD members (ENAB/ENAD/ENAID) and record a
+backup demo video alongside our live multi-device presentation9.
