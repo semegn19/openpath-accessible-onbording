@@ -1,0 +1,350 @@
+openapi: 3.1.0
+info:
+  title: OpenPath forms API
+  version: 1.1.0
+  summary: Accessible onboarding forms for Savanna — submit, retrieve, and fetch the form definition.
+  description: |
+    Level 2 of the Digital Bridge adoptability ladder: a documented REST API in front of the
+    same JSON schemas the accessible form renders from.
+
+    **Four endpoints and one spec file.** No authentication, no API keys, no paid services.
+
+    ### Privacy contract
+    Accommodation and disability data (the `support` step, anything marked `localOnly`) is
+    **never accepted**. If a client sends it anyway the API drops it, never writes it to disk,
+    and reports the field names back in `stripped` — so "support answers never leave the phone"
+    is a verifiable claim, not a promise.
+
+    ### Storage
+    Append-only JSONL on disk. When `DATA_KEY` is set, answers the schema classifies as
+    `pii: personal` or `sensitive` (names, phone numbers, ID numbers) are encrypted with
+    AES-256-GCM before they are written, and decrypted for a caller holding the id. A submission is retrievable only with its unguessable id
+    (`sub_` + 12 random bytes). There is no list endpoint, by design.
+  contact:
+    name: OpenPath — Digital Bridge Accessibility Hackathon 2026
+  license:
+    name: MIT
+servers:
+  - url: /api
+    description: Same origin as the form (nginx proxies /api to the container)
+  - url: http://localhost:8080/api
+    description: Local `docker compose up`
+tags:
+  - name: meta
+  - name: forms
+  - name: submissions
+paths:
+  /health:
+    get:
+      tags: [meta]
+      operationId: getHealth
+      summary: Liveness and a little about the deployment
+      responses:
+        '200':
+          description: Running.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+              example:
+                ok: true
+                version: 1.1.0
+                forms: [savanna-onboard-v1, savanna-job-v1, employer-accommodations-v1]
+                submissions: 128
+                uptimeSec: 3600
+
+  /forms:
+    get:
+      tags: [forms]
+      operationId: listForms
+      summary: The forms this deployment can accept
+      responses:
+        '200':
+          description: Form summaries. Fetch one by id for the full definition.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forms:
+                    type: array
+                    items: { $ref: '#/components/schemas/FormSummary' }
+                    required: [forms]
+
+  /forms/{formId}:
+    get:
+      tags: [forms]
+      operationId: getForm
+      summary: One form definition, exactly as the renderer consumes it
+      description: |
+        This is what makes "bring your own schema" true: point the renderer at any form the
+        API serves. Adding a fourth form is a JSON file in `schema/`, not a code change.
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema: { type: string }
+          examples:
+            learner: { value: savanna-onboard-v1 }
+            job: { value: savanna-job-v1 }
+            employer: { value: employer-accommodations-v1 }
+      responses:
+        '200':
+          description: The schema document (steps, validation rules, Amharic and English strings).
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /submissions:
+    post:
+      tags: [submissions]
+      operationId: createSubmission
+      summary: Submit a completed form
+      description: |
+        The server re-validates every answer against the form's own `validation` rules. A client
+        that skips validation, or lies, gets `422` with the same rule names the form uses
+        (`required`, `phone-et`, `exclusiveOption`, …), so the UI can reuse its messages.
+
+        Rate limited to 30 requests per minute per IP; over the limit returns `429`.
+        Bodies over 32 KB return `413`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmissionRequest' }
+            examples:
+              learner:
+                summary: Learner sign-up, Amharic UI, one support answer that must be dropped
+                value:
+                  formId: savanna-onboard-v1
+                  answers:
+                    language: am
+                    accessibility-prefs: [large-text]
+                    assistance: call-me
+                    name: ሳራ ተስፋዬ
+                    phone: '0912345678'
+                    id-route: fayda
+                    id-value: '3910028475'
+                    consent: [agree]
+      responses:
+        '201':
+          description: Stored. The id is the only way to read it back — keep it.
+          headers:
+            Location:
+              description: Canonical URL of the created submission.
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubmissionReceipt' }
+              example:
+                id: sub_9mQ2xT7bK1vR4pLz
+                receivedAt: '2026-11-15T09:41:02.114Z'
+                stripped: [accessibility-prefs]
+        '200':
+          description: |
+            Already stored — this `clientRef` was seen before. Nothing new was written and the
+            body is the original receipt, so a retry can never register the same person twice.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubmissionReceipt' }
+              example:
+                id: sub_9mQ2xT7bK1vR4pLz
+                receivedAt: '2026-11-15T09:41:02.114Z'
+                stripped: [accessibility-prefs]
+                duplicate: true
+        '413':
+          description: Body too large.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '415':
+          description: Content-Type is not application/json.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: Validation failed. `fields[]` names each field and the rule it broke.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+              example:
+                error:
+                  code: invalid
+                  message: Some answers need fixing.
+                  fields:
+                    - { field: phone, rule: phone-et }
+                    - { field: name, rule: required }
+        '429':
+          description: Rate limited.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /submissions/{id}:
+    get:
+      tags: [submissions]
+      operationId: getSubmission
+      summary: Read back one submission
+      description: |
+        Anyone holding the id can read the record, so treat the id as a bearer token. There is
+        no list endpoint and no search: an attacker cannot enumerate what they do not have.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^sub_[A-Za-z0-9_-]{16}$' }
+          example: sub_9mQ2xT7bK1vR4pLz
+      responses:
+        '200':
+          description: The stored submission.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Submission' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /openapi.yaml:
+    get:
+      tags: [meta]
+      operationId: getOpenApiDocument
+      summary: This document
+      responses:
+        '200':
+          description: OpenAPI 3.1 description of this API.
+          content:
+            application/yaml:
+              schema: { type: string }
+
+components:
+  schemas:
+    Health:
+      type: object
+      required: [ok, version, forms, submissions]
+      properties:
+        ok: { type: boolean }
+        version: { type: string }
+        forms:
+          type: array
+          items: { type: string }
+        submissions: { type: integer, minimum: 0 }
+        uptimeSec: { type: integer, minimum: 0 }
+
+    FormSummary:
+      type: object
+      required: [id, version]
+      properties:
+        id: { type: string }
+        version: { type: string }
+        kind: { type: string, examples: [onboarding] }
+        title:
+          type: object
+          additionalProperties: { type: string }
+          description: Localised titles keyed by BCP-47 language tag.
+        langs:
+          type: array
+          items: { type: string }
+
+    SubmissionRequest:
+      type: object
+      required: [formId, answers]
+      additionalProperties: false
+      properties:
+        clientRef:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{8,64}$'
+          description: |
+            An idempotency key the client generates once and keeps until the sign-up is
+            confirmed. Sending the same `clientRef` again returns the **same** record with
+            `200` instead of creating a second one — which is what makes it safe to retry
+            after a dropped connection, or to flush an offline queue twice.
+          examples: [ref_m8x2kq9w4t]
+        formId:
+          type: string
+          description: An id from `GET /forms`.
+          examples: [savanna-onboard-v1]
+        answers:
+          type: object
+          description: |
+            Step id → answer, exactly as the form collects it. Values are strings, or arrays of
+            strings for checkbox steps. Fields marked `localOnly` in the schema are rejected
+            and reported in `stripped`.
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: array
+                items: { type: string }
+
+    SubmissionReceipt:
+      type: object
+      required: [id, receivedAt, stripped]
+      properties:
+        id:
+          type: string
+          pattern: '^sub_[A-Za-z0-9_-]{16}$'
+        receivedAt: { type: string, format: date-time }
+        stripped:
+          type: array
+          description: Field names that arrived but were deliberately not stored (support, accommodations).
+          items: { type: string }
+        duplicate:
+          type: boolean
+          description: Present and `true` only on the `200` replay of an already-stored `clientRef`.
+
+    Submission:
+      type: object
+      required: [id, receivedAt, formId, answers]
+      properties:
+        id: { type: string }
+        receivedAt: { type: string, format: date-time }
+        formId: { type: string }
+        answers:
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: array
+                items: { type: string }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              examples: [not-found, rate-limited, bad-json, too-large, unsupported-media-type]
+            message: { type: string }
+
+    ValidationError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, fields]
+          properties:
+            code: { type: string, const: invalid }
+            message: { type: string }
+            fields:
+              type: array
+              items:
+                type: object
+                required: [field, rule]
+                properties:
+                  field: { type: string }
+                  rule:
+                    type: string
+                    examples: [required, phone-et, email, exclusiveOption, unknown-form, unknown-field, not-an-option]
+
+  responses:
+    NotFound:
+      description: No such resource.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            error: { code: not-found, message: No submission with that id. }
