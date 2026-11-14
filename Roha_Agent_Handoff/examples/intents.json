@@ -1,0 +1,44 @@
+[
+  {
+    "schemaVersion": "2.0",
+    "utteranceId": "turn-001",
+    "mapId": "signup-map",
+    "mapVersion": 1,
+    "intent": "text_scale",
+    "targetId": "page.main",
+    "payload": {
+      "percent": 150
+    }
+  },
+  {
+    "schemaVersion": "2.0",
+    "utteranceId": "turn-002",
+    "mapId": "signup-map",
+    "mapVersion": 1,
+    "intent": "simple_mode",
+    "targetId": "page.main",
+    "payload": {
+      "enabled": true
+    }
+  },
+  {
+    "schemaVersion": "2.0",
+    "utteranceId": "turn-003",
+    "mapId": "signup-map",
+    "mapVersion": 1,
+    "intent": "propose_answer",
+    "targetId": "field.name",
+    "payload": {
+      "value": "Example Learner"
+    }
+  },
+  {
+    "schemaVersion": "2.0",
+    "utteranceId": "turn-004",
+    "mapId": "signup-map",
+    "mapVersion": 1,
+    "intent": "review",
+    "targetId": "form.signup",
+    "payload": {}
+  }
+]

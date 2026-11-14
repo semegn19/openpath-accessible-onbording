@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "2.0",
+  "mapId": "career-map",
+  "mapVersion": 1,
+  "routeKey": "jobs",
+  "locale": "en",
+  "origin": "illustrative-shape-only",
+  "resources": [
+    {
+      "id": "page.main",
+      "kind": "region",
+      "name": "Find work",
+      "nameSource": "text",
+      "visible": true,
+      "enabled": true,
+      "risk": "read-only",
+      "allowedIntents": [
+        "read",
+        "explain",
+        "text_scale",
+        "simple_mode",
+        "pause",
+        "resume"
+      ],
+      "privacy": "page-metadata"
+    },
+    {
+      "id": "job.data",
+      "kind": "job",
+      "name": "Data assistant",
+      "nameSource": "text",
+      "visible": true,
+      "enabled": true,
+      "risk": "read-only",
+      "allowedIntents": [
+        "read",
+        "focus"
+      ],
+      "privacy": "page-metadata",
+      "parentId": "page.main"
+    },
+    {
+      "id": "button.data-apply",
+      "kind": "button",
+      "name": "Apply",
+      "nameSource": "text",
+      "visible": true,
+      "enabled": true,
+      "risk": "unknown",
+      "allowedIntents": [
+        "focus",
+        "navigate"
+      ],
+      "privacy": "page-metadata",
+      "parentId": "job.data"
+    },
+    {
+      "id": "job.support",
+      "kind": "job",
+      "name": "Customer support",
+      "nameSource": "text",
+      "visible": true,
+      "enabled": true,
+      "risk": "read-only",
+      "allowedIntents": [
+        "read",
+        "focus"
+      ],
+      "privacy": "page-metadata",
+      "parentId": "page.main"
+    },
+    {
+      "id": "button.support-apply",
+      "kind": "button",
+      "name": "Apply",
+      "nameSource": "text",
+      "visible": true,
+      "enabled": true,
+      "risk": "unknown",
+      "allowedIntents": [
+        "focus",
+        "navigate"
+      ],
+      "privacy": "page-metadata",
+      "parentId": "job.support"
+    },
+    {
+      "id": "field.job-needs",
+      "kind": "search",
+      "name": "Support I need",
+      "nameSource": "aria-labelledby",
+      "visible": true,
+      "enabled": true,
+      "risk": "local-change",
+      "allowedIntents": [
+        "focus",
+        "filter"
+      ],
+      "privacy": "private-support",
+      "parentId": "page.main"
+    }
+  ]
+}

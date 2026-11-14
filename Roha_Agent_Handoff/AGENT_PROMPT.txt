@@ -1,0 +1,59 @@
+You are the implementation owner for Roha, a conversational accessibility assistant for Track 1 of the Digital Bridge Accessibility Hackathon. Build working software from this handoff; the maximum working budget is approximately 12 hours, with the final three hours reserved for evaluation, fixes and submission.
+
+Read these files before editing: SPEC.md, SOURCE_REQUIREMENTS.txt, FEATURES.json, ARCHITECTURE.md, TASKS.md and ACCEPTANCE_TESTS.md. Use the supplied repository/starter and its applicable project instructions. Inspect existing code, startup commands and tests before choosing an approach. Preserve useful work.
+
+The essential product is a drop-in agent that understands a new website automatically. One script should discover semantic page content/controls, generate its own versioned JSON map, converse in context and execute validated website actions. The owner must not have to hand-author a schema for every basic form. Optional host overrides improve custom controls, privacy and authorised integrations. Form filling is one part of the whole-site assistant.
+
+Use Roha everywhere. Proposed activation phrase: Hey Roha. Example learner requests: make the words bigger; explain this simply; read this; go back; change my phone number; help me register; I have no national ID; find work with flexible hours; review before sending. Actual host content must change when a preference is applied. All voice work must retain keyboard, text, touch and screen-reader alternatives.
+
+FIRST PRODUCE THE IMPLEMENTATION FILES
+
+1. Confirm or reconcile SPEC.md against the actual repository and supplied starter. Preserve every requested feature and priority; record assumptions and feasibility limits instead of dropping requirements.
+2. Create IMPLEMENTATION_PLAN.md with concrete modules, dependencies, selected demo profile and the first end-to-end task. Start necessary model downloads early.
+3. Create STATUS.md from STATUS_TEMPLATE.md and map every feature ID to a task, test, status and evidence path. Initially mark unverified work as planned/not tested.
+4. Confirm schema contracts and run tests/validate_contracts.py. These contract tests do not prove the SDK is implemented.
+5. Begin implementing immediately after this short setup. Do not stop at documents or a visual mockup.
+
+BUILD IN THIS ORDER
+
+Pass 1: inspect/reuse the project, create the semantic discovery/registry and JSON output, expose a minimal mount/unmount SDK, and prove that one bundle understands both ordinary HTML fixtures without supplied maps.
+
+Pass 2: implement local essential command routing, actual text scaling/reset, reading/navigation, simple explanations with the original available, plain recovery errors and a one-question guided form with answer correction.
+
+Pass 3: connect and test one real local speech/transcription/read-aloud profile. Use explicit microphone permission and visible state. After enablement, alternate speech/listening without a click per answer; prevent self-transcription. Add tested foreground wake if feasible and keep tap/keyboard activation. Never claim a renamed or mocked model provides wake recognition.
+
+Pass 4: complete no-standard-ID registration, optional attachments, private support, consent, final review and truthful host submission. Reuse the engine for a voice job application, a private support-needs filter and an employer accommodation form. Disconnected hosts must remain visibly disconnected; demo records must be labelled.
+
+Pass 5: add the documented offline profile, host-origin public cache, selected pack readiness, minimal opt-in draft recovery/deletion and reconnection without automatic submission. Verify by disconnecting internet and reloading. Do not describe a LAN-dependent profile as independent of all networks.
+
+Pass 6: integrate available Savanna code, test the second host and finish the required human/automated evaluation. Add the highest-value P1 items if they help the learner: spelling/digit review, where-am-I orientation, reversible change preview/undo, resume recap and shared-device reset. Start P2 only after the main gate is stable.
+
+ARCHITECTURE REQUIREMENTS
+
+Keep the SDK light and provider-independent. Use the current framework if suitable. The core must not require a large model download or paid API. Local command rules handle essential preferences/navigation; an optional local LLM proposes structured intents for flexible wording. Your deterministic validator checks schema, current map version, target, allowed arguments, host authority, consent and confirmation before executing. The model never supplies executable code or grants itself permissions.
+
+Use schemas/ for contracts and examples/ for illustrative shapes. The actual runtime must generate the website map from the DOM; illustrative JSON examples are not proof of discovery. Keep DOM handles in a local registry and omit raw HTML, selectors, field values, credentials and hidden/private content from exported maps. Debounce relevant route/DOM updates and protect against stale targets.
+
+Support device-local, local-network hub and optional remote profiles explicitly. Keep processing local by default; no silent cloud fallback or telemetry. Host authentication, CSRF, upload checks and current-session permission must still apply. Never scan desktop folders, bypass native file-dialog permissions, infer disability/status, or leak private support into public/employer payloads.
+
+LANGUAGE AND MODELS
+
+Target English, Amharic, Tigrinya and Afaan Oromo through pluggable language packs. Maintain separate statuses for UI, commands, transcription, arbitrary TTS and wake. Verify official model cards and licences before selecting dependencies. MODEL_SELECTION.md lists candidates to evaluate, not a tested configuration. Do not assume standard Whisper covers every requested language. Do not call a set of recorded questions arbitrary read-aloud support. Build pack interfaces now and label unavailable capabilities honestly; have native speakers review text and speech when available.
+
+EXTRA FEATURES AND SCOPE CONTROL
+
+The full feature catalog includes all original requirements plus orientation, context-aware error recovery, spelling/number review, preview/undo, resume recap, a preference profile/shared-device reset, a developer compatibility report, job context/checklists and optional human help. Keep the complete backlog visible. P0 is the first implementation commitment; P1 follows based on learner value; P2 covers partner assistance, SMS, advanced reading aids, extension distribution and standards extras. Ask before removing a requirement; do not ask permission for ordinary reversible implementation choices.
+
+TEST AND DOCUMENT EVIDENCE
+
+Run appropriate unit, contract and integration checks. Exercise live discovery, dynamic DOM changes, duplicate labels, malformed intents, private-data separation, denied microphone, stale state, provider failure and offline reload. Use real speech when available; explicitly label synthetic fixtures. Test keyboard, NVDA, TalkBack, 200% zoom, sound off and co-designer unaided completion when the environment allows. Record blocked/not-tested items rather than fabricating results. Fix axe critical/serious issues and prepare the WCAG evaluation; never equate an automated scan with full conformance.
+
+Provide the README, one-script bundle, SDK/API usage, source, two-host fixtures, Docker Compose, schemas/examples, model/setup/licence/cost notes, capability matrix, accessibility report, test evidence and a three-minute demo using DEMO_SCRIPT.md. Measure installation time and core bundle size. Do not claim 3,000 concurrent sessions from a learner-count target.
+
+WORKING BEHAVIOUR
+
+Proceed through dependencies in order, deliver a runnable first slice early, and keep it runnable. Update STATUS.md at each milestone with feature IDs, changed files, verification and the next task. Use available tools to inspect and test rather than speculating. Give short progress updates about observed behaviour and blockers. Ask only for genuinely blocking access or a consequential product decision; continue independent work meanwhile.
+
+If the complete four-language/all-device vision cannot fit the budget, deliver the strongest tested Track 1 journey and explicitly retain the remaining requirements in the backlog. Do not pretend they work. If a provider or integration is unavailable, keep the useful local/text path, document the exact missing dependency and continue the independent work.
+
+Begin with repository inspection, write the implementation files, then build. End with exact run commands, output paths, what actually passed, the selected demo profile and remaining limitations.

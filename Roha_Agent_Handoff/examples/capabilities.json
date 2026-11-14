@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "2.0",
+  "profile": "device-local",
+  "device": "Target device not selected - planning example only",
+  "languages": [
+    {
+      "tag": "en",
+      "capabilities": {
+        "ui": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "commands": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "transcription": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "dynamicTts": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "promptAudio": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "wake": {
+          "status": "planned",
+          "offlineReady": false
+        }
+      }
+    },
+    {
+      "tag": "am",
+      "capabilities": {
+        "ui": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "commands": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "transcription": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "dynamicTts": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "promptAudio": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "wake": {
+          "status": "planned",
+          "offlineReady": false
+        }
+      }
+    },
+    {
+      "tag": "ti",
+      "capabilities": {
+        "ui": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "commands": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "transcription": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "dynamicTts": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "promptAudio": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "wake": {
+          "status": "planned",
+          "offlineReady": false
+        }
+      }
+    },
+    {
+      "tag": "om",
+      "capabilities": {
+        "ui": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "commands": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "transcription": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "dynamicTts": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "promptAudio": {
+          "status": "planned",
+          "offlineReady": false
+        },
+        "wake": {
+          "status": "planned",
+          "offlineReady": false
+        }
+      }
+    }
+  ]
+}

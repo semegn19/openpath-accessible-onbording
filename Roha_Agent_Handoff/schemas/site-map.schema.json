@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Roha discovered page metadata v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mapId",
+    "mapVersion",
+    "routeKey",
+    "locale",
+    "origin",
+    "resources"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0"
+    },
+    "mapId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+    },
+    "mapVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "routeKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "locale": {
+      "enum": [
+        "en",
+        "am",
+        "ti",
+        "om"
+      ]
+    },
+    "origin": {
+      "enum": [
+        "runtime-discovery",
+        "illustrative-shape-only"
+      ]
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    }
+  },
+  "$defs": {
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "nameSource",
+        "visible",
+        "enabled",
+        "risk",
+        "allowedIntents",
+        "privacy"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+        },
+        "parentId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+        },
+        "kind": {
+          "enum": [
+            "region",
+            "heading",
+            "form",
+            "field",
+            "button",
+            "link",
+            "menu",
+            "search",
+            "table",
+            "document",
+            "job",
+            "status"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "nameSource": {
+          "enum": [
+            "label",
+            "aria-labelledby",
+            "aria-label",
+            "text",
+            "semantic-context",
+            "host-override",
+            "none"
+          ]
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "risk": {
+          "enum": [
+            "read-only",
+            "local-change",
+            "external-write",
+            "unknown"
+          ]
+        },
+        "allowedIntents": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "text_scale",
+              "simple_mode",
+              "contrast",
+              "reduced_motion",
+              "read",
+              "explain",
+              "focus",
+              "navigate",
+              "search",
+              "filter",
+              "propose_answer",
+              "choose_file",
+              "review",
+              "request_submission",
+              "request_support",
+              "pause",
+              "resume",
+              "undo",
+              "reset_preferences"
+            ]
+          }
+        },
+        "privacy": {
+          "enum": [
+            "page-metadata",
+            "application",
+            "private-support",
+            "identity",
+            "unclassified"
+          ]
+        },
+        "fieldType": {
+          "enum": [
+            "text",
+            "email",
+            "tel",
+            "textarea",
+            "select",
+            "file",
+            "secure-input"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "label"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 500
+              }
+            }
+          }
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "accept": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      }
+    }
+  }
+}
