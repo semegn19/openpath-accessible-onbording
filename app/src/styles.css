@@ -335,3 +335,8 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   font-weight: 700;
   fill: currentColor;
 }
+
+/* Integration Level 1: seamless background in an embedded iframe */
+.op-shell[data-embed] {
+  background: transparent;
+}

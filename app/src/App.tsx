@@ -31,10 +31,70 @@ export default function App() {
   return <Shell key={page.schema.id} schema={page.schema} />;
 }
 
+function postToParent(type: string, payload: Record<string, unknown> = {}) {
+  if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+    window.parent.postMessage({ source: 'openpath', v: 1, type, ...payload }, '*');
+  }
+}
+
 function Shell({ schema }: { schema: Schema }) {
   const f = useForm(schema);
   const { settings, setSettings, step, steps, index, values, errors, errorList } = f;
   const lang = settings.lang;
+  const isEmbed = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('embed') === '1' || window.parent !== window);
+
+  // In embed mode, take initial language from ?lang= query param if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lp = params.get('lang');
+    if (lp === 'am' || lp === 'en') {
+      setSettings((s) => (s.lang === lp ? s : { ...s, lang: lp }));
+    }
+  }, [setSettings]);
+
+  // Integration Level 1 postMessage bridge
+  useEffect(() => {
+    if (!isEmbed) return;
+    postToParent('ready', { formId: schema.id, lang });
+  }, [isEmbed, schema.id, lang]);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    postToParent('step', { formId: schema.id, stepId: step?.id, index, total: steps.length });
+  }, [isEmbed, schema.id, step?.id, index, steps.length]);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    const notifyHeight = () => {
+      const shell = document.querySelector('.op-shell');
+      const height = Math.ceil(shell ? shell.getBoundingClientRect().height : document.body.scrollHeight);
+      postToParent('resize', { height: Math.max(500, height) });
+    };
+    notifyHeight();
+    const ro = new ResizeObserver(notifyHeight);
+    const shell = document.querySelector('.op-shell');
+    if (shell) ro.observe(shell);
+    window.addEventListener('resize', notifyHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', notifyHeight);
+    };
+  }, [isEmbed, step?.id, index, settings, values, f.submitted]);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    const handler = (e: MessageEvent) => {
+      if (e.data && e.data.source === 'openpath-host' && e.data.v === 1) {
+        if (e.data.type === 'set-lang' && (e.data.lang === 'am' || e.data.lang === 'en')) {
+          setSettings((s) => ({ ...s, lang: e.data.lang }));
+        } else if (e.data.type === 'set-settings' && e.data.settings) {
+          setSettings((s) => ({ ...s, ...e.data.settings }));
+        }
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [isEmbed, setSettings]);
 
   useEffect(() => {
     document.title = `${t(schema.title, lang)} — OpenPath`;
@@ -395,7 +455,7 @@ function Shell({ schema }: { schema: Schema }) {
   const progress = tpl(t(schema.ui?.stepOf, lang), { n: index + 1, total: steps.length });
 
   return (
-    <div className="op-shell" data-big={settings.big || undefined}>
+    <div className="op-shell" data-big={settings.big || undefined} data-embed={isEmbed || undefined}>
       <a className="op-skip" href="#op-main">
         {c('nav.skip', lang)}
       </a>
@@ -476,9 +536,11 @@ function Shell({ schema }: { schema: Schema }) {
                 if (mine) {
                   setSend({ state: 'sent', id: mine.id, receivedAt: mine.receivedAt, stripped: mine.stripped });
                   setReceipt(outbox.lastReceipt(schema.id) ?? null);
+                  postToParent('submitted', { id: mine.id, reference: entry.ref, formId: schema.id });
                 } else if (left) {
                   setSend({ state: 'queued', ref: entry.ref, attempts: left.attempts,
                             reason: left.lastError === 'rejected' ? 'unreachable' : 'offline' });
+                  postToParent('queued', { reference: entry.ref, reason: left.lastError, formId: schema.id });
                 }
               });
             } else f.next();

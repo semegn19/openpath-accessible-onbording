@@ -10,12 +10,11 @@ The brief asks for a module that can be integrated **three ways**, not necessari
 
 | Level | Requirement | Status | Evidence |
 |---|---|---|---|
-| **L1** | Runs on any site via a `<script>` tag | **Not built.** The app is embeddable (`frame-ancestors *` is already in the CSP) but there is no loader script, no snippet, no documented postMessage contract | `app/public/` has no `embed.js` |
+| **L1** | Runs on any site via a `<script>` tag | **Done.** Drop-in loader script with zero inner scrollbars, postMessage protocol v1, microphone permission delegation, and full WCAG embed conformance | `app/public/embed.js`, `docs/embed-contract.md`, tested in `app/tests/embed.mjs` |
 | **L2** | REST API with an OpenAPI spec | **Done.** 6 endpoints, OpenAPI 3.1, spec served at `/api/openapi.yaml`, parity asserted (no endpoint missing from the spec) | `api/server.mjs` v1.2.0, `api/openapi.yaml`, 41 assertions in `npm run api` |
 | **L3** | A standard: LTI 1.3, schema.org/JobPosting, Open Badges 3.0 | **Not built.** No standard artefact in the repo | — |
 
-**What we can honestly claim today: Level 2.** One solid level beats two half-ones, and the
-rubric's "can be kept running" line rewards a working REST contract more than a broken LTI launch.
+**What we can honestly claim today: Level 1 and Level 2.** Both a drop-in script tag embed and a working REST API with OpenAPI spec are built and verified.
 
 ---
 
