@@ -43,6 +43,7 @@ export interface Step {
   optional?: boolean;
   voice?: boolean;
   readAloud?: boolean;
+  audio?: Partial<Record<Lang, string>>;
   pii?: 'none' | 'personal' | 'sensitive';
   localOnly?: boolean;
   inputmode?: string;

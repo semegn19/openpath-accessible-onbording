@@ -12,10 +12,10 @@
  * docs/amharic-voice.md). Nothing here calls the network: the runtime never leaves the origin.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, writeFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { collect } from './_strings.mjs';
+import { collect, FORMS } from './_strings.mjs';
 
 const SCHEMA_DIR = fileURLToPath(new URL('../../schema/', import.meta.url));
 const AUDIO_DIR = fileURLToPath(new URL('../public/audio/', import.meta.url));
@@ -36,6 +36,25 @@ const hash = (s) => {
 // recording checklist would have shipped missing 64 clips.
 const strings = collect(SCHEMA_DIR);
 
+// Collect all known step IDs across schemas so pre-recorded step audio is recognized
+const knownSteps = new Set();
+for (const form of FORMS) {
+  try {
+    const schema = JSON.parse(readFileSync(join(SCHEMA_DIR, `${form}.json`), 'utf8'));
+    for (const step of schema.steps ?? []) {
+      if (step.id) knownSteps.add(step.id);
+    }
+  } catch {}
+}
+
+const parseStepAudio = (f) => {
+  const m = f.match(/^(?:([a-z0-9-]+)_)?([a-z0-9-]+)[._](am|en)(?:\.(simple))?\.[a-z0-9]+$/i);
+  if (!m) return null;
+  const [, formPrefix, stepId, lang, simple] = m;
+  if (!knownSteps.has(stepId)) return null;
+  return { formPrefix, stepId, lang: lang.toLowerCase(), simple: Boolean(simple) };
+};
+
 mkdirSync(AUDIO_DIR, { recursive: true });
 const present = new Set(readdirSync(AUDIO_DIR).filter((f) => /\.(opus|ogg|mp3|m4a|wav)$/i.test(f)));
 
@@ -48,8 +67,25 @@ for (const s of strings) {
   else missing.push({ ...s, name, target: `${name}.opus` });
 }
 
+// Index any pre-recorded step audio files (<stepId>.<lang>.<ext> or <form>_<stepId>.<lang>.<ext>)
+for (const f of present) {
+  const parsed = parseStepAudio(f);
+  if (parsed) {
+    const { formPrefix, stepId, lang, simple } = parsed;
+    index[`${stepId}:${lang}${simple ? ':simple' : ''}`] = f;
+    index[`${stepId}.${lang}${simple ? '.simple' : ''}`] = f;
+    if (formPrefix) {
+      index[`${formPrefix}:${stepId}:${lang}${simple ? ':simple' : ''}`] = f;
+    }
+  }
+}
+
 // a clip for a string that no longer exists is dead weight — say so rather than ship it
-const orphans = [...present].filter((f) => !strings.some((s) => hash(`${s.lang}|${s.text}`) === f.replace(/\.[^.]+$/, '')));
+const orphans = [...present].filter((f) => {
+  const byString = strings.some((s) => hash(`${s.lang}|${s.text}`) === f.replace(/\.[^.]+$/, ''));
+  const byStep = Boolean(parseStepAudio(f));
+  return !byString && !byStep;
+});
 
 if (process.argv.includes('--list')) {
   console.log(`${strings.length} spoken strings · ${present.size} files · ${strings.length - missing.length} covered`);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Lang, Schema, Step } from './types';
 import { t, tpl } from './i18n';
 import { useForm, useCancelSpeechOnKey } from './useForm';
-import { Field, questionText, hintText, bodyText, optionText } from './fields';
+import { Field, questionText, hintText, whyText, bodyText, optionText } from './fields';
 import { ErrorSummary, ReviewScreen, SettingsBar, reviewText } from './screens';
 import { ReadAloudButton, speak } from './speech';
 import { stopAudio } from './audio';
@@ -379,12 +379,16 @@ function Shell({ schema }: { schema: Schema }) {
     // The intro used to be left out of this. It is the one paragraph that tells a person they
     // can get help and that there is no time limit — nothing that only appears on the first
     // screen should be the one thing that is never spoken.
-    const parts = [questionText(st, lang, settings.simple)];
+    // Structured contract: 1. Question title -> 2. Intro (if first step) -> 3. Why & Hint & Body
+    // -> 4. Optional marker -> 5. Choices/Options. Nothing left out across any question type.
+    const parts: string[] = [questionText(st, lang, settings.simple)];
     if (index === 0 && schema.intro) parts.push(t(introText(), lang));
-    parts.push(hintText(st, lang, settings.simple));
+    if (st.why) parts.push(whyText(st, lang, settings.simple));
+    if (st.hint) parts.push(hintText(st, lang, settings.simple));
     if (st.body) parts.push(bodyText(st, lang, settings.simple));
-    if (st.type === 'statement' || st.type === 'submit' || st.type === 'language') {
-      for (const o of st.options ?? []) parts.push(optionText(o, lang, settings.simple));
+    if (st.optional) parts.push(t(schema.ui?.optional, lang));
+    if (st.options && st.options.length > 0) {
+      for (const o of st.options) parts.push(optionText(o, lang, settings.simple));
     }
     return parts.filter(Boolean).join(' ');
   };
@@ -503,7 +507,13 @@ function Shell({ schema }: { schema: Schema }) {
           ) : (
             <>
               {showReadAloud && (
-                <ReadAloudButton text={readAloudText(step)} lang={lang} schema={schema} />
+                <ReadAloudButton
+                  step={step}
+                  simple={settings.simple}
+                  text={readAloudText(step)}
+                  lang={lang}
+                  schema={schema}
+                />
               )}
               <Field
                 headingId="op-q-title"

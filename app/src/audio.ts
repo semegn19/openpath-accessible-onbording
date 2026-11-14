@@ -55,21 +55,99 @@ export function stopAudio(): void {
   }
 }
 
+export function isAudioPlaying(): boolean {
+  return Boolean(current && !current.paused && !current.ended);
+}
+
+/** Play a single audio file from /audio/ or absolute URL. Returns true if playback succeeded. */
+async function playFile(src: string): Promise<boolean> {
+  stopAudio();
+  return new Promise<boolean>((resolve) => {
+    try {
+      const url = src.startsWith('/') ? src : `/audio/${src}`;
+      const el = new Audio(url);
+      el.preload = 'auto';
+      let done = false;
+      const finish = (ok: boolean) => {
+        if (!done) {
+          done = true;
+          if (!ok && current === el) current = null;
+          resolve(ok);
+        }
+      };
+      el.addEventListener('error', () => finish(false), { once: true });
+      el.addEventListener('ended', () => {
+        if (current === el) current = null;
+      }, { once: true });
+      current = el;
+      el.play().then(() => finish(true)).catch(() => finish(false));
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
 /** Play the recorded clip for this text. False means "no clip", not "it failed badly". */
 export async function playRecorded(lang: Lang, text: string): Promise<boolean> {
   await load();
   const file = index?.[clipName(lang, text)];
   if (!file) return false;
-  stopAudio();
-  try {
-    const el = new Audio(`/audio/${file}`);
-    el.preload = 'auto';
-    current = el;
-    await el.play();
-    return true;
-  } catch {
-    return false;      // autoplay refusal, decode error, 404 — fall through, never silent
+  return playFile(file);
+}
+
+export interface QuestionAudioOptions {
+  stepId: string;
+  formId?: string;
+  lang: Lang;
+  simple?: boolean;
+  text: string;
+  audioProp?: Partial<Record<Lang, string>>;
+}
+
+/**
+ * Play recorded audio for a question/step.
+ * Resolves by:
+ *  1. Direct schema audio property (if configured)
+ *  2. Step & language keys in index.json (e.g. "accessibility-prefs:am", "accessibility-prefs.am")
+ *  3. Exact text hash in index.json
+ *  4. Direct file probes in /audio/ (e.g. "accessibility-prefs.am.mp3")
+ * Returns false if no recorded file was found/playable, allowing immediate TTS fallback.
+ */
+export async function playQuestionAudio(opts: QuestionAudioOptions): Promise<boolean> {
+  await load();
+
+  // 1. Direct audio property from schema
+  const directProp = opts.audioProp?.[opts.lang];
+  if (directProp) {
+    const file = index?.[directProp] ?? directProp;
+    if (await playFile(file)) return true;
   }
+
+  // 2. Candidate keys in index.json
+  const keys: string[] = [];
+  if (opts.formId) {
+    if (opts.simple) keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}:simple`);
+    keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}`);
+  }
+  if (opts.simple) {
+    keys.push(`${opts.stepId}:${opts.lang}:simple`);
+    keys.push(`${opts.stepId}.${opts.lang}.simple`);
+  }
+  keys.push(
+    `${opts.stepId}:${opts.lang}`,
+    `${opts.stepId}.${opts.lang}`,
+    `${opts.stepId}_${opts.lang}`,
+    clipName(opts.lang, opts.text),
+  );
+
+  for (const k of keys) {
+    const file = index?.[k];
+    if (file) {
+      if (await playFile(file)) return true;
+    }
+  }
+
+  return false;
 }
 
 /** How many clips this build actually ships. Used by the UI and by tests. */

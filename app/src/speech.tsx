@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Lang } from './types';
 import { t, tpl } from './i18n';
-import type { Schema } from './types';
+import type { Lang, Schema, Step } from './types';
 
 import { c } from './copy';
 import { Icon } from './icons';
 import { spokenToDigits } from './digits';
-import { playRecorded, stopAudio } from './audio';
+import { playRecorded, playQuestionAudio, stopAudio } from './audio';
 
 /** Speak one string with the browser. Amharic only if a matching voice exists — otherwise say so. */
 export function speak(text: string, lang: Lang) {
@@ -23,7 +22,19 @@ export function speak(text: string, lang: Lang) {
   return true;
 }
 
-export function ReadAloudButton({ text, lang, schema }: { text: string; lang: Lang; schema: Schema }) {
+export function ReadAloudButton({
+  text,
+  lang,
+  schema,
+  step,
+  simple,
+}: {
+  text: string;
+  lang: Lang;
+  schema: Schema;
+  step?: Step;
+  simple?: boolean;
+}) {
   const [msg, setMsg] = useState('');
   const label = t(schema.ui?.readAloud, lang);
   return (
@@ -33,9 +44,22 @@ export function ReadAloudButton({ text, lang, schema }: { text: string; lang: La
         className="op-btn op-btn-quiet"
         onClick={async () => {
           setMsg('');
-          // 1. a recording we shipped (works offline, on any phone, in a human voice)
+          // 1. A pre-recorded human audio clip (works offline, on any phone)
+          if (
+            step &&
+            (await playQuestionAudio({
+              stepId: step.id,
+              formId: schema.id,
+              lang,
+              simple,
+              text,
+              audioProp: step.audio,
+            }))
+          ) {
+            return;
+          }
           if (await playRecorded(lang, text)) return;
-          // 2. the device's own voice, if it has one for this language
+          // 2. The device's own voice fallback, if it has one for this language
           const ok = speak(text, lang);
           setMsg(ok ? '' : c('voice.noVoice', lang));
         }}
