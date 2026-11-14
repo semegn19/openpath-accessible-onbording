@@ -17,8 +17,31 @@ import { appendFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statS
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateJobPostingFromSchema, generateJobPostingFromSubmission } from './jsonld.mjs';
+import { sendSms, formatResumeMessage, normalizePhone } from './sms.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+// Auto-load .env from app/src/.env or api/.env if SMS_KEY is missing
+if (!process.env.SMS_KEY) {
+  const envPath = existsSync(join(here, '..', 'app', 'src', '.env'))
+    ? join(here, '..', 'app', 'src', '.env')
+    : existsSync(join(here, '.env'))
+    ? join(here, '.env')
+    : null;
+  if (envPath) {
+    try {
+      const lines = readFileSync(envPath, 'utf8').split('\n');
+      for (const line of lines) {
+        const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)?\s*$/);
+        if (m && !process.env[m[1]]) {
+          process.env[m[1]] = m[2].trim();
+        }
+      }
+    } catch { /* ignore */ }
+  }
+}
+
+const checkpoints = new Map();
 
 const PORT = Number(process.env.PORT ?? 8080);
 const DATA_DIR = process.env.DATA_DIR ?? join(here, 'data');
@@ -506,6 +529,76 @@ const server = createServer(async (req, res) => {
     const rec = store.get(decodeURIComponent(subMatch[1]));
     if (!rec) return error(res, 404, 'not-found', 'No submission with that id.');
     return send(res, 200, rec);
+  }
+
+  if (path === '/api/checkpoints' && req.method === 'POST') {
+    const read = await readBody(req);
+    let body;
+    try { body = JSON.parse(read.body); } catch { return error(res, 400, 'bad-json', 'Invalid JSON'); }
+    const token = body.token || randomBytes(16).toString('hex');
+    const checkpoint = {
+      token,
+      formId: body.formId || 'savanna-onboard-v1',
+      phone: body.phone,
+      answers: body.answers || {},
+      currentStep: body.currentStep ?? 0,
+      stepId: body.stepId,
+      savedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+    };
+    checkpoints.set(token, checkpoint);
+    const origin = body.origin || 'http://localhost:5173';
+    const slug = checkpoint.formId.replace(/-v\d+$/, '').replace(/^savanna-/, '');
+    const resumeUrl = `${origin}/${slug}?resume=${token}`;
+    return send(res, 200, { ok: true, token, resumeUrl, checkpoint });
+  }
+
+  const cpMatch = path.match(/^\/api\/checkpoints\/([a-zA-Z0-9_-]+)$/);
+  if (cpMatch && req.method === 'GET') {
+    const token = cpMatch[1];
+    const cp = checkpoints.get(token);
+    if (!cp) return error(res, 404, 'not-found', 'Checkpoint not found');
+    if (new Date(cp.expiresAt) < new Date()) {
+      checkpoints.delete(token);
+      return error(res, 410, 'expired', 'Checkpoint expired');
+    }
+    return send(res, 200, { ok: true, checkpoint: cp });
+  }
+
+  if (path === '/api/sms/send-resume' && req.method === 'POST') {
+    const read = await readBody(req);
+    let body;
+    try { body = JSON.parse(read.body); } catch { return error(res, 400, 'bad-json', 'Invalid JSON'); }
+    let token = body.token;
+    let cp = token ? checkpoints.get(token) : null;
+    if (!cp && body.answers) {
+      token = token || randomBytes(16).toString('hex');
+      cp = {
+        token,
+        formId: body.formId || 'savanna-onboard-v1',
+        phone: body.phone,
+        answers: body.answers || {},
+        currentStep: body.currentStep ?? 0,
+        stepId: body.stepId,
+        savedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+      };
+      checkpoints.set(token, cp);
+    }
+    const phone = body.phone || cp?.phone || cp?.answers?.phone;
+    if (!phone) return error(res, 400, 'missing-phone', 'No phone number for SMS resume link.');
+    const origin = body.origin || 'http://localhost:5173';
+    const slug = (cp?.formId || 'savanna-onboard-v1').replace(/-v\d+$/, '').replace(/^savanna-/, '');
+    const resumeUrl = `${origin}/${slug}?resume=${token}`;
+    const lang = body.lang || cp?.answers?.language || 'am';
+    const text = formatResumeMessage(resumeUrl, lang);
+    const smsResult = await sendSms({ to: phone, text });
+    return send(res, 200, {
+      ok: true,
+      token,
+      resumeUrl,
+      sms: smsResult,
+    });
   }
 
   return error(res, 404, 'not-found', `${req.method} ${path} is not an endpoint. See /api/openapi.yaml.`);

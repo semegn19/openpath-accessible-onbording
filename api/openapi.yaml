@@ -155,7 +155,6 @@ paths:
                   answers:
                     language: am
                     accessibility-prefs: [large-text]
-                    assistance: call-me
                     name: ሳራ ተስፋዬ
                     phone: '0912345678'
                     id-route: fayda
