@@ -157,25 +157,86 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             ))}
           </select>
         );
-      case 'file':
+      case 'file': {
+        const fileVal = typeof value === 'object' && value !== null ? (value as { name?: string; data?: string; size?: number }) : typeof value === 'string' && value ? { name: value } : undefined;
+        const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) {
+            onChange(undefined);
+            return;
+          }
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const img = new Image();
+              img.onload = () => {
+                const maxDim = 800;
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                  if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                  } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                  }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const sizeKb = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
+                onChange({
+                  name: file.name,
+                  type: 'image/jpeg',
+                  size: sizeKb,
+                  data: compressedDataUrl,
+                });
+              };
+              img.src = reader.result as string;
+            };
+            reader.readAsDataURL(file);
+          } else {
+            onChange({
+              name: file.name,
+              size: Math.round(file.size / 1024),
+            });
+          }
+        };
+
         return (
-          <div>
+          <div className="op-file-wrap">
             <input
               id={baseId}
               className="op-input"
               type="file"
               aria-labelledby={headingId}
               accept={step.accept}
-              onChange={(e) => setStr(e.target.files?.[0]?.name ?? '')}
+              onChange={onFileChange}
               aria-describedby={describedBy || undefined}
               aria-invalid={error ? true : undefined}
               aria-errormessage={error ? errorId : undefined}
             />
-            <p className="op-hint">
-              {c('file.demoNote', lang)}
-            </p>
+            {fileVal?.data ? (
+              <div className="op-file-preview" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <img src={fileVal.data} alt="" aria-hidden="true" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ccc' }} />
+                <div>
+                  <div style={{ fontWeight: 600 }}>{fileVal.name}</div>
+                  <div className="op-hint" style={{ marginTop: 0 }}>
+                    {c('file.compressed', lang)} {fileVal.size ? `(${fileVal.size} KB)` : ''}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="op-hint">
+                {c('file.demoNote', lang)}
+              </p>
+            )}
           </div>
         );
+      }
       case 'date-ec-gc': {
         const v = (value as { year?: string; month?: string; day?: string; yearOnly?: boolean } | undefined) ?? {};
         const set = (patch: Partial<typeof v>) => onChange({ ...v, ...patch });

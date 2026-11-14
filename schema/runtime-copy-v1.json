@@ -130,6 +130,12 @@
       "om": "Yaalii kana keessatti faayilli hin olkaa'amu. Maqaan isaa qofti fayyadama.",
       "ti": "ኣብዚ ፈተነ እዚ እቲ ፋይል ኣይስደድን እዩ። ስሙ ጥራይ እዩ ዝርአ።"
     },
+    "file.compressed": {
+      "am": "ፎቶው ተጨምቋል",
+      "en": "Image compressed",
+      "om": "Suuraan salphateera",
+      "ti": "ስእሊ ተቐኒሱ እዩ"
+    },
     "announce.backOnline": {
       "am": "ግንኙነቱ ተመልሷል።",
       "en": "You are back online.",
@@ -201,6 +207,12 @@
       "en": "Your answers are kept on this device and will send themselves when the connection returns.",
       "om": "Deebiin keessan meeshaa kanarratti qabama; yommuu qunnamtiin deebi'u ofumaan ergama.",
       "ti": "መልስኹም ኣብዚ መሳርሒ ይዕቀብ፤ ርክብ መርበብ ክመጽእ ከሎ ብባዕሉ ይስደድ።"
+    },
+    "offline.smsSent": {
+      "am": "የቀጣይነት ማስፈንጠሪያ በኤስኤምኤስ ተልኳል።",
+      "en": "A resume link was sent via SMS.",
+      "om": "Hidhaan itti fufiinsaa karaa SMS ergomeera.",
+      "ti": "ናይ ምቕጻል ሊንክ ብኤስኤምኤስ ተሰዲዱ እዩ።"
     },
     "nav.skip": {
       "am": "ወደ ዋና ይዘት ዝለል",

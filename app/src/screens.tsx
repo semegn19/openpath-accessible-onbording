@@ -48,6 +48,9 @@ export function answerText(s: Step, values: Values, lang: Lang, simple = false):
     const d = v as { year?: string; month?: string; day?: string; yearOnly?: boolean };
     return [d.year, d.month, d.day].filter(Boolean).join('/') + (d.yearOnly ? (c('date.yearOnlyShort', lang)) : '');
   }
+  if (s.type === 'file' && v && typeof v === 'object') {
+    return (v as { name?: string }).name ?? '';
+  }
   return String(v ?? '');
 }
 
