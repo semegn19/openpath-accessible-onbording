@@ -7,7 +7,7 @@ WORKDIR /api
 COPY api/package.json api/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY api/server.mjs api/openapi.yaml ./
-COPY api/assistant.mjs api/database.mjs api/migrate.mjs api/maintenance.mjs ./
+COPY api/assistant.mjs api/database.mjs api/migrate.mjs api/maintenance.mjs api/storage-tools.mjs api/storage-cli.mjs ./
 
 # The API validates against the same schema files the form renders from.
 COPY schema/ /schema/
