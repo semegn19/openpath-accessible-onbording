@@ -5,6 +5,7 @@ import http from 'node:http';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const port = Number(process.argv[2] ?? 8081);
@@ -47,6 +48,16 @@ http.createServer((req, res) => {
   const cache = url.startsWith('/assets/') ? 'public, max-age=31536000, immutable'
     : url.startsWith('/fonts/') ? 'public, max-age=2592000'
     : file.endsWith('index.html') ? 'no-cache' : 'public, max-age=3600';
-  res.writeHead(200, { ...HEADERS, 'Content-Type': type, 'Cache-Control': cache });
-  res.end(readFileSync(file));
+  const body = readFileSync(file);
+  // Match nginx.conf's gzip policy. Fonts are already compressed. Without this,
+  // the Slow 3G test measures an uncompressed server that we do not deploy.
+  const compressible = /^(text\/|application\/(javascript|json)|image\/svg)/.test(type);
+  const gzip = body.length >= 1024 && compressible && /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+  res.writeHead(200, { ...HEADERS, 'Content-Type': type, 'Cache-Control': cache,
+    ...(url === '/roha-admin.html' ? { 'Cache-Control':'no-store', 'X-Frame-Options':'DENY', 'Referrer-Policy':'no-referrer',
+      'Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'" } : {}),
+    ...(compressible ? { Vary: 'Accept-Encoding' } : {}),
+    ...(gzip ? { 'Content-Encoding': 'gzip' } : {}),
+  });
+  res.end(gzip ? gzipSync(body) : body);
 }).listen(port, '0.0.0.0', () => console.log(`serving dist on ${port} (nginx semantics)`));

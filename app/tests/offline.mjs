@@ -11,9 +11,20 @@ import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:net';
 
-const PORT = 8085;
-const API_PORT = 8091;
+// Fixed ports can belong to unrelated services. Reserve an available port, and
+// fail explicitly if another process wins the small close/start race below.
+async function availablePort() {
+  const socket = createServer();
+  await new Promise((resolve, reject) => { socket.once('error', reject); socket.listen(0, '127.0.0.1', resolve); });
+  const port = socket.address().port;
+  await new Promise((resolve) => socket.close(resolve));
+  return port;
+}
+const PORT = await availablePort();
+let API_PORT = await availablePort();
+while (API_PORT === PORT) API_PORT = await availablePort();
 const SITE = `http://127.0.0.1:${PORT}/onboard`;
 const API = `http://127.0.0.1:${API_PORT}/api`;
 let fail = 0;
@@ -49,10 +60,15 @@ const ready = async (url) => {
   }
   return false;
 };
-if (!(await ready(`http://127.0.0.1:${API_PORT}/api/health`))) { console.error('api did not start'); process.exit(1); }
-if (!(await ready(`http://127.0.0.1:${PORT}/`))) { console.error('site did not start'); process.exit(1); }
 const stop = () => { api.kill('SIGKILL'); site.kill('SIGKILL'); };
 process.on('exit', stop);
+if (!(await ready(`http://127.0.0.1:${API_PORT}/api/health`)) || api.exitCode !== null) { console.error('scratch API did not start'); process.exit(1); }
+if (!(await ready(`http://127.0.0.1:${PORT}/`)) || site.exitCode !== null) { console.error('scratch site did not start'); process.exit(1); }
+const health = await (await fetch(`${API}/health`)).json();
+const html = await (await fetch(SITE)).text();
+if (!health.forms?.includes('savanna-onboard-v1') || !html.includes('id="root"')) {
+  console.error('Unexpected service at the scratch test address'); process.exit(1);
+}
 
 const browser = await chromium.launch();
 
@@ -176,6 +192,7 @@ await page.reload({ waitUntil: 'load' });
 await wait(600);
 h1 = (await page.locator('h1').first().innerText()).trim();
 ok(/ተቀምጧል|Saved on this device/.test(h1), 'a reload with no connection still shows the waiting sign-up', h1);
+ok(await page.locator('[data-roha-control="roha-launcher-pill"]').isVisible(), 'assistant controls remain available after an offline reload');
 const retryBtn = page.getByRole('button', { name: /እንደገና ሞክር|Try sending now/ });
 ok(await retryBtn.isVisible(), 'there is a "try sending now" button, not just advice');
 
@@ -214,7 +231,7 @@ const flushed = await page.evaluate(async () => {
   const res = await fetch('/api/submissions', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      formId: 'savanna-onboard',
+      formId: raw.formId,
       clientRef: raw.ref,
       answers: { language: 'am', assistance: 'call-me', name: 'ሳራ በቀለ ታደሰ', phone: '+251912345678' },
     }),
