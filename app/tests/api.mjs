@@ -149,10 +149,10 @@ let id;
 {
   const spec = await (await fetch(`${B}/openapi.yaml`)).text();
   ok(spec.startsWith('openapi: 3.1.0'), 'GET /openapi.yaml is served');
-  for (const p of ['/health:', '/forms:', '/forms/{formId}:', '/submissions:', '/submissions/{id}:', '/openapi.yaml:']) {
+  for (const p of ['/health:', '/forms:', '/forms/{formId}:', '/forms/{formId}/jsonld:', '/submissions:', '/submissions/{id}:', '/submissions/{id}/jsonld:', '/openapi.yaml:']) {
     ok(spec.includes(`  ${p}`), `spec documents ${p.replace(':', '')}`);
   }
-  const implemented = ['/health', '/forms', '/forms/{formId}', '/submissions', '/submissions/{id}'];
+  const implemented = ['/health', '/forms', '/forms/{formId}', '/forms/{formId}/jsonld', '/submissions', '/submissions/{id}', '/submissions/{id}/jsonld'];
   const undocumented = implemented.filter((p) => !spec.includes(`  ${p}:`));
   ok(undocumented.length === 0, 'no endpoint is missing from the spec', undocumented.join(',') || 'parity');
 }

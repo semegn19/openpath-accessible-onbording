@@ -4,10 +4,11 @@ info:
   version: 1.1.0
   summary: Accessible onboarding forms for Savanna — submit, retrieve, and fetch the form definition.
   description: |
-    Level 2 of the Digital Bridge adoptability ladder: a documented REST API in front of the
-    same JSON schemas the accessible form renders from.
+    Level 2 and Level 3 of the Digital Bridge adoptability ladder: a documented REST API
+    and Schema.org/JobPosting JSON-LD standard in front of the same JSON schemas the accessible form renders from.
 
-    **Four endpoints and one spec file.** No authentication, no API keys, no paid services.
+    **Endpoints and spec file.** No authentication, no API keys, no paid services.
+    Includes schema.org/JobPosting JSON-LD generation for employer accommodation forms (Level 3 standard).
 
     ### Privacy contract
     Accommodation and disability data (the `support` step, anything marked `localOnly`) is
@@ -95,6 +96,39 @@ paths:
               schema: { type: object, additionalProperties: true }
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/jsonld:
+    get:
+      tags: [forms]
+      operationId: getFormJsonLd
+      summary: Schema.org JSON-LD representation (Level 3 standard)
+      description: |
+        Generates schema.org structured data (e.g. JobPosting) for schemas declaring standard generation.
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema: { type: string }
+          examples:
+            employer: { value: employer-accommodations-v1 }
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, enum: [en, am], default: en }
+          description: Language for titles and summaries
+      responses:
+        '200':
+          description: Schema.org JSON-LD document.
+          content:
+            application/ld+json:
+              schema: { type: object, additionalProperties: true }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Form does not generate schema.org structured data.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /submissions:
     post:
@@ -203,6 +237,40 @@ paths:
               schema: { $ref: '#/components/schemas/Submission' }
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /submissions/{id}/jsonld:
+    get:
+      tags: [submissions]
+      operationId: getSubmissionJsonLd
+      summary: Schema.org JobPosting JSON-LD for an employer accommodation submission
+      description: |
+        Generates a standard schema.org/JobPosting JSON-LD document from an employer submission.
+        Includes company, role title, category, accommodations, telecommute status.
+        Zero personal data (contact phone numbers or applicant information) is included.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^sub_[A-Za-z0-9_-]{16}$' }
+          example: sub_9mQ2xT7bK1vR4pLz
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, enum: [en, am], default: en }
+          description: Language for descriptions and labels
+      responses:
+        '200':
+          description: Schema.org JobPosting JSON-LD document.
+          content:
+            application/ld+json:
+              schema: { type: object, additionalProperties: true }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Submission form does not generate schema.org structured data.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   /openapi.yaml:
     get:

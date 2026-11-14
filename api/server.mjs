@@ -16,6 +16,7 @@ import { randomBytes, createCipheriv, createDecipheriv } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generateJobPostingFromSchema, generateJobPostingFromSubmission } from './jsonld.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -229,7 +230,8 @@ function validateSubmission(body) {
   const answers = {};
   for (const step of schema.steps) {
     const raw = answersIn[step.id];
-    if (NEVER_STORED.has(step.id) || step.localOnly) {
+    const isEmployerAccommodation = schema.kind === 'employer' && step.id === 'accommodations';
+    if (!isEmployerAccommodation && (NEVER_STORED.has(step.id) || step.localOnly)) {
       if (raw !== undefined) stripped.push(step.id);
       continue;                       // never stored, never echoed, never logged
     }
@@ -250,6 +252,7 @@ function validateSubmission(body) {
   // it — a client that invents a field cannot get it stored either.
   const named = Object.keys(answersIn);
   for (const k of named) {
+    if (schema.kind === 'employer' && k === 'accommodations') continue;
     if (NEVER_STORED.has(k) && !stripped.includes(k)) stripped.push(k);
   }
   const unknown = named.filter((k) => !schema.steps.some((s) => s.id === k) && !NEVER_STORED.has(k));
@@ -357,6 +360,18 @@ const server = createServer(async (req, res) => {
     return send(res, 200, {
       forms: [...schemas.values()].map((s) => ({ id: s.id, version: s.version, kind: s.kind, title: s.title, langs: s.langs })),
     });
+  }
+
+  const formJsonLdMatch = path.match(/^\/api\/forms\/([^/]+)\/jsonld$/);
+  if (formJsonLdMatch && req.method === 'GET') {
+    const s = schemas.get(decodeURIComponent(formJsonLdMatch[1]));
+    if (!s) return error(res, 404, 'unknown-form', 'No form with that id.');
+    if (s.generates !== 'schema.org/JobPosting') {
+      return error(res, 422, 'not-supported', `Form ${s.id} does not generate schema.org structured data.`);
+    }
+    const lang = url.searchParams.get('lang') || 'en';
+    const jsonLd = generateJobPostingFromSchema(s, { lang });
+    return send(res, 200, jsonLd, { 'Content-Type': 'application/ld+json; charset=utf-8' });
   }
 
   const formMatch = path.match(/^\/api\/forms\/([^/]+)$/);
@@ -470,6 +485,20 @@ const server = createServer(async (req, res) => {
       console.log(`transcribe error: ${e.message}`);
       return error(res, 504, 'asr-timeout', 'The speech engine did not answer in time.');
     }
+  }
+
+  const subJsonLdMatch = path.match(/^\/api\/submissions\/([^/]+)\/jsonld$/);
+  if (subJsonLdMatch && req.method === 'GET') {
+    const subId = decodeURIComponent(subJsonLdMatch[1]);
+    const rec = store.get(subId);
+    if (!rec) return error(res, 404, 'not-found', 'No submission with that id.');
+    const s = schemas.get(rec.formId);
+    if (!s || s.generates !== 'schema.org/JobPosting') {
+      return error(res, 422, 'not-supported', `Submission ${rec.id} does not generate schema.org structured data.`);
+    }
+    const lang = url.searchParams.get('lang') || rec.answers?.language || 'en';
+    const jsonLd = generateJobPostingFromSubmission(rec, s, { lang });
+    return send(res, 200, jsonLd, { 'Content-Type': 'application/ld+json; charset=utf-8' });
   }
 
   const subMatch = path.match(/^\/api\/submissions\/([^/]+)$/);
