@@ -101,7 +101,33 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   gap: 0.4rem;
 }
 .op-lang, .op-toggles { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.op-settings .op-btn-chip { min-height: 48px; padding: 0.35rem 0.7rem; font-size: 0.95rem; }
+.op-settings .op-btn-chip {
+  min-height: 48px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.95rem;
+  background: var(--op-surface);
+  color: var(--op-primary);
+  border: 2px solid var(--op-border);
+  border-radius: var(--op-radius);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.op-settings .op-btn-chip:hover {
+  background: var(--op-primary-tint);
+  border-color: var(--op-primary);
+}
+.op-settings .op-btn-chip[aria-pressed='true'] {
+  background: var(--op-primary);
+  color: #ffffff;
+  border-color: var(--op-primary);
+  box-shadow: 0 1px 3px rgba(0, 43, 86, 0.3);
+}
+.op-settings .op-btn-chip[aria-pressed='true']:hover {
+  background: var(--op-primary-hover);
+  border-color: var(--op-primary-hover);
+}
+.op-settings .op-btn-chip[aria-pressed='true'] .op-svg {
+  color: #ffffff;
+}
 .op-shell[data-big='true'] .op-root { max-width: 40rem; }
 
 /* ---- headings: focus target on every step -------------------------------- */
@@ -271,6 +297,7 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
 @media (forced-colors: active) {
   .op-option, .op-check, .op-input, .op-btn, .op-error-summary { border: 2px solid ButtonText; }
   .op-btn-primary { background: ButtonFace; color: ButtonText; }
+  .op-btn-chip[aria-pressed='true'] { background: Highlight; color: HighlightText; border-color: Highlight; outline: 2px solid Highlight; }
   .op-option:has(input:checked) { outline: 3px solid Highlight; }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -7,7 +7,7 @@ await p.evaluate(() => localStorage.clear());
 await p.reload({ waitUntil: 'networkidle' });
 const live = p.locator('[role="status"][aria-live="polite"]').first();
 console.log('initial live region text:', JSON.stringify(await live.innerText()));
-await p.getByRole('radio', { name: /English/ }).check();
+await p.getByRole('radio', { name: /English|እንግሊዝኛ/ }).check();
 await p.waitForTimeout(150);
 console.log('after language change  :', JSON.stringify(await live.innerText()));
 await p.getByRole('button', { name: /Next|ቀጣይ/ }).click();

@@ -13,11 +13,11 @@ export const ErrorSummary = forwardRef<HTMLDivElement, {
 }>(({ items, lang, schema, onJump }, ref) => {
   if (!items.length) return null;
   return (
-    <div className="op-error-summary" ref={ref} tabIndex={-1} role="alert" aria-labelledby="op-error-title">
+    <div className="op-error-summary" ref={ref} tabIndex={-1} role="alert" aria-labelledby="op-error-title op-error-list">
       <h2 id="op-error-title" className="op-error-title">
         {t(schema.ui?.errorSummary, lang)}
       </h2>
-      <ul>
+      <ul id="op-error-list">
         {items.map(({ step, rule }) => (
           <li key={step.id}>
             <a href={`#${step.id}`} onClick={(e) => { e.preventDefault(); onJump(step.id); }}>
@@ -83,6 +83,8 @@ export function ReviewScreen({ steps, values, lang, simple, schema, onEdit }: {
   );
 }
 
+const LANG_CHIPS: { id: Lang; label: string }[] = [{ id: 'am', label: 'አማርኛ' }, { id: 'om', label: 'Afaan Oromoo' }, { id: 'ti', label: 'ትግርኛ' }, { id: 'en', label: 'English' }];
+
 export function SettingsBar({ lang, setLang, simple, setSimple, big, setBig, autoRead, setAutoRead }: {
   lang: Lang; setLang: (l: Lang) => void;
   simple: boolean; setSimple: (b: boolean) => void;
@@ -92,8 +94,18 @@ export function SettingsBar({ lang, setLang, simple, setSimple, big, setBig, aut
   return (
     <div className="op-settings" role="group" aria-label={c('settings.group', lang)}>
       <div className="op-lang" role="group" aria-label={c('settings.language', lang)}>
-        <button type="button" className="op-btn op-btn-chip" aria-pressed={lang === 'am'} onClick={() => setLang('am')} lang="am">አማርኛ</button>
-        <button type="button" className="op-btn op-btn-chip" aria-pressed={lang === 'en'} onClick={() => setLang('en')} lang="en">English</button>
+        {LANG_CHIPS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            className="op-btn op-btn-chip"
+            aria-pressed={lang === id}
+            onClick={() => setLang(id)}
+            lang={id}
+          >
+            {label}
+          </button>
+        ))}
       </div>
       {/* Toggle buttons, not checkbox rows: as three stacked 52 px rows this bar ate 287 px of
           a 400 px viewport and covered the question it was supposed to help with. */}

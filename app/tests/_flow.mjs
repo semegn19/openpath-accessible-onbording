@@ -6,16 +6,18 @@
  * follows.
  */
 export const LABELS = {
-  next: /ቀጣይ|Next/,
-  finish: /ምዝገባውን ጨርስ|Finish/,
+  next: /ቀጣይ|Next|Itti fufi/,
+  finish: /ምዝገባውን ጨርስ|Finish|Xumuri|ምዝገባ ወድእ/,
   amharic: /አማርኛ/,
-  english: /English/,
-  agree: /ተስማምቻለሁ|agree/i,
-  callMe: /አዎ፣ ይደውሉልኝ|Yes, call me/,
-  noThanks: /አይ፣ ራሴ|No, I will fill it myself/,
-  noDocument: /ምንም መታወቂያ|do not have any/,
-  helpChoosing: /የትኛውን እንድመርጥ|need help choosing/,
-  fayda: /የፋይዳ|Fayda/,
+  english: /English|እንግሊዝኛ|Afaan Ingilizii/,
+  oromo: /Afaan Oromoo|ኦሮምኛ/,
+  tigrinya: /ትግርኛ/,
+  agree: /ተስማምቻለሁ|agree|walii nan gala|ተሰማሚዐ ኣለኹ/i,
+  callMe: /አዎ፣ ይደውሉልኝ|Yes, call me|Eeyyee, naaf bilbilaa|እወ፣ ደውሉለይ/,
+  noThanks: /አይ፣ ራሴ|No, I will fill it myself|Lakki, anumatu guuta|ኣይፋል፣ ባዕለይ ክመልኦ እየ/,
+  noDocument: /ምንም መታወቂያ|do not have any|tokkollee hin qabu|ዝኾነ መለለዪ የብለይን/,
+  helpChoosing: /የትኛውን እንድመርጥ|need help choosing|gargaarsi na barbaachisa|ምምራጽ ሓገዝ የድልየኒ/,
+  fayda: /የፋይዳ|Fayda|Faayidaa|ፋይዳ/,
 };
 
 export const goto = async (page, url) => {
@@ -37,7 +39,7 @@ export async function answer(page, {
   idValue = '3910028475',
 } = {}) {
   // 1. language
-  await page.getByRole('radio', { name: lang === 'am' ? LABELS.amharic : LABELS.english }).check();
+  await page.getByRole('radio', { name: lang === 'am' ? LABELS.amharic : lang === 'om' ? LABELS.oromo : lang === 'ti' ? LABELS.tigrinya : LABELS.english }).check();
   await next(page);
   await page.waitForTimeout(120);
 
@@ -143,7 +145,7 @@ export async function fillVisible(page, { text = 'Test Person', phone = '0912345
  * on step 1 the radios *are* the languages, so a generic click silently switches the form.
  */
 export async function setLang(page, lang = 'am') {
-  const name = lang === 'am' ? LABELS.amharic : LABELS.english;
+  const name = lang === 'am' ? LABELS.amharic : lang === 'om' ? LABELS.oromo : lang === 'ti' ? LABELS.tigrinya : LABELS.english;
   await page.getByRole('radio', { name }).first().check().catch(async () => {
     await page.getByRole('radio', { name }).first().click({ force: true }).catch(() => {});
   });
