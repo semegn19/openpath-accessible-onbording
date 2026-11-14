@@ -23,44 +23,38 @@ export class FormActionExecutor {
 
   public proposeAnswer(targetId: string, value: string): boolean {
     const el = this.registry.getElement(targetId);
-    if (!el) return false;
+    if (!el || el.matches(':disabled, [readonly]')) return false;
 
     if (el instanceof HTMLInputElement) {
       if (el.type === 'checkbox') {
-        el.checked = value.toLowerCase() === 'true' || value.toLowerCase() === 'yes';
+        if (!['true', 'false', 'yes', 'no'].includes(value.toLowerCase())) return false;
+        const checked = ['true', 'yes'].includes(value.toLowerCase());
+        if (el.checked !== checked) el.click();
+        return el.checked === checked;
       } else if (el.type === 'radio') {
-        el.checked = el.value.toLowerCase() === value.toLowerCase();
+        if (el.value.toLowerCase() !== value.toLowerCase()) return false;
+        if (!el.checked) el.click();
+        return el.checked;
       } else {
-        el.value = value;
+        if (['file', 'password', 'hidden', 'submit', 'button', 'reset', 'image'].includes(el.type)) return false;
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(el, value);
       }
       this.dispatchChangeEvents(el);
       return true;
     }
 
     if (el instanceof HTMLTextAreaElement) {
-      el.value = value;
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(el, value);
       this.dispatchChangeEvents(el);
       return true;
     }
 
     if (el instanceof HTMLSelectElement) {
-      let matched = false;
       const lower = value.toLowerCase().trim();
-
-      for (let i = 0; i < el.options.length; i++) {
-        const opt = el.options[i];
-        if (
-          opt.value.toLowerCase() === lower ||
-          opt.text.toLowerCase().includes(lower) ||
-          lower.includes(opt.value.toLowerCase())
-        ) {
-          el.selectedIndex = i;
-          matched = true;
-          break;
-        }
-      }
-
-      if (matched) {
+      const matches = Array.from(el.options).filter(opt => !opt.disabled && opt.value !== '' &&
+        (opt.value.toLowerCase() === lower || opt.text.trim().toLowerCase() === lower));
+      if (matches.length === 1) {
+        el.value = matches[0].value;
         this.dispatchChangeEvents(el);
         return true;
       }
@@ -156,11 +150,11 @@ export class FormActionExecutor {
     const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]') as HTMLElement;
     if (submitBtn) {
       submitBtn.click();
-      return Promise.resolve({ success: true, receipt: `sub-local-${Date.now()}` });
+      return Promise.resolve({ success: true });
     }
 
     form.requestSubmit();
-    return Promise.resolve({ success: true, receipt: `sub-native-${Date.now()}` });
+    return Promise.resolve({ success: true });
   }
 
   private dispatchChangeEvents(el: HTMLElement): void {
