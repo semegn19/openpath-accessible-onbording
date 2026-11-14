@@ -8,7 +8,7 @@
 
 ### Amharic (አማርኛ) — Standard Mode
 
-onboard_language.am.mp3 : "ቋንቋ ይምረጡ አስቀድመው ቋንቋዎንና የሚፈልጉትን እርዳታ ይምረጣሉ። ከዚያ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ English"
+onboard_language.am.mp3 : "ቋንቋ ይምረጡ አስቀድመው ቋንቋዎንና የሚፈልጉትን እርዳታ ይመርጣሉ። ከዚያ ጥቂት ጥያቄዎችን ይመልሳሉ። የጊዜ ገደብ የለም። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
 
 accessibility-prefs.am.mp3 : "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ? ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ። ጥያቄዎች እንዲነበቡልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
@@ -22,13 +22,13 @@ id-route.am.mp3 : "ማንነትዎን እንዴት እናውቃለን? መታወ
 
 id-value.am.mp3 : "የመታወቂያ ቁጥር ይህ ቁጥር ከሰነድዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁ ይህን ይዝለሉ። ባይሞሉም ይቻላል"
 
-referral.am.mp3 : "ወደ አጋር መመራት አጋር ድርጅት ይደውልልዎታል። ስምዎንና ስልክ ቁጥርዎን ብቻ እናጋራለን። ስለ ጤናዎ ምንም አንሰጥም። በስልክ ላይ \"አልፈልግም\" ብለው መሰረዝ ይችላሉ። ስሜንና ስልክ ቁጥሬን ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።"
+referral.am.mp3 : "ወደ አጋር መመራት አጋር ድርጅት ይደውልልዎታል። ስምዎንና ስልክ ቁጥርዎን ብቻ እናጋራለን። ስለ ጤናዎ ምንም አንሰጥም። በስልክ ላይ \"አልፈልግም\" ብለው መሰረዝ ይችላሉ። ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።"
 
 onboard_submit.am.mp3 : "ማረጋገጫ መረጃዬ ለትምህርት ፕሮግራሙ እንዲውል ተስማምቻለሁ።"
 
 ### Amharic (አማርኛ) — Simple Words Mode (ቀላል ቃላት)
 
-onboard_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብለው ይሙሉ። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ English"
+onboard_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብለው ይሙሉ። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
 
 accessibility-prefs.am.simple.mp3 : "ቅጹ እንዲመችዎ ይምረጡ ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ። ጥያቄዎቹን ያንብብልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
@@ -48,7 +48,7 @@ onboard_submit.am.simple.mp3 : "ለመጨረስ ዝግጁ ነዎት? መረጃ�
 
 ### English — Standard Mode
 
-onboard_language.en.mp3 : "Choose your language First choose your language and any help you need. Then answer a few questions. There is no time limit. You can change this at any time. Amharic English"
+onboard_language.en.mp3 : "Choose your language First choose your language and any help you need. Then answer a few questions. There is no time limit. You can change this at any time. Amharic Afaan Oromoo English Tigrinya"
 
 accessibility-prefs.en.mp3 : "How would you like this form to work for you? This helps you read the form in the way that suits you. What you choose changes this form straight away. You can change it later. Read the questions to me Bigger text Simple words"
 
@@ -68,7 +68,7 @@ onboard_submit.en.mp3 : "Confirmation I agree that my information is used for th
 
 ### English — Simple Words Mode
 
-onboard_language.en.simple.mp3 : "Pick your language Take your time. No rush. You can change this at any time. Amharic English"
+onboard_language.en.simple.mp3 : "Pick your language Take your time. No rush. You can change this at any time. Amharic Afaan Oromoo English Tigrinya"
 
 accessibility-prefs.en.simple.mp3 : "Make this easier to use This helps you read the form in the way that suits you. Pick any help you need. You can change this later. Read questions aloud Bigger text Simple words"
 
@@ -86,13 +86,93 @@ referral.en.simple.mp3 : "Get help by phone A helper will call you to finish sig
 
 onboard_submit.en.simple.mp3 : "Ready to finish? I agree to use my details for my classes."
 
+### Afaan Oromoo — Standard Mode
+
+onboard_language.om.mp3 : "Afaan keessan filadhaa Waa'ee keessan gaaffilee muraasa deebisaa. Daangaan yeroo hin jiru. Kana yeroo kamiyyuu jijjiiruu dandeessu. Afaan Amaaraa Afaan Oromoo Afaan Ingilizii Tigriffaa"
+
+accessibility-prefs.om.mp3 : "Waraqaan kun akkamitti akka isiniif hojjetu barbaaddu? Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Wanti filattan waraqaa kana yeruma sana jijjiira. Boodas jijjiiruu dandeessu. Gaaffileen akka naaf dubbifaman Barreeffama guddaa Jechoota salphaa"
+
+assistance.om.mp3 : "Namni akka isin gargaaru barbaadduu? Yoo barbaaddan, namni tokko bilbilaan isiniif bilbila. Maqaa fi lakkoofsa bilbilaa keessan qofa dhaabbata michuu ta'eef kennina. Waa'ee fayyaa keessanii homaa hin qoodnu. Eeyyee, naaf bilbilaa Lakki, anumatu guuta"
+
+name.om.mp3 : "Maqaa keessan barreessaa Maqaan kun galmee barumsaa keessan irratti mul'ata. Maqaa keessan, maqaa abbaa, maqaa akaakayyuu"
+
+phone.om.mp3 : "Lakkoofsa bilbilaa keessan barreessaa Ergaa galmee keessanii bilbila kanatti ergina. Fakkeenyaaf: 0912 345 678"
+
+id-route.om.mp3 : "Eenyummaa keessan akkamitti mirkaneessina? Waraqaa eenyummaa malees galmaa'uu dandeessu. Sanada yoo hin qabaanne rakkoo hin qabu. Isa kam akka filattan yoo hin beekne, isin gargaarra. Lakkoofsa Faayidaa Waraqaa baqattummaa Paaspoortii Sanada biraa Kanneen keessaa tokkollee hin qabu Filachuuf gargaarsi na barbaachisa"
+
+id-value.om.mp3 : "Lakkoofsa waraqaa eenyummaa Lakkoofsa kanaan sanada keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne, bira darbaa. Dirqama miti"
+
+referral.om.mp3 : "Gara dhaabbata michuutti qajeelfamuu Dhaabbanni michuu ta'e isiniif bilbila. Maqaa fi lakkoofsa bilbilaa keessan qofa qoodna. Waa'ee fayyaa keessanii homaa hin kenninu. Bilbilaarratti 'hin barbaadu' jechuun haquu dandeessu. Maqaan koo fi bilbilli koo dhaabbata michuutti akka kennamu walii nan gala."
+
+onboard_submit.om.mp3 : "Mirkaneessa Odeeffannoon koo sagantaa barumsaatiif akka oolu walii nan gala."
+
+### Afaan Oromoo — Simple Words Mode (Jechoota Salphaa)
+
+onboard_language.om.simple.mp3 : "Afaan filadhaa Suuta jedhaa guutaa. Jarjarri hin jiru. Kana yeroo kamiyyuu jijjiiruu dandeessu. Afaan Amaaraa Afaan Oromoo Afaan Ingilizii Tigriffaa"
+
+accessibility-prefs.om.simple.mp3 : "Itti fayyadama salphisaa Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Gargaarsa isin barbaachisu filadhaa. Boodas jijjiiruu dandeessu. Naaf dubbisi Barreeffama guddaa Jechoota salphaa"
+
+assistance.om.simple.mp3 : "Bilbilaan gargaarsa Waa'ee fayyaa keessanii homaa hin qoodnu. Gargaaraan tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Eeyyee, naaf bilbilaa Ofuman guuta"
+
+name.om.simple.mp3 : "Maqaa Maqaan kun galmee barumsaa keessan irratti mul'ata. Maqaa keessan, maqaa abbaa, maqaa akaakayyuu"
+
+phone.om.simple.mp3 : "Bilbila Ergaa galmee keessanii bilbila kanatti ergina. Fakkeenyaaf: 0912 345 678"
+
+id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Waraqaa eenyummaa malees galmaa'uu dandeessu. Waraqaa eenyummaa hin qabdanii? Rakkoo hin qabu. Galmaa'uuf isin gargaarra. Lakkoofsa Faayidaa Waraqaa baqattummaa Paaspoortii Sanada biraa Sanada hin qabu Gargaarsi na barbaachisa"
+
+id-value.om.simple.mp3 : "Lakkoofsa Lakkoofsa kanaan sanada keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne bira darbuu dandeessu. Dirqama miti"
+
+referral.om.simple.mp3 : "Bilbilaan gargaarsa argadhaa Galmee xumuruuf gargaaraan tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaa fi bilbilli koo haa kennamu"
+
+onboard_submit.om.simple.mp3 : "Xumuruuf qophiidhaa? Odeeffannoon koo haa galu"
+
+### Tigrinya (ትግርኛ) — Standard Mode
+
+onboard_language.ti.mp3 : "ቋንቋኹም ምረጹ ቅድሚ ምጅማርኩም ቋንቋኹምን ዘድልየኩም ሓገዝን ምረጹ። ድሕሪኡ ሒደት ሕቶታት ክትምልሱ ኢኹም። ናይ ግዜ ደረት የለን። ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም። ኣምሓርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
+
+accessibility-prefs.ti.mp3 : "እዚ ቅጥዒ ብኸመይ ክሰርሓልኩም ትመርጹ? እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዝመረጽክምዎ ነገር ነዚ ቅጥዒ ብኡብኡ ይቕይሮ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ሕቶታት ክንበቡለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
+
+assistance.ti.mp3 : "ሓጋዚ ሰብ ክድውለልኩም ትደልዩዶ? ክትደልዩ እንተኾይንኩም ሓደ ሰብ ክድውለልኩም እዩ። ስምኩምን ናይ ስልኪ ቍጽርኹምን ጥራይ ንመሻርኽቲ ትካል ንህብ። ብዛዕባ ጥዕናኹም ዋላ ሓንቲ ኣይንህብን። እወ፣ ደውሉለይ ኣይፋል፣ ባዕለይ ክመልኦ እየ"
+
+name.ti.mp3 : "ስምኩም ጽሓፉ እዚ ስም ኣብ ናይ ትምህርቲ መዝገብኩም ክርአ እዩ። ስምኩም፣ ስም ኣቦኹም፣ ስም ኣቦሓጎኹም።"
+
+phone.ti.mp3 : "ናይ ስልኪ ቍጽርኹም ጽሓፉ ናይ ምዝገባ መልእኽቲ በዚ ስልኪ ክንሰድድ ኢና። ንኣብነት፦ 0912 345 678"
+
+id-route.ti.mp3 : "መንነትኩም ብኸመይ ነረጋግጽ? መታወቒ እንተዘይብልኩም'ውን ክትምዝገቡ ትኽእሉ ኢኹም። መታወቒ ሰነድ እንተዘይብልኩም ዋላ ሓንቲ ጸገም የለን። ኣየናይ ክትመርጹ ከም ዘለኩም እንተዘይፈሊጥኩም ድማ ክንሕግዘኩም ኢና። ናይ ፋይዳ ቍጽሪ ናይ ስደተኛ መታወቒ ፓስፖርት ካልእ ሰነድ ካብዚኣቶም ዋላ ሓደ የብለይን ንምምራጽ ሓገዝ የድልየኒ"
+
+id-value.ti.mp3 : "ናይ መታወቒ ቍጽሪ እዚ ቍጽሪ ምስ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ሕለፍዎ። ግዴታ ኣይኮነን"
+
+referral.ti.mp3 : "ናብ መሻርኽቲ ትካል ምምራሕ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ብዛዕባ ጥዕናኹም ዋላ ሓደ ኣይንህብን። ኣብ ስልኪ \"ኣይደልን\" ኢልኩም ክትሰርዙ ትኽእሉ ኢኹም። ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
+
+onboard_submit.ti.mp3 : "መረጋገጺ ሓበሬታይ ነቲ ናይ ትምህርቲ ፕሮግራም ክውዕል ተሰማሚዐ ኣለኹ።"
+
+### Tigrinya (ትግርኛ) — Simple Words Mode (ቀለልቲ ቃላት)
+
+onboard_language.ti.simple.mp3 : "ቋንቋ ብዘይ ህጹጽነት ቀስ ኢልኩም ምልእዎ። ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም። ኣምሓርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
+
+accessibility-prefs.ti.simple.mp3 : "ቅጥዒ ንምቕላል እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዘድልየኩም ሓገዝ ምረጹ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ኣንብበለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
+
+assistance.ti.simple.mp3 : "ናይ ስልኪ ሓገዝ ብዛዕባ ጥዕናኹም ዋላ ሓደ ኣይንህብን። ሓደ ሓጋዚ ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ኢና እንህብ። እወ፣ ደውሉለይ ባዕለይ ይምልኦ"
+
+name.ti.simple.mp3 : "ስም እዚ ስም ኣብ ናይ ትምህርቲ መዝገብኩም ክርአ እዩ። ስምኩም፣ ስም ኣቦኹም፣ ስም ኣቦሓጎኹም።"
+
+phone.ti.simple.mp3 : "ናይ ርክብ ስልኪ ናይ ምዝገባ መልእኽቲ በዚ ስልኪ ክንሰድድ ኢና። ንኣብነት፦ 0912 345 678"
+
+id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መታወቒ እንተዘይብልኩም'ውን ክትምዝገቡ ትኽእሉ ኢኹም። መታወቒ እንተዘይብልኩም'ውን ጸገም የለን። ክንሕግዘኩም ኢና። ናይ ፋይዳ ቍጽሪ ናይ ስደተኛ መታወቒ ፓስፖርት ካልእ ሰነድ መታወቒ የብለይን ሓገዝ የድልየኒ"
+
+id-value.ti.simple.mp3 : "ቍጽሪ እዚ ቍጽሪ ምስ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ክትሓልፍዎ ትኽእሉ ኢኹም። ግዴታ ኣይኮነን"
+
+referral.ti.simple.mp3 : "ብሓገዝቲ ምምራሕ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። እወ፣ ስመይን ስልከይን ይወሃብ"
+
+onboard_submit.ti.simple.mp3 : "ክትውድኡ ድሉዋት ዲኹም? ሓበሬታይ ንትምህርተይ ክውዕል ተሰማሚዐ ኣለኹ።"
+
 ---
 
 ## Job Application Form (savanna-job-v1)
 
 ### Amharic (አማርኛ) — Standard Mode
 
-job_language.am.mp3 : "ቋንቋ ይምረጡ ስለ ሥራዎ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ English"
+job_language.am.mp3 : "ቋንቋ ይምረጡ ስለ ሥራዎ ጥቂት ጥያቄዎችን ይመልሳሉ። የጊዜ ገደብ የለም። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
 
 accessibility-prefs.am.mp3 : "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ? ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ። ጥያቄዎች እንዲነበቡልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
@@ -110,11 +190,11 @@ availability.am.mp3 : "እንዴት መሥራት ይመርጣሉ? አሠሪው �
 
 job-support.am.mp3 : "ለቃለ መጠይቁ እርዳታ ይፈልጋሉ? አሠሪው የሚያስፈልግዎትን እንዲያዘጋጅ ይረዳዋል። የመረጡት ነገር ለአሠሪው ይታያል። ስለ ጤናዎ ምንም አንሰጥም። ባይሞሉም ይቻላል ጸጥ ያለ ክፍል የምልክት ቋንቋ አስተርጓሚ ተጨማሪ ጊዜ ጥያቄዎች በጽሑፍ መረጃ መስጠት አልፈልግም"
 
-job_submit.am.mp3 : "ማረጋገጫ ስሜን፣ ስልክ ቁጥሬን፣ ኢሜይል አድራሻዬን፣ የሥራ ልምዴን፣ የሥራ ሰዓቴንና የቃለ መጠይቅ ድጋፍ ፍላጎቴን ለአሠሪው እንዲሰጥ ተስማምቻለሁ።"
+job_submit.am.mp3 : "ማረጋገጫ ስሜ፣ ስልክ ቁጥሬ፣ ኢሜይል አድራሻዬ፣ የሥራ ልምዴ፣ የሥራ ሰዓቴና የቃለ መጠይቅ ድጋፍ ፍላጎቴ ለአሠሪው እንዲሰጥ ተስማምቻለሁ።"
 
 ### Amharic (አማርኛ) — Simple Words Mode (ቀላል ቃላት)
 
-job_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብለው ይሙሉ። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ English"
+job_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብለው ይሙሉ። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
 
 accessibility-prefs.am.simple.mp3 : "ቅጹ እንዲመችዎ ይምረጡ ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ። ጥያቄዎቹን ያንብብልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
@@ -132,11 +212,11 @@ availability.am.simple.mp3 : "የሥራ ጊዜ አሠሪው የሚመችዎት�
 
 job-support.am.simple.mp3 : "እርዳታ ለቃለ መጠይቁ እንዲረዱዎት። አሠሪው የመረጡትን ያያል። ስለ ጤናዎ ምንም አይታይም። ባይሞሉም ይቻላል ጸጥ ያለ ክፍል አስተርጓሚ ተጨማሪ ጊዜ ጥያቄዎች በጽሑፍ መናገር አልፈልግም"
 
-job_submit.am.simple.mp3 : "ለመላክ ዝግጁ ነዎት? እነዚህን ለአሠሪው እንዲሰጥ ተስማምቻለሁ፦ ስሜ፣ ስልኬ፣ ኢሜይሌ፣ የቀድሞ ሥራዬ፣ ሰዓቴና የቃለ መጠይቅ እርዳታ።"
+job_submit.am.simple.mp3 : "ለመላክ ዝግጁ ነዎት? እነዚህ ለአሠሪው እንዲሰጡ ተስማምቻለሁ፦ ስሜ፣ ስልኬ፣ ኢሜይሌ፣ የቀድሞ ሥራዬ፣ ሰዓቴና የቃለ መጠይቅ እርዳታ።"
 
 ### English — Standard Mode
 
-job_language.en.mp3 : "Choose your language Answer a few questions about your work. There is no time limit. You can change this at any time. Amharic English"
+job_language.en.mp3 : "Choose your language Answer a few questions about your work. There is no time limit. You can change this at any time. Amharic Afaan Oromoo English Tigrinya"
 
 accessibility-prefs.en.mp3 : "How would you like this form to work for you? This helps you read the form in the way that suits you. What you choose changes this form straight away. You can change it later. Read the questions to me Bigger text Simple words"
 
@@ -158,7 +238,7 @@ job_submit.en.mp3 : "Confirmation I agree to share my name, phone, email, work h
 
 ### English — Simple Words Mode
 
-job_language.en.simple.mp3 : "Pick your language Take your time. No rush. You can change this at any time. Amharic English"
+job_language.en.simple.mp3 : "Pick your language Take your time. No rush. You can change this at any time. Amharic Afaan Oromoo English Tigrinya"
 
 accessibility-prefs.en.simple.mp3 : "Make this easier to use This helps you read the form in the way that suits you. Pick any help you need. You can change this later. Read questions aloud Bigger text Simple words"
 
@@ -178,13 +258,101 @@ job-support.en.simple.mp3 : "Help So they can help you at the interview. The emp
 
 job_submit.en.simple.mp3 : "Ready to send? I agree to share these with the employer: name, phone, email, past work, hours, interview help."
 
+### Afaan Oromoo — Standard Mode
+
+job_language.om.mp3 : "Afaan keessan filadhaa Waa'ee muuxannoo hojii keessanii gaaffilee muraasa deebisaa. Daangaan yeroo hin jiru. Kana yeroo kamiyyuu jijjiiruu dandeessu. Afaan Amaaraa Afaan Oromoo Afaan Ingilizii Tigriffaa"
+
+accessibility-prefs.om.mp3 : "Waraqaan kun akkamitti akka isiniif hojjetu barbaaddu? Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Wanti filattan waraqaa kana yeruma sana jijjiira. Boodas jijjiiruu dandeessu. Gaaffileen akka naaf dubbifaman Barreeffama guddaa Jechoota salphaa"
+
+job-name.om.mp3 : "Maqaa keessan barreessaa Qacaran maqaa kana arga. Maqaa keessan, maqaa abbaa, maqaa akaakayyuu"
+
+job-phone.om.mp3 : "Lakkoofsa bilbilaa keessan barreessaa Qacaran lakkoofsa kanarratti bilbila. Fakkeenyaaf: 0912 345 678"
+
+years-experience.om.mp3 : "Waggaa meeqa hojjettaniittu? Kun hojiin kun waan kanaan dura hojjettaniif mijachuu isaa qacaraatti agarsiisa. Lakkoofsa qofa barreessaa. Hojjetanii kan hin beekne yoo ta'e 0 galchaa. Dirqama miti"
+
+experience.om.mp3 : "Waa'ee hojii kanaan dura hojjettanii nutti himaa Muuxannoo keessan qacaraatti agarsiisa. Himoota tokko yookiin lama gahaadha. Dirqama miti"
+
+job-email.om.mp3 : "Imeelii Qacaran karaa imeelii isin qunnama ta'a. Yoo qabaattan qofa barreessaa. Dirqama miti"
+
+availability.om.mp3 : "Akkamitti hojjechuu barbaaddu? Qacaran yeroo jijjiirraa hojii kanaan karoorsa. Waan isiniif mijatu filadhaa. Tokkoo ol filachuu dandeessu. Dirqama miti Mana taa'anii hojjechuu Sa'aatii jijjiiramaa Waajjira keessatti"
+
+job-support.om.mp3 : "Gaafannoo hojiirratti gargaarsi isin barbaachisaa? Qacaran waan isin barbaachisu akka qopheessuuf gargaara. Wanti filattan qacaraatti agarsiifama. Waa'ee fayyaa keessanii homaa hin qoodnu. Dirqama miti Kutaa callisaa qabu Turjumaana afaan mallattoo Yeroo dabalataa Gaaffilee barreeffamaatiin Dubbachuu hin barbaadu"
+
+job_submit.om.mp3 : "Mirkaneessa Maqaa koo, bilbila, imeelii, seenaa hojii, sa'aatii hojii fi gargaarsa gaafannoo qacaraaf qooduuf walii nan gala."
+
+### Afaan Oromoo — Simple Words Mode (Jechoota Salphaa)
+
+job_language.om.simple.mp3 : "Afaan filadhaa Suuta jedhaa guutaa. Jarjarri hin jiru. Kana yeroo kamiyyuu jijjiiruu dandeessu. Afaan Amaaraa Afaan Oromoo Afaan Ingilizii Tigriffaa"
+
+accessibility-prefs.om.simple.mp3 : "Itti fayyadama salphisaa Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Gargaarsa isin barbaachisu filadhaa. Boodas jijjiiruu dandeessu. Naaf dubbisi Barreeffama guddaa Jechoota salphaa"
+
+job-name.om.simple.mp3 : "Maqaa Qacaran maqaa kana arga. Maqaa keessan guutuu."
+
+job-phone.om.simple.mp3 : "Bilbila Qacaran lakkoofsa kanarratti bilbila. Fakkeenyaaf: 0912 345 678"
+
+years-experience.om.simple.mp3 : "Waggaa Hojii kanaan dura hojjettan qacaraatti agarsiisa. Lakkoofsa qofa. Yoo hin qabaanne 0. Dirqama miti"
+
+experience.om.simple.mp3 : "Hojii darbe Waan hojjechuu dandeessan agarsiisa. Gabaabsanii barreessaa. Dirqama miti"
+
+job-email.om.simple.mp3 : "Imeelii Isin qunnamuuf. Yoo qabaattan qofa barreessaa. Dirqama miti"
+
+availability.om.simple.mp3 : "Yeroo hojii Qacaran sa'aatii isiniif mijatu akka beekuuf gargaara. Waan isiniif mijatu filadhaa. Dirqama miti Mana taa'anii Jijjiiramaa Waajjira"
+
+job-support.om.simple.mp3 : "Gargaarsa Gaafannoorratti akka isin gargaaraniif. Qacaran waan filattan arga. Waa'ee fayyaa keessanii homaa hin argu. Dirqama miti Kutaa callisaa qabu Turjumaana Yeroo dabalataa Gaaffilee barreeffamaatiin Hin dubbadhu"
+
+job_submit.om.simple.mp3 : "Erguuf qophiidhaa? Maqaan koo, bilbilli, imeeliin, hojiin koo, sa'aatiin fi gargaarsi gaafannoo qacaraaf haa kennamu."
+
+### Tigrinya (ትግርኛ) — Standard Mode
+
+job_language.ti.mp3 : "ቋንቋኹም ምረጹ ብዛዕባ ስራሕኩም ሒደት ሕቶታት መልሱ። ናይ ግዜ ደረት የለን። ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም። ኣምሓርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
+
+accessibility-prefs.ti.mp3 : "እዚ ቅጥዒ ብኸመይ ክሰርሓልኩም ትመርጹ? እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዝመረጽክምዎ ነገር ነዚ ቅጥዒ ብኡብኡ ይቕይሮ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ሕቶታት ክንበቡለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
+
+job-name.ti.mp3 : "ስምኩም ጽሓፉ ቀጣሪ ትካል ነዚ ስም ክርእዮ እዩ። ስምኩም፣ ስም ኣቦኹም፣ ስም ኣቦሓጎኹም።"
+
+job-phone.ti.mp3 : "ናይ ስልኪ ቍጽርኹም ጽሓፉ ቀጣሪ ትካል በዚ ቍጽሪ ክድውለልኩም እዩ። ንኣብነት፦ 0912 345 678"
+
+years-experience.ti.mp3 : "ክንደይ ዓመት ሰሪሕኩም? እቲ ስራሕ ምስ ተመክሮኹም ዝሰማማዕ ምዃኑ ንቀጣሪ የርእዮ። ቍጽሪ ጥራይ። እንተዘይሰሪሕኩም 0 ጽሓፉ። ግዴታ ኣይኮነን"
+
+experience.ti.mp3 : "ካብዚ ንንየው ዝሰራሕኩምዎ ስራሕ ንገሩና ተመክሮኹም ንቀጣሪ የርእዮ። ሓደ ወይ ክልተ ሓሳብ እኹል እዩ። ግዴታ ኣይኮነን"
+
+job-email.ti.mp3 : "ኢሜይል ቀጣሪ ትካል ብኢሜይል ርክብ ክገብረልኩም ይኽእል እዩ። ንኣብነት፦ name@example.com ግዴታ ኣይኮነን"
+
+availability.ti.mp3 : "ብኸመይ ክትሰርሑ ትመርጹ? ቀጣሪ ናይ ስራሕ ሰዓታት ንምምዳብ ይጥቀመሉ። ዝጥዕመኩም ኩነታት ምረጹ። ካብ ሓደ ንላዕሊ ምምራጽ ይከኣል እዩ። ግዴታ ኣይኮነን ካብ ገዛ ተለዋዋጢ ሰዓታት ኣብ ቢሮ"
+
+job-support.ti.mp3 : "ንቃለ መጠይቕ ሓገዝ የድልየኩምዶ? ቀጣሪ ዘድልየኩም ሓገዝ ንኸዳሉ ይሕግዝ። ዝመረጽክምዎ ንቀጣሪ ይርአ። ብዛዕባ ጥዕናኹም ዋላ ሓደ ኣይንህብን። ግዴታ ኣይኮነን ህዱእ ክፍሊ ናይ ምልክት ቋንቋ ኣተርጓሚ ዝነውሐ ግዜ ሕቶታት ብጽሑፍ ክትገልጹ ዘይትደልዩ"
+
+job_submit.ti.mp3 : "መረጋገጺ ስመይ፣ ስልከይ፣ ኢሜይለይ፣ ናይ ስራሕ ታሪኸይ፣ ናይ ስራሕ ሰዓታተይን ናይ ቃለ መጠይቕ ሓገዘይን ንቀጣሪ ክወሃብ ተሰማሚዐ ኣለኹ።"
+
+### Tigrinya (ትግርኛ) — Simple Words Mode (ቀለልቲ ቃላት)
+
+job_language.ti.simple.mp3 : "ቋንቋ ብዘይ ህጹጽነት ቀስ ኢልኩም ምልእዎ። ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም። ኣምሓርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
+
+accessibility-prefs.ti.simple.mp3 : "ቅጥዒ ንምቕላል እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዘድልየኩም ሓገዝ ምረጹ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ኣንብበለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
+
+job-name.ti.simple.mp3 : "ስም ቀጣሪ ትካል ነዚ ስም ክርእዮ እዩ። ምሉእ ስምኩም።"
+
+job-phone.ti.simple.mp3 : "ናይ ርክብ ስልኪ ቀጣሪ ትካል በዚ ቍጽሪ ክድውለልኩም እዩ። ንኣብነት፦ 0912 345 678"
+
+years-experience.ti.simple.mp3 : "ዓመታት ዝሓለፈ ስራሕኩም ንቀጣሪ የርእዮ። ቍጽሪ ጥራይ። እንተዘየለ 0። ግዴታ ኣይኮነን"
+
+experience.ti.simple.mp3 : "ዝሓለፈ ስራሕ እንታይ ክትሰርሑ ከም እትኽእሉ የርእዮ። ብሓጺሩ ጽሓፍዎ። ግዴታ ኣይኮነን"
+
+job-email.ti.simple.mp3 : "ኢሜይል ርክብ ንምግባር ይጠቅም። ንኣብነት፦ name@example.com ግዴታ ኣይኮነን"
+
+availability.ti.simple.mp3 : "ናይ ስራሕ ግዜ ዝሰማምዓኩም ሰዓታት ንቀጣሪ ንምፍላጥ ይሕግዝ። ዝጥዕመኩም ኩነታት ምረጹ። ግዴታ ኣይኮነን ኣብ ገዛ ዝጥዕመኩም ሰዓታት ቢሮ"
+
+job-support.ti.simple.mp3 : "ሓገዝ ኣብ ቃለ መጠይቕ ክሕግዙኹም ይጠቅም። ቀጣሪ ዝመረጽክምዎ ይርኢ። ብዛዕባ ጥዕናኹም ዋላ ሓደ ኣይወሃብን። ግዴታ ኣይኮነን ህዱእ ክፍሊ ኣተርጓሚ ዝነውሐ ግዜ ሕቶታት ብጽሑፍ ዘይምግላጽ"
+
+job_submit.ti.simple.mp3 : "ክትውድኡ ድሉዋት ዲኹም? እዚኣቶም ንቀጣሪ ክወሃቡ ተሰማሚዐ ኣለኹ፦ ስም፣ ስልኪ፣ ኢሜይል፣ ዝሓለፈ ስራሕ፣ ሰዓታት፣ ናይ ቃለ መጠይቕ ሓገዝ።"
+
 ---
 
 ## Employer Accommodations Form (employer-accommodations-v1)
 
 ### Amharic (አማርኛ) — Standard Mode
 
-employer_language.am.mp3 : "ቋንቋ ይምረጡ ስለ ድርጅትዎ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ English"
+employer_language.am.mp3 : "ቋንቋ ይምረጡ ስለ ድርጅትዎ ጥቂት ጥያቄዎችን ይመልሳሉ። የጊዜ ገደብ የለም። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
 
 accessibility-prefs.am.mp3 : "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ? ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ። ጥያቄዎች እንዲነበቡልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
@@ -194,7 +362,7 @@ role.am.mp3 : "የሥራው ዓይነት ተማሪዎች በሥራው ስም ይ
 
 job-category.am.mp3 : "የሥራው ክፍል ተማሪዎች በዘርፋቸው ውስጥ ያለውን ሥራ እንዲያገኙ ይረዳል። አንዱን ይምረጡ። ባይሞሉም ይቻላል ቢሮ እና አስተዳደር ሽያጭ ማስተማር ቴክኖሎጂ ሆቴል እና መስተንግዶ ሌላ"
 
-accommodations.am.mp3 : "ድርጅትዎ ምን ይሰጣል? ተማሪዎች ሥራ ከመመልከታቸው በፊት ምን እንደሚገኝ ያውቃሉ። የማይሰጡትን አይምረጡ። ባዶ መተው ይችላሉ። ባይሞሉም ይቻላል ደረጃ የሌለው መግቢያ ከቤት መሥራት ተለዋዋጭ ሰዓት የስክሪን አንባቢ ሶፍትዌር የምልክት ቋንቋ አስተርጓሚ ምቹ የሥራ ጠረጴዛ"
+accommodations.am.mp3 : "ድርጅትዎ ምን ይሰጣል? ተማሪዎች ሥራ ከማመልከታቸው በፊት ምን እንደሚገኝ ያውቃሉ። የማይሰጡትን አይምረጡ። ባዶ መተው ይችላሉ። ባይሞሉም ይቻላል ደረጃ የሌለው መግቢያ ከቤት መሥራት ተለዋዋጭ ሰዓት የስክሪን አንባቢ ሶፍትዌር የምልክት ቋንቋ አስተርጓሚ ምቹ የሥራ ጠረጴዛ"
 
 contact.am.mp3 : "የመገኛ ስልክ ቁጥር ተማሪዎች ስለ ሥራው ለመጠየቅ ሊደውሉ ይችላሉ። ምሳሌ፦ 0912 345 678 ባይሞሉም ይቻላል"
 
@@ -202,7 +370,7 @@ employer_submit.am.mp3 : "ማረጋገጫ የሰጠሁት መረጃ እውነት
 
 ### Amharic (አማርኛ) — Simple Words Mode (ቀላል ቃላት)
 
-employer_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብለው ይሙሉ። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ English"
+employer_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብለው ይሙሉ። ይህን በማንኛውም ጊዜ መቀየር ይችላሉ። አማርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
 
 accessibility-prefs.am.simple.mp3 : "ቅጹ እንዲመችዎ ይምረጡ ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ። ጥያቄዎቹን ያንብብልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
@@ -220,7 +388,7 @@ employer_submit.am.simple.mp3 : "ለመላክ ዝግጁ ነዎት? መረጃዬ 
 
 ### English — Standard Mode
 
-employer_language.en.mp3 : "Choose your language Answer a few questions about your workplace. There is no time limit. You can change this at any time. Amharic English"
+employer_language.en.mp3 : "Choose your language Answer a few questions about your workplace. There is no time limit. You can change this at any time. Amharic Afaan Oromoo English Tigrinya"
 
 accessibility-prefs.en.mp3 : "How would you like this form to work for you? This helps you read the form in the way that suits you. What you choose changes this form straight away. You can change it later. Read the questions to me Bigger text Simple words"
 
@@ -238,7 +406,7 @@ employer_submit.en.mp3 : "Confirmation The information I gave is true."
 
 ### English — Simple Words Mode
 
-employer_language.en.simple.mp3 : "Pick your language Take your time. No rush. You can change this at any time. Amharic English"
+employer_language.en.simple.mp3 : "Pick your language Take your time. No rush. You can change this at any time. Amharic Afaan Oromoo English Tigrinya"
 
 accessibility-prefs.en.simple.mp3 : "Make this easier to use This helps you read the form in the way that suits you. Pick any help you need. You can change this later. Read questions aloud Bigger text Simple words"
 
@@ -253,5 +421,77 @@ accommodations.en.simple.mp3 : "Support Learners see this before they apply, so 
 contact.en.simple.mp3 : "Phone So learners can ask about the job. Example: 0912 345 678 Optional"
 
 employer_submit.en.simple.mp3 : "Ready to send? The details I gave are true."
+
+### Afaan Oromoo — Standard Mode
+
+employer_language.om.mp3 : "Afaan keessan filadhaa Waa'ee iddoo hojii keessanii gaaffilee muraasa deebisaa. Daangaan yeroo hin jiru. Kana yeroo kamiyyuu jijjiiruu dandeessu. Afaan Amaaraa Afaan Oromoo Afaan Ingilizii Tigriffaa"
+
+accessibility-prefs.om.mp3 : "Waraqaan kun akkamitti akka isiniif hojjetu barbaaddu? Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Wanti filattan waraqaa kana yeruma sana jijjiira. Boodas jijjiiruu dandeessu. Gaaffileen akka naaf dubbifaman Barreeffama guddaa Jechoota salphaa"
+
+company.om.mp3 : "Maqaa dhaabbataa Barattoonni maqaa kana argu. Maqaa guutuu, akkuma sanada galmee irratti jiru."
+
+role.om.mp3 : "Gosa hojii Barattoonni hojii mataduree kanaan barbaadu. Fakkeenyaaf: Gargaaraa gurgurtaa"
+
+job-category.om.mp3 : "Damee hojii Barattoonni hojii damee isaaniitiin wal simu akka argatan gargaara. Tarree keessaa tokko filadhaa. Dirqama miti Hojii waajjiraa fi bulchiinsaa Gurgurtaa Barsiisummaa Teeknooloojii Keessummeessummaa Kan biraa"
+
+accommodations.om.mp3 : "Iddoon hojii keessan maaliin mijeessa? Barattoonni osoo hin galmaayin dura kana argu, kanaaf namni tokkollee waa'ee miidhamasaa dubbachuun isa hin dhibu. Waan qabdan qofa filadhaa. Duwwaa dhiisuu dandeessu. Dirqama miti Seensa sadarkaa hin qabne Mana taa'anii hojjechuu Sa'aatii jijjiiramaa Sooftiweerii iskiriinii dubbisu Turjumaana afaan mallattoo Minjaala mijataa"
+
+contact.om.mp3 : "Bilbila qunnamtii Barattoonni waa'ee hojii kanaa gaafachuuf bilbila kanatti bilbila ta'a. Fakkeenyaaf: 0912 345 678 Dirqama miti"
+
+employer_submit.om.mp3 : "Mirkaneessa Odeeffannoon ani kenne dhugaa dha."
+
+### Afaan Oromoo — Simple Words Mode (Jechoota Salphaa)
+
+employer_language.om.simple.mp3 : "Afaan filadhaa Suuta jedhaa guutaa. Jarjarri hin jiru. Kana yeroo kamiyyuu jijjiiruu dandeessu. Afaan Amaaraa Afaan Oromoo Afaan Ingilizii Tigriffaa"
+
+accessibility-prefs.om.simple.mp3 : "Itti fayyadama salphisaa Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Gargaarsa isin barbaachisu filadhaa. Boodas jijjiiruu dandeessu. Naaf dubbisi Barreeffama guddaa Jechoota salphaa"
+
+company.om.simple.mp3 : "Dhaabbata Barattoonni maqaa kana argu. Maqaa guutuu dhaabbataa."
+
+role.om.simple.mp3 : "Hojii Barattoonni hojii mataduree kanaan barbaadu. Fakkeenyaaf: gargaaraa gurgurtaa."
+
+job-category.om.simple.mp3 : "Damee Barattoonni hojii damee isaaniitiin wal simu akka argatan gargaara. Tarree keessaa tokko filadhaa. Dirqama miti Hojii waajjiraa fi bulchiinsaa Gurgurtaa Barsiisummaa Teeknooloojii Keessummeessummaa Kan biraa"
+
+accommodations.om.simple.mp3 : "Gargaarsa Barattoonni osoo hin galmaayin dura gargaarsa jiru argu. Waan qabdan qofa filadhaa. Duwwaa dhiisuu dandeessu. Dirqama miti Seensa sadarkaa hin qabne Mana taa'anii hojjechuu Sa'aatii jijjiiramaa Iskiriinii dubbisaa Turjumaana Minjaala mijataa"
+
+contact.om.simple.mp3 : "Bilbila Barattoonni waa'ee hojii akka gaafataniif. Fakkeenyaaf: 0912 345 678 Dirqama miti"
+
+employer_submit.om.simple.mp3 : "Erguuf qophiidhaa? Odeeffannoon koo dhugaa dha."
+
+### Tigrinya (ትግርኛ) — Standard Mode
+
+employer_language.ti.mp3 : "ቋንቋኹም ምረጹ ትካልኩም ዘቕርቦም ናይ ስራሕ ቦታ ምምዕርራያት መዝግቡ። ናይ ግዜ ደረት የለን። ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም። ኣምሓርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
+
+accessibility-prefs.ti.mp3 : "እዚ ቅጥዒ ብኸመይ ክሰርሓልኩም ትመርጹ? እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዝመረጽክምዎ ነገር ነዚ ቅጥዒ ብኡብኡ ይቕይሮ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ሕቶታት ክንበቡለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
+
+company.ti.mp3 : "ናይ ትካል ስም ተማሃሮ ነዚ ስም ክርእይዎ እዮም። ምሉእ ስም፣ ኣብ ሰነድ ምዝገባኹም ከም ዘሎ።"
+
+role.ti.mp3 : "ናይ ስራሕ መዓርግ ተማሃሮ በዚ መዓርግ ስራሕ ይደልዩ። ንኣብነት፦ ናይ ሽያጥ ሓጋዚ"
+
+job-category.ti.mp3 : "ናይ ስራሕ ዓውዲ ተማሃሮ ምስ ዓውዶም ዝሰማማዕ ስራሕ ንኽረኽቡ ይሕግዞም። ካብቲ ዝርዝር ሓደ ምረጹ። ግዴታ ኣይኮነን ቢሮን ምምሕዳርን ሽያጥ ትምህርቲ ቴክኖሎጂ ሆቴልን መስተንግዶን ካልእ"
+
+accommodations.ti.mp3 : "ናይ ስራሕ ቦታኹም እንታይ ዓይነት ምምዕርራይ የቕርብ? ተማሃሮ ቅድሚ ምምልካቶም ነዚ ይርእይዎ፣ ስለዚ ዋላ ሓደ ሰብ ጉድኣት ኣካል ከይገለጸ ሓገዝ ይረክብ። እትህብዎ ጥራይ ምረጹ። ባዶ ክትሓድግዎ'ውን ትኽእሉ ኢኹም። ግዴታ ኣይኮነን ደረጃ ዘይብሉ ምእተዊ (ንመንኰርኰር ምቹእ) ካብ ገዛ ምስራሕ ይከኣል እዩ ተለዋዋጢ ሰዓታት ናይ ስክሪን ኣንባቢ ሶፍትዌር ናይ ምልክት ቋንቋ ኣተርጓሚ ምቹእ መንበር ወይ ጠረጴዛ"
+
+contact.ti.mp3 : "ናይ ርክብ ስልኪ ቍጽሪ ጽሓፉ ተማሃሮ ብዛዕባ እቲ ስራሕ ንምሕታት በዚ ስልኪ ክድውሉ ይኽእሉ እዮም። ንኣብነት፦ 0912 345 678 ግዴታ ኣይኮነን"
+
+employer_submit.ti.mp3 : "መረጋገጺ ዝሃብክዎ ሓበሬታ ሓቂ ምዃኑ አረጋግጽ።"
+
+### Tigrinya (ትግርኛ) — Simple Words Mode (ቀለልቲ ቃላት)
+
+employer_language.ti.simple.mp3 : "ቋንቋ ብዘይ ህጹጽነት ቀስ ኢልኩም ምልእዎ። ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም። ኣምሓርኛ ኦሮምኛ እንግሊዝኛ ትግርኛ"
+
+accessibility-prefs.ti.simple.mp3 : "ቅጥዒ ንምቕላል እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዘድልየኩም ሓገዝ ምረጹ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ኣንብበለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
+
+company.ti.simple.mp3 : "ትካል ተማሃሮ ነዚ ስም ክርእይዎ እዮም። ምሉእ ስም ናይቲ ትካል"
+
+role.ti.simple.mp3 : "ስራሕ ተማሃሮ በዚ መዓርግ ስራሕ ይደልዩ። ንኣብነት፦ ናይ ሽያጥ ሓጋዚ።"
+
+job-category.ti.simple.mp3 : "ናይ ስራሕ ክፍሊ ተማሃሮ ምስ ዓውዶም ዝሰማማዕ ስራሕ ንኽረኽቡ ይሕግዞም። ካብቲ ዝርዝር ሓደ ምረጹ። ግዴታ ኣይኮነን ቢሮን ምምሕዳርን ሽያጥ ትምህርቲ ቴክኖሎጂ ሆቴልን መስተንግዶን ካልእ"
+
+accommodations.ti.simple.mp3 : "ትካልኩም እንታይ ይህብ? ተማሃሮ ቅድሚ ምምልካቶም ነዚ ይርእይዎ፣ ጉድኣት ኣካል ከይገለጽኩም ሓገዝ ክትረኽቡ ትኽእሉ ኢኹም። እትህብዎ ጥራይ ምረጹ። ባዶ ክትሓድግዎ'ውን ትኽእሉ ኢኹም። ግዴታ ኣይኮነን ደረጃ ዘይብሉ ምእተዊ (ንመንኰርኰር ምቹእ) ካብ ገዛ ምስራሕ ይከኣል እዩ ተለዋዋጢ ሰዓታት ስክሪን ኣንባቢ ናይ ምልክት ቋንቋ ምቹእ መንበር ወይ ጠረጴዛ"
+
+contact.ti.simple.mp3 : "ናይ ርክብ ስልኪ ተማሃሮ ብዛዕባ እቲ ስራሕ ንምሕታት ይጠቅም። ንኣብነት፦ 0912 345 678 ግዴታ ኣይኮነን"
+
+employer_submit.ti.simple.mp3 : "ክትውድኡ ድሉዋት ዲኹም? እዚ ክፍቲ ስራሕ ተበጻሒ ኮይኑ ንኽወጽእ ተሰማሚዐ ኣለኹ።"
 
 ---

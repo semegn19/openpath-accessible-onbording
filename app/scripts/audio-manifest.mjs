@@ -48,7 +48,7 @@ for (const form of FORMS) {
 }
 
 const parseStepAudio = (f) => {
-  const m = f.match(/^(?:([a-z0-9-]+)_)?([a-z0-9-]+)[._](am|en)(?:\.(simple))?\.[a-z0-9]+$/i);
+  const m = f.match(/^(?:([a-z0-9-]+)_)?([a-z0-9-]+)[._](am|en|om|ti)(?:\.(simple))?\.[a-z0-9]+$/i);
   if (!m) return null;
   const [, formPrefix, stepId, lang, simple] = m;
   if (!knownSteps.has(stepId)) return null;

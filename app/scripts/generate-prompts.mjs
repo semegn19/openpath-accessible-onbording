@@ -124,6 +124,58 @@ for (const form of FORMS) {
     lines.push('');
   });
 
+  lines.push(`### Afaan Oromoo — Standard Mode`);
+  lines.push('');
+  schema.steps.forEach((step, idx) => {
+    if (step.type === 'review') return;
+    const rawText = getReadAloud(schema, step, idx, 'om', false);
+    const text = rawText.replace(/"/g, '\\"');
+    const isShared = step.id === 'language' || step.id === 'submit';
+    const prefix = isShared ? `${form.prefix}_` : '';
+    const filename = `${prefix}${step.id}.om.mp3`;
+    lines.push(`${filename} : "${text}"`);
+    lines.push('');
+  });
+
+  lines.push(`### Afaan Oromoo — Simple Words Mode (Jechoota Salphaa)`);
+  lines.push('');
+  schema.steps.forEach((step, idx) => {
+    if (step.type === 'review') return;
+    const rawText = getReadAloud(schema, step, idx, 'om', true);
+    const text = rawText.replace(/"/g, '\\"');
+    const isShared = step.id === 'language' || step.id === 'submit';
+    const prefix = isShared ? `${form.prefix}_` : '';
+    const filename = `${prefix}${step.id}.om.simple.mp3`;
+    lines.push(`${filename} : "${text}"`);
+    lines.push('');
+  });
+
+  lines.push(`### Tigrinya (ትግርኛ) — Standard Mode`);
+  lines.push('');
+  schema.steps.forEach((step, idx) => {
+    if (step.type === 'review') return;
+    const rawText = getReadAloud(schema, step, idx, 'ti', false);
+    const text = rawText.replace(/"/g, '\\"');
+    const isShared = step.id === 'language' || step.id === 'submit';
+    const prefix = isShared ? `${form.prefix}_` : '';
+    const filename = `${prefix}${step.id}.ti.mp3`;
+    lines.push(`${filename} : "${text}"`);
+    lines.push('');
+  });
+
+  lines.push(`### Tigrinya (ትግርኛ) — Simple Words Mode (ቀለልቲ ቃላት)`);
+  lines.push('');
+  schema.steps.forEach((step, idx) => {
+    if (step.type === 'review') return;
+    const rawText = getReadAloud(schema, step, idx, 'ti', true);
+    const text = rawText.replace(/"/g, '\\"');
+    const isShared = step.id === 'language' || step.id === 'submit';
+    const prefix = isShared ? `${form.prefix}_` : '';
+    const filename = `${prefix}${step.id}.ti.simple.mp3`;
+    lines.push(`${filename} : "${text}"`);
+    lines.push('');
+  });
+
   lines.push('---', '');
 }
 

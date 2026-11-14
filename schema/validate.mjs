@@ -9,7 +9,7 @@ const INPUT_TYPES = new Set(['text', 'tel', 'email', 'number', 'textarea', 'sele
 const STEP_TYPES = new Set([...INPUT_TYPES, 'review', 'submit']);
 const CHOICE_TYPES = new Set(['radio', 'checkbox', 'language']);  // statement carries one consent option, not a choice
 const RULES = new Set(['required', 'phone-et', 'email', 'minLength', 'maxLength', 'minValue', 'maxValue', 'exclusiveOption']);
-const LANGS = ['am', 'en'];
+const LANGS = ['am', 'en', 'om', 'ti'];
 
 const errors = [];
 const warn = [];
@@ -32,6 +32,18 @@ function checkI18n(file, step, path, val, { required = true } = {}) {
   }
   const extra = Object.keys(val).filter((k) => !LANGS.includes(k));
   if (extra.length) warning(file, step, 'W01', `${path} has unknown language keys: ${extra.join(',')}`);
+  const holes = (txt) => new Set([...(txt ?? '').matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+  const baseHoles = holes(val[LANGS[0]]);
+  for (let i = 1; i < LANGS.length; i++) {
+    const l = LANGS[i];
+    const lHoles = holes(val[l]);
+    for (const h of baseHoles) {
+      if (!lHoles.has(h)) err(file, step, 'E27', `{${h}} is in .${LANGS[0]} but not .${l} at ${path}`);
+    }
+    for (const h of lHoles) {
+      if (!baseHoles.has(h)) err(file, step, 'E27', `{${h}} is in .${l} but not .${LANGS[0]} at ${path}`);
+    }
+  }
 }
 
 
@@ -43,7 +55,7 @@ function validateRuntimeCopy(file, doc) {
     err(file, null, 'E26', 'strings must be an object of key -> {am,en}');
     return;
   }
-  const seen = new Map();
+  const seenByLang = Object.fromEntries(LANGS.map((l) => [l, new Map()]));
   for (const [key, val] of Object.entries(strings)) {
     if (!/^[a-z][A-Za-z0-9]*(\.[a-zA-Z0-9]+)+$/.test(key)) {
       err(file, key, 'E26', 'key must look like "area.name" — dot-separated, lowerCamel segments');
@@ -64,6 +76,7 @@ function validateRuntimeCopy(file, doc) {
     for (const l of LANGS) {
       const t = val[l]?.trim();
       if (!t) continue;
+      const seen = seenByLang[l];
       if (seen.has(t)) warning(file, key, 'W12', `.${l} is identical to ${seen.get(t)}`);
       else seen.set(t, key);
     }

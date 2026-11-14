@@ -38,7 +38,7 @@ const P: Record<string, ReactNode> = {
 /* A language is written in a script, so the script itself is the icon: anyone who reads Amharic
  * recognises አ, and anyone who reads English recognises A. Flags would say "which country", which is
  * a question this form deliberately never asks — and Windows Chrome has no flag emoji at all. */
-const LETTERS: Record<string, string> = { 'letter-am': 'አ', 'letter-en': 'A' };
+const LETTERS: Record<string, string> = { 'letter-am': 'አ', 'letter-en': 'A', 'letter-om': 'O', 'letter-ti': 'ት' };
 
 export function Icon({ name }: { name?: string }) {
   if (!name) return null;

@@ -6,295 +6,441 @@
   "strings": {
     "status.complete": {
       "am": "ምዝገባው ተጠናቅቋል",
-      "en": "Sign-up complete"
+      "en": "Sign-up complete",
+      "om": "Galmeen xumurameera",
+      "ti": "ምዝገባ ተወዲኡ እዩ"
     },
     "status.sending": {
       "am": "በመላክ ላይ…",
-      "en": "Sending…"
+      "en": "Sending…",
+      "om": "Ergamaa jira…",
+      "ti": "ይስደድ ኣሎ…"
     },
     "status.rejected": {
       "am": "አልተላከም",
-      "en": "Not sent yet"
+      "en": "Not sent yet",
+      "om": "Ammaaf hin ergamne",
+      "ti": "ንሕጂ ኣይተላእከን"
     },
     "status.saved": {
       "am": "በዚህ መሣሪያ ላይ ተቀምጧል",
-      "en": "Saved on this device"
+      "en": "Saved on this device",
+      "om": "Meeshaa kanarratti olkaa'ameera",
+      "ti": "ኣብዚ መሳርሒ ተዓቂቡ እዩ"
     },
     "receipt.reference": {
       "am": "የማጣቀሻ ቁጥርዎ፦",
-      "en": "Your reference:"
+      "en": "Your reference:",
+      "om": "Lakkoofsa wabiikeessanii:",
+      "ti": "ናይ መወከሲ ቍጽርኹም፦"
     },
     "receipt.keep": {
       "am": "ይህን ቁጥር ይያዙት።",
-      "en": "Keep this number."
+      "en": "Keep this number.",
+      "om": "Lakkoofsa kana qabadhaa.",
+      "ti": "ነዚ ቍጽሪ ሓዝዎ።"
     },
     "status.wait": {
       "am": "እባክዎ ይጠብቁ።",
-      "en": "Please wait."
+      "en": "Please wait.",
+      "om": "Mee eegaa.",
+      "ti": "ብኽብረትኩም ተጸበዩ።"
     },
     "status.thanks": {
       "am": "አመሰግናለሁ።",
-      "en": "Thank you."
+      "en": "Thank you.",
+      "om": "Galatoomaa.",
+      "ti": "የቐንየልና።"
     },
     "settings.group": {
       "am": "ቅንብሮች",
-      "en": "Settings"
+      "en": "Settings",
+      "om": "Qindaa'ina",
+      "ti": "ምምዕርራይ"
     },
     "settings.language": {
       "am": "ቋንቋ",
-      "en": "Language"
+      "en": "Language",
+      "om": "Afaan",
+      "ti": "ቋንቋ"
     },
     "settings.help": {
       "am": "እርዳታ",
-      "en": "Help options"
+      "en": "Help options",
+      "om": "Filannoowwan gargaarsaa",
+      "ti": "ናይ ሓገዝ ኣማራጽታት"
     },
     "settings.simple": {
       "am": "ቀላል ቃላት",
-      "en": "Simple words"
+      "en": "Simple words",
+      "om": "Jechoota salphaa",
+      "ti": "ቀለልቲ ቃላት"
     },
     "settings.big": {
       "am": "ትልቅ ጽሑፍ",
-      "en": "Bigger text"
+      "en": "Bigger text",
+      "om": "Barreeffama guddaa",
+      "ti": "ዓቢ ጽሑፍ"
     },
     "settings.autoRead": {
       "am": "ጥያቄ አንብብ",
-      "en": "Read aloud"
+      "en": "Read aloud",
+      "om": "Sagaleedhaan dubbisi",
+      "ti": "ብድምጺ ኣንብብ"
     },
     "date.year": {
       "am": "ዓመት",
-      "en": "Year"
+      "en": "Year",
+      "om": "Waggaa",
+      "ti": "ዓመት"
     },
     "date.month": {
       "am": "ወር",
-      "en": "Month"
+      "en": "Month",
+      "om": "Ji'a",
+      "ti": "ወርሒ"
     },
     "date.day": {
       "am": "ቀን",
-      "en": "Day"
+      "en": "Day",
+      "om": "Guyyaa",
+      "ti": "መዓልቲ"
     },
     "date.yearOnly": {
       "am": "ዓመቱን ብቻ አውቃለሁ",
-      "en": "I only know the year"
+      "en": "I only know the year",
+      "om": "Waggaa qofan beeka",
+      "ti": "ዓመት ጥራይ እየ ዝፈልጥ"
     },
     "date.yearOnlyShort": {
       "am": "(ዓመት ብቻ)",
-      "en": "(year only)"
+      "en": "(year only)",
+      "om": "(waggaa qofa)",
+      "ti": "(ዓመት ጥራይ)"
     },
     "date.hint": {
       "am": "የኢትዮጵያ ዓመት — ለምሳሌ 1988",
-      "en": "Ethiopian year — for example 1988"
+      "en": "Ethiopian year — for example 1988",
+      "om": "Bara Itoophiyaa — fakkeenyaaf 1988",
+      "ti": "ናይ ኢትዮጵያ ዓመተ ምሕረት — ንኣብነት 1988"
     },
     "file.demoNote": {
       "am": "በዚህ ሙከራ ውስጥ ፋይሉ አይላክም። ስሙ ብቻ ይታያል።",
-      "en": "In this demo the file is not uploaded. Only its name is used."
+      "en": "In this demo the file is not uploaded. Only its name is used.",
+      "om": "Yaalii kana keessatti faayilli hin olkaa'amu. Maqaan isaa qofti fayyadama.",
+      "ti": "ኣብዚ ፈተነ እዚ እቲ ፋይል ኣይስደድን እዩ። ስሙ ጥራይ እዩ ዝርአ።"
     },
     "announce.backOnline": {
       "am": "ግንኙነቱ ተመልሷል።",
-      "en": "You are back online."
+      "en": "You are back online.",
+      "om": "Toorarratti deebitaniittu.",
+      "ti": "ናብ መርበብ ተመሊስኩም ኣለኹም።"
     },
     "announce.offline": {
       "am": "ግንኙነት የለም። መልሶችዎ በዚህ መሣሪያ ላይ ይቀመጣሉ።",
-      "en": "You are offline. Your answers are being kept on this device."
+      "en": "You are offline. Your answers are being kept on this device.",
+      "om": "Qunnamtiin hin jiru. Deebiin keessan meeshaa kanarratti qabama.",
+      "ti": "ርክብ መርበብ የለን። መልስኹም ኣብዚ መሳርሒ ይዕቀብ።"
     },
     "announce.saved": {
       "am": "መልሶችዎ ተቀምጠዋል።",
-      "en": "Your answers were saved."
+      "en": "Your answers were saved.",
+      "om": "Deebiin keessan olkaa'ameera.",
+      "ti": "መልስኹም ተዓቂቡ እዩ።"
     },
     "announce.langChanged": {
       "am": "ቋንቋ ወደ አማርኛ ተቀይሯል።",
-      "en": "Language changed to English."
+      "en": "Language changed to English.",
+      "om": "Afaan gara Afaan Oromootti jijjiirameera.",
+      "ti": "ቋንቋ ናብ ትግርኛ ተቐይሩ እዩ።"
     },
     "announce.readAloudOn": {
       "am": "ጥያቄዎች ይነበባሉ",
-      "en": "questions will be read aloud"
+      "en": "questions will be read aloud",
+      "om": "gaaffileen sagaleedhaan dubbifamu",
+      "ti": "ሕቶታት ብድምጺ ይንበቡ"
     },
     "announce.bigOn": {
       "am": "ጽሑፉ ጨምሯል",
-      "en": "text is now bigger"
+      "en": "text is now bigger",
+      "om": "barreeffamni guddateera",
+      "ti": "ጽሑፍ ዓብዩ እዩ"
     },
     "announce.simpleOn": {
       "am": "ቀላል ቃላት በርተዋል",
-      "en": "simple words are on"
+      "en": "simple words are on",
+      "om": "jechoonni salphaan banamaniiru",
+      "ti": "ቀለልቲ ቃላት ተኸፊቶም ኣለዉ"
     },
     "announce.choicesCleared": {
       "am": "ሌሎቹ ምርጫዎች ተነስተዋል።",
-      "en": "Your other choices were cleared."
+      "en": "Your other choices were cleared.",
+      "om": "Filannoowwan keessan kan biroo haqamaniiru.",
+      "ti": "እቶም ካልኦት ምርጫታትኩም ተሰሪዞም እዮም።"
     },
     "announce.sending": {
       "am": "በመላክ ላይ። እባክዎ ይጠብቁ።",
-      "en": "Sending. Please wait."
+      "en": "Sending. Please wait.",
+      "om": "Ergamaa jira. Mee eegaa.",
+      "ti": "ይስደድ ኣሎ። ብኽብረትኩም ተጸበዩ።"
     },
     "announce.newQuestion": {
       "am": "አዲስ ጥያቄ ተጨምሯል።",
-      "en": "a new question was added."
+      "en": "a new question was added.",
+      "om": "gaaffiin haaraan dabalameera.",
+      "ti": "ሓድሽ ሕቶ ተወሲኹ እዩ።"
     },
     "offline.title": {
       "am": "ግንኙነት የለም።",
-      "en": "No connection."
+      "en": "No connection.",
+      "om": "Qunnamtiin hin jiru.",
+      "ti": "ርክብ መርበብ የለን።"
     },
     "offline.body": {
       "am": "መልሶችዎ በዚህ መሣሪያ ላይ ይቀመጣሉ፤ ግንኙነት ሲመጣ በራሳቸው ይላካሉ።",
-      "en": "Your answers are kept on this device and will send themselves when the connection returns."
+      "en": "Your answers are kept on this device and will send themselves when the connection returns.",
+      "om": "Deebiin keessan meeshaa kanarratti qabama; yommuu qunnamtiin deebi'u ofumaan ergama.",
+      "ti": "መልስኹም ኣብዚ መሳርሒ ይዕቀብ፤ ርክብ መርበብ ክመጽእ ከሎ ብባዕሉ ይስደድ።"
     },
     "nav.skip": {
       "am": "ወደ ዋና ይዘት ዝለል",
-      "en": "Skip to main content"
+      "en": "Skip to main content",
+      "om": "Gara qabiyyee ijooti darbi",
+      "ti": "ናብ ቀንዲ ትሕዝቶ ሕለፍ"
     },
     "banner.lastSent": {
       "am": "የመጨረሻው ምዝገባ ተልኳል። የማጣቀሻ ቁጥር፦ ",
-      "en": "Your last sign-up was sent. Reference: "
+      "en": "Your last sign-up was sent. Reference: ",
+      "om": "Galmeen keessan inni dhumaa ergameera. Wabii: ",
+      "ti": "ናይ መወዳእታ ምዝገባኹም ተላኢኹ እዩ። መወከሲ፦ "
     },
     "banner.dismiss": {
       "am": "ዝጋ",
-      "en": "Dismiss"
+      "en": "Dismiss",
+      "om": "Cufi",
+      "ti": "ዕጾ"
     },
     "resume.title": {
       "am": "ያልተጠናቀቀ ምዝገባ አለ። መልሶችዎ ተቀምጠዋል።",
-      "en": "You have an unfinished form. Your answers were restored."
+      "en": "You have an unfinished form. Your answers were restored.",
+      "om": "Waraqaa galmee hin xumuramne qabdu. Deebiin keessan deebi'eera.",
+      "ti": "ዘይተዛዘመ ቅጥዒ ኣሎኩም። መልስኹም ተመሊሱ ኣሎ።"
     },
     "resume.startAgain": {
       "am": "አዲስ ጀምር",
-      "en": "Start again"
+      "en": "Start again",
+      "om": "Haaraa eegali",
+      "ti": "ካብ ሓድሽ ጀምር"
     },
     "review.intro": {
-      "am": "እነዚህን መልሶች ይሰሙ። ትክክል ካልሆኑ ይቀይሩ።",
-      "en": "Listen to your answers. If something is wrong, change it."
+      "am": "እነዚህን መልሶች ያዳምጡ። ትክክል ካልሆኑ ይቀይሩ።",
+      "en": "Listen to your answers. If something is wrong, change it.",
+      "om": "Deebiiwwan keessan dhaggeeffadhaa. Yoo dogoggorri jiraate jijjiiraa.",
+      "ti": "መልስኹም ስምዑ። ጌጋ እንተሃልዩ ኣዐርይዎ።"
     },
     "review.nextHint": {
       "am": "ትክክል ከሆነ ቀጣይን ይጫኑ።",
-      "en": "If it is right, press Next."
+      "en": "If it is right, press Next.",
+      "om": "Yoo sirrii ta'e Itti-aansi cuqaasaa.",
+      "ti": "ትኽክል እንተኾይኑ ቀጻሊ ጠውቑ።"
     },
     "send.storageFull": {
       "am": "ይህ መሣሪያ ማስቀመጥ አልቻለም። መልሶችዎ አሁንም በዚህ ገጽ ላይ አሉ። እባክዎ ገጹን አይዝጉ።",
-      "en": "This device would not store it. Your answers are still on this page — please do not close it."
+      "en": "This device would not store it. Your answers are still on this page — please do not close it.",
+      "om": "Meeshaan kun olkaawwachuu hin dandeenye. Deebiin keessan ammallee fuula kanarra jira — mee hin cufinaa.",
+      "ti": "እዚ መሳርሒ ክዕቅብ ኣይከኣለን። መልስኹም ሕጂ'ውን ኣብዚ ገጽ ኣሎ — ብኽብረትኩም ኣይትዕጸውዎ።"
     },
     "send.unreachable": {
       "am": "አገልጋዩን ማግኘት አልቻልንም። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል እና ግንኙነት ሲመጣ በራሳቸው ይላካሉ። ገጹን መዝጋት ይችላሉ።",
-      "en": "We could not reach the server. Your answers are saved on this device and will send themselves when the connection comes back. You can close this page."
+      "en": "We could not reach the server. Your answers are saved on this device and will send themselves when the connection comes back. You can close this page.",
+      "om": "Sarvarii argachuu hin dandeenye. Deebiin keessan meeshaa kanarratti olkaa'ameera; yommuu qunnamtiin deebi'u ofumaan ergama. Fuula kana cufuu dandeessu.",
+      "ti": "ሰርቨር ክርከብ ኣይከኣለን። መልስኹም ኣብዚ መሳርሒ ተዓቂቡ ኣሎ፤ ርክብ ምስ ተመልሰ ብባዕሉ ይስደድ። ነዚ ገጽ ክትዓጽውዎ ትኽእሉ ኢኹም።"
     },
     "send.queued": {
       "am": "መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል። ግንኙነት ሲመጣ በራሳቸው ይላካሉ። ገጹን መዝጋት ይችላሉ።",
-      "en": "Your answers are saved on this device. They will send themselves when the connection returns. You can close this page."
+      "en": "Your answers are saved on this device. They will send themselves when the connection returns. You can close this page.",
+      "om": "Deebiin keessan meeshaa kanarratti olkaa'ameera. Yommuu qunnamtiin deebi'u ofumaan ergama. Fuula kana cufuu dandeessu.",
+      "ti": "መልስኹም ኣብዚ መሳርሒ ተዓቂቡ ኣሎ። ርክብ ምስ ተመልሰ ብባዕሉ ይስደድ። ነዚ ገጽ ክትዓጽውዎ ትኽእሉ ኢኹም።"
     },
     "send.rejected": {
       "am": "አገልጋዩ እነዚህን መልሶች መቀበል አልቻለም። ",
-      "en": "The server could not accept these answers. "
+      "en": "The server could not accept these answers. ",
+      "om": "Sarvariin deebiiwwan kana fudhachuu hin dandeenye. ",
+      "ti": "ሰርቨር ነዚ መልስታት ክቕበሎ ኣይከኣለን። "
     },
     "retry.trying": {
       "am": "በመሞከር ላይ…",
-      "en": "Trying…"
+      "en": "Trying…",
+      "om": "Yaalamaa jira…",
+      "ti": "ይፍተን ኣሎ…"
     },
     "retry.now": {
       "am": "አሁን እንደገና ሞክር",
-      "en": "Try sending now"
+      "en": "Try sending now",
+      "om": "Amma irra deebi'ii ergi",
+      "ti": "ሕጂ ደጊምካ ፈትን"
     },
     "sent.wasSent": {
       "am": "የተላከው መረጃ",
-      "en": "What was sent"
+      "en": "What was sent",
+      "om": "Wanti ergame",
+      "ti": "ዝተላእከ"
     },
     "sent.willSend": {
       "am": "ምን ይላካል",
-      "en": "What will be sent"
+      "en": "What will be sent",
+      "om": "Wanti ergamu",
+      "ti": "ዝስደድ"
     },
     "announce.complete": {
       "am": "ምዝገባው ተጠናቅቋል። የማጣቀሻ ቁጥርዎ {ref}። ይህን ቁጥር ይያዙት።",
-      "en": "Sign-up complete. Your reference is {ref}. Keep this number."
+      "en": "Sign-up complete. Your reference is {ref}. Keep this number.",
+      "om": "Galmeen xumurameera. Lakkoofsi wabii keessanii {ref} dha. Lakkoofsa kana qabadhaa.",
+      "ti": "ምዝገባ ተወዲኡ እዩ። ናይ መወከሲ ቍጽርኹም {ref} እዩ። ነዚ ቍጽሪ ሓዝዎ።"
     },
     "voice.noVoice": {
       "am": "ይህ መሣሪያ በአማርኛ ማንበብ አይችልም። ጽሑፉ ከዚህ በታች አለ።",
-      "en": "This device has no voice for this language. The text is below."
+      "en": "This device has no voice for this language. The text is below.",
+      "om": "Meeshaan kun afaan kanaan dubbisuu hin danda'u. Barreeffamni isaa armaan gadi jira.",
+      "ti": "እዚ መሳርሒ በዚ ቋንቋ ከንብብ ኣይክእልን እዩ። ጽሑፉ ኣብ ታሕቲ ኣሎ።"
     },
     "voice.unsupported": {
       "am": "ድምጽ በዚህ አሳሽ አይሠራም። የስልኩን ማይክሮፎን ይጠቀሙ ወይም ይጻፉ።",
-      "en": "Voice does not work in this browser. Use your keyboard microphone, or type."
+      "en": "Voice does not work in this browser. Use your keyboard microphone, or type.",
+      "om": "Sagaleen braawzarii kanaan hin hojjetu. Maayikirofoonii kiiyboordii fayyadamaa, yookiin barreessaa.",
+      "ti": "ድምጺ በዚ ብራውዘር ኣይሰርሕን እዩ። ኣብ ኪቦርድ ዘሎ ማይክሮፎን ተጠቐሙ፣ ወይ ጽሓፉ።"
     },
     "voice.recording": {
       "am": "በመቅዳት ላይ… ይናገሩ።",
-      "en": "Recording… speak now."
+      "en": "Recording… speak now.",
+      "om": "Waraabamaa jira… amma dubbadhaa.",
+      "ti": "ይቕዳሕ ኣሎ… ሕጂ ተዛረቡ።"
     },
     "voice.transcribing": {
       "am": "በመቀየር ላይ…",
-      "en": "Transcribing…"
+      "en": "Transcribing…",
+      "om": "Gara barreeffamatti jijjiiramaa jira…",
+      "ti": "ናብ ጽሑፍ ይቕየር ኣሎ…"
     },
     "voice.finished": {
       "am": "ተናገርኩ",
-      "en": "I have finished"
+      "en": "I have finished",
+      "om": "Dubbadhee xumureera",
+      "ti": "ተዛሪበ ወዲአ"
     },
     "voice.pickOne": {
       "am": "ይህን አልገባኝም። ከዚህ ይምረጡ፦",
-      "en": "I did not catch that. Pick one:"
+      "en": "I did not catch that. Pick one:",
+      "om": "Kun naaf hin galle. Kanarraa filadhaa:",
+      "ti": "እዚ ኣይተረድኣንን። ካብዚ ምረጹ፦"
     },
     "voice.chooseWithButtons": {
       "am": "በአዝራር መምረጥ",
-      "en": "Choose with buttons"
+      "en": "Choose with buttons",
+      "om": "Qubsumaan filadhaa",
+      "ti": "ብመልጎም ምረጹ"
     },
     "voice.listening": {
       "am": "በማዳመጥ ላይ…",
-      "en": "Listening…"
+      "en": "Listening…",
+      "om": "Dhaggeeffachaa jira…",
+      "ti": "ይሰምዕ ኣሎ…"
     },
     "voice.privacy": {
-      "am": "ድምጽዎ ለግል መረጃ ብቻ ወደዚህ አገልጋይ ይላካል፣ ከዚያ ይሰረዛል።",
-      "en": "Your voice is sent to this server only to be written down, then deleted."
+      "am": "ድምጽዎ ወደ ጽሑፍ ለመቀየር ብቻ ወደዚህ አገልጋይ ይላካል፣ ከዚያ ይሰረዛል።",
+      "en": "Your voice is sent to this server only to be written down, then deleted.",
+      "om": "Sagaleen keessan barreeffamatti jijjiiramuuf qofa gara sarvariitti ergama, sana booda ni haqama.",
+      "ti": "ድምጽኹም ናብ ጽሑፍ ንምቕያር ጥራይ ናብ ሰርቨር ይስደድ፣ ድሕሪኡ ይድምሰስ።"
     },
     "voice.buttonsOrType": {
       "am": "እባክዎ በአዝራሮቹ ይምረጡ ወይም ይጻፉ።",
-      "en": "Please use the buttons or type instead."
+      "en": "Please use the buttons or type instead.",
+      "om": "Mee qulqullinaan qubsumaan filadhaa yookiin barreessaa.",
+      "ti": "ብኽብረትኩም ብመልጎም ምረጹ ወይ ጽሓፉ።"
     },
     "voice.noEngine": {
       "am": " በዚህ አገልጋይም የድምጽ መለወጫ አገልግሎት የለም።",
-      "en": " This server also has no transcription service configured, so there is nothing to fall back on."
+      "en": " This server also has no transcription service configured, so there is nothing to fall back on.",
+      "om": " Sarvarii kanarras tajaajilli sagalee jijjiiruu hin qophoofne.",
+      "ti": " ኣብዚ ሰርቨር'ውን ኣገልግሎት ምቕያር ድምጺ ኣይተዳለወን።"
     },
     "voice.nameAm": {
       "am": "አማርኛ",
-      "en": "Amharic"
+      "en": "Amharic",
+      "om": "Afaan Amaaraa",
+      "ti": "ኣምሓርኛ"
     },
     "voice.nameEn": {
       "am": "እንግሊዝኛ",
-      "en": "English"
+      "en": "English",
+      "om": "Afaan Ingilizii",
+      "ti": "እንግሊዝኛ"
     },
     "voice.or": {
       "am": " ወይም ",
-      "en": " or "
+      "en": " or ",
+      "om": " yookiin ",
+      "ti": " ወይ "
     },
     "voice.weWillUse": {
       "am": "የሚመረጠው፦",
-      "en": "We will use:"
+      "en": "We will use:",
+      "om": "Wanti filatamu:",
+      "ti": "ዝምረጽ፦"
     },
     "voice.err.insecure": {
       "am": "ማይክሮፎኑ ደህንነቱ የተጠበቀ ገጽ ይፈልጋል። ገጹን በhttps ከፍተው እንደገና ይሞክሩ።",
-      "en": "The microphone needs a secure page. Open this form over https (or on localhost) and try again."
+      "en": "The microphone needs a secure page. Open this form over https (or on localhost) and try again.",
+      "om": "Maayikirofooniin fuula eegumsa qabu barbaada. Fuula kana https irratti banaatii irra deebi'aa yaalaa.",
+      "ti": "ማይክሮፎን ውሑስ ገጽ የድልዮ። ነዚ ገጽ ብ https ከፊቶም ደጊሞም ይፈትኑ።"
     },
     "voice.err.framed": {
       "am": "ማይክሮፎኑ በተካተተው ገጽ ውስጥ ተከልክሏል። ቅጹን በራሱ ትር ከፍተው ይሞክሩ።",
-      "en": "The microphone is blocked inside an embedded frame. Open the form in its own tab and try again."
+      "en": "The microphone is blocked inside an embedded frame. Open the form in its own tab and try again.",
+      "om": "Maayikirofooniin fuula keessatti cufameera. Fuula kana baafata mataa isaatiin banaatii irra deebi'aa yaalaa.",
+      "ti": "ማይክሮፎን ኣብ ውሽጢ ገጽ ተዓጽዩ ኣሎ። ነዚ ገጽ ኣብ ባዕሉ መስኮት ከፊቶም ደጊሞም ይፈትኑ።"
     },
     "voice.err.blocked": {
-      "am": "ማይክሮፎኑ ተከልክሏል። በአድራሻ አሞሌው ላይ የማይክሮፎን ፈቃድ ስጡ፣ ከዚያ ይሞክሩ።",
-      "en": "The microphone is blocked. Allow microphone access for this site in the address bar, then try again."
+      "am": "ማይክሮፎኑ ተከልክሏል። በአድራሻ አሞሌው ላይ የማይክሮፎን ፈቃድ ይስጡ፣ ከዚያ ይሞክሩ።",
+      "en": "The microphone is blocked. Allow microphone access for this site in the address bar, then try again.",
+      "om": "Maayikirofooniin cufameera. Barreeffama teessoo irratti maayikirofooniif heyyama kennaatii irra deebi'aa yaalaa.",
+      "ti": "ማይክሮፎን ተዓጽዩ ኣሎ። ኣብ ኣድራሻ መስመር ንማይክሮፎን ፍቓድ ሂብኩም ደጊምኩም ፈትኑ።"
     },
     "voice.err.service": {
       "am": "ይህ ገጽ በድምጽ መስማት እንዲጠቀም አልተፈቀደም። ገጹን በhttps በራሱ ትር ይክፈቱ።",
-      "en": "This page is not allowed to use speech recognition — usually a secure-page or embedding restriction. Open the form in its own tab over https."
+      "en": "This page is not allowed to use speech recognition — usually a secure-page or embedding restriction. Open the form in its own tab over https.",
+      "om": "Fuulli kun sagalee akka hin fayyadamne dhorkameera. Fuula kana https irratti baafata mataa isaatiin banaa.",
+      "ti": "እዚ ገጽ ድምጺ ከይጥቀም ተኸልኪሉ ኣሎ። ነዚ ገጽ ብ https ኣብ ባዕሉ መስኮት ክፈትዎ።"
     },
     "voice.err.network": {
       "am": "በድምጽ መስማት የአሳሹ አገልግሎት ግንኙነት ይፈልጋል፣ እሱም አልተገኘም።",
-      "en": "Speech recognition needs a connection to the browser's speech service, and it could not be reached."
+      "en": "Speech recognition needs a connection to the browser's speech service, and it could not be reached.",
+      "om": "Sagaleedhaan hubachuun qunnamtii tajaajila braawzarii barbaada, inni immoo hin argamne.",
+      "ti": "ድምጺ ንምርዳእ ርክብ ኣገልግሎት ብራውዘር የድሊ፣ ንሱ ድማ ኣይተረኽበን።"
     },
     "voice.err.noMic": {
       "am": "በዚህ መሣሪያ ላይ ማይክሮፎን አልተገኘም።",
-      "en": "No microphone was found on this device."
+      "en": "No microphone was found on this device.",
+      "om": "Meeshaa kanarra maayikirofoonii hin argamne.",
+      "ti": "ኣብዚ መሳርሒ ማይክሮፎን ኣይተረኽበን።"
     },
     "voice.err.noModel": {
       "am": "አሳሹ ለ{langs} የድምጽ ሞዴል የለውም።",
-      "en": "The browser has no speech model for {langs}."
+      "en": "The browser has no speech model for {langs}.",
+      "om": "Braawzariin kun moodeela sagalee {langs} hin qabu.",
+      "ti": "እዚ ብራውዘር ናይ {langs} ድምጺ ሞዴል የብሉን።"
     },
     "voice.err.unknown": {
       "am": "በድምጽ መስማት በዚህ መሣሪያ አልተጀመረም።",
-      "en": "Speech input did not start on this device."
+      "en": "Speech input did not start on this device.",
+      "om": "Galchi sagalee meeshaa kanarratti hin eegalle.",
+      "ti": "ናይ ድምጺ እታዎት ኣብዚ መሳርሒ ኣይተጀመረን።"
     },
     "sent.supportHidden": {
       "am": "የእርዳታ መልሶች በዚህ ዝርዝር ውስጥ የሉም።",
-      "en": "The support answers are not in this payload — they never left the phone."
+      "en": "The support answers are not in this payload — they never left the phone.",
+      "om": "Deebiin gargaarsaa tarree kana keessa hin jiru — bilbila kana keessaa matumaa hin baane.",
+      "ti": "ናይ ሓገዝ መልሲ ኣብዚ ዝርዝር የለን — ካብዚ ስልኪ ፈጺሙ ኣይወጸን።"
     }
   }
 }

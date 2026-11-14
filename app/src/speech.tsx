@@ -12,7 +12,7 @@ export function speak(text: string, lang: Lang) {
   stopAudio();
   if (!('speechSynthesis' in window)) return false;
   const u = new SpeechSynthesisUtterance(text);
-  const want = lang === 'am' ? 'am' : 'en';
+  const want = lang === 'am' ? 'am' : lang === 'om' ? 'om' : lang === 'ti' ? 'ti' : 'en';
   const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want));
   if (!voice) return false;
   u.voice = voice;
@@ -225,7 +225,7 @@ export function VoiceButton({ lang, schema, fieldType, choices, tryLangs, onAcce
     if (!attempt) { setWhy({ code: 'language-not-supported', lang: order[0] }); setPhase('unavailable'); return; }
 
     rec.current = r;
-    r.lang = attempt === 'am' ? 'am-ET' : 'en-US';
+    r.lang = attempt === 'am' ? 'am-ET' : attempt === 'om' ? 'om-ET' : attempt === 'ti' ? 'ti-ET' : 'en-US';
     r.interimResults = false;
     r.maxAlternatives = 3;
 
