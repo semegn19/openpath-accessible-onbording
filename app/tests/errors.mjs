@@ -20,7 +20,7 @@ const placeholders = [];
 for (const f of FORMS) {
   const d = JSON.parse(readFileSync(join('../schema', `${f}.json`), 'utf8'));
   for (const [rule, msg] of Object.entries(d.errors ?? {})) {
-    for (const lang of ['am', 'en']) {
+    for (const lang of ['am', 'en', 'om', 'ti']) {
       const text = msg?.[lang] ?? '';
       if (!text) { placeholders.push({ f, rule, lang, problem: 'empty message' }); continue; }
       for (const m of text.matchAll(/\{(\w+)\}/g)) {
