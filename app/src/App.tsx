@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Lang, Schema, Step } from './types';
-import { t, tpl } from './i18n';
+import { t, tpl, errorText } from './i18n';
 import { useForm, useCancelSpeechOnKey } from './useForm';
 import { Field, questionText, hintText, whyText, bodyText, optionText } from './fields';
 import { ErrorSummary, ReviewScreen, SettingsBar, reviewText } from './screens';
 import { ReadAloudButton, speak } from './speech';
 import { stopAudio } from './audio';
 import { Icon } from './icons';
+import { syncJsonLdScript } from './jsonld';
 
 import { useSlug, type Slug } from './router';
 import { flush, type SendState } from './api';
@@ -47,7 +48,7 @@ function Shell({ schema }: { schema: Schema }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const lp = params.get('lang');
-    if (lp === 'am' || lp === 'en') {
+    if (lp === 'am' || lp === 'en' || lp === 'om' || lp === 'ti') {
       setSettings((s) => (s.lang === lp ? s : { ...s, lang: lp }));
     }
   }, [setSettings]);
@@ -85,7 +86,7 @@ function Shell({ schema }: { schema: Schema }) {
     if (!isEmbed) return;
     const handler = (e: MessageEvent) => {
       if (e.data && e.data.source === 'openpath-host' && e.data.v === 1) {
-        if (e.data.type === 'set-lang' && (e.data.lang === 'am' || e.data.lang === 'en')) {
+        if (e.data.type === 'set-lang' && ['am', 'en', 'om', 'ti'].includes(e.data.lang)) {
           setSettings((s) => ({ ...s, lang: e.data.lang }));
         } else if (e.data.type === 'set-settings' && e.data.settings) {
           setSettings((s) => ({ ...s, ...e.data.settings }));
@@ -99,6 +100,10 @@ function Shell({ schema }: { schema: Schema }) {
   useEffect(() => {
     document.title = `${t(schema.title, lang)} — OpenPath`;
   }, [schema.title, lang]);
+
+  useEffect(() => {
+    return syncJsonLdScript(schema, f.values, lang);
+  }, [schema, f.values, lang]);
 
   // Keep scroll-padding in sync with the sticky bar, so a focused control is never hidden
   // underneath it (WCAG 2.2 SC 2.4.11). Measured, not guessed: the bar changes height with
@@ -227,7 +232,14 @@ function Shell({ schema }: { schema: Schema }) {
 
   const [attempts, setAttempts] = useState(0);
   useEffect(() => {
-    if (errorList.length) summary.current?.focus();
+    if (errorList.length) {
+      summary.current?.focus();
+      const msg = t(schema.ui?.errorSummary, lang) + ' — ' +
+        errorList.map((e) => `${questionText(e.step, lang, false)}: ${errorText(schema.errors, lang, e.rule)}`).join('. ');
+      setAnnounce('');
+      const tid = setTimeout(() => setAnnounce(msg), 50);
+      return () => clearTimeout(tid);
+    }
   }, [errorList.length, errors, attempts]);
 
   // A conditional answer can add a question later (7 → 8 steps). The progress text
@@ -243,6 +255,7 @@ function Shell({ schema }: { schema: Schema }) {
     setAnnounce(
       tpl(t(schema.ui?.stepOf, lang), {
         n: index + 1,
+        step: index + 1,
         total: stepCount,
       }) + (' — ' + c('announce.newQuestion', lang)),
     );
@@ -304,10 +317,11 @@ function Shell({ schema }: { schema: Schema }) {
   const handleChange = (s: Step, v: unknown) => {
     f.setValue(s.id, v);
 
-    if (s.type === 'language' && (v === 'am' || v === 'en')) {
-      setSettings((prev) => ({ ...prev, lang: v }));
+    if (s.type === 'language' && (v === 'am' || v === 'en' || v === 'om' || v === 'ti')) {
+      const nextLang = v as Lang;
+      setSettings((prev) => ({ ...prev, lang: nextLang }));
       // A language change re-renders every string; say so, in the new language.
-      setAnnounce(c('announce.langChanged', lang));
+      setAnnounce(c('announce.langChanged', nextLang));
     }
 
     // Any step whose options declare what they change about the page — not one hardcoded id,
@@ -326,7 +340,7 @@ function Shell({ schema }: { schema: Schema }) {
       if (exclusive && picked.includes(exclusive) && picked.length === 1) {
         setAnnounce(c('announce.choicesCleared', lang));
       } else if (on.length) {
-        setAnnounce(on.join(lang === 'am' ? '፣ ' : ', ') + '.');
+        setAnnounce(on.join(lang === 'am' || lang === 'ti' ? '፣ ' : ', ') + '.');
       }
     }
   };
@@ -452,7 +466,7 @@ function Shell({ schema }: { schema: Schema }) {
     }
     return parts.filter(Boolean).join(' ');
   };
-  const progress = tpl(t(schema.ui?.stepOf, lang), { n: index + 1, total: steps.length });
+  const progress = tpl(t(schema.ui?.stepOf, lang), { n: index + 1, step: index + 1, total: steps.length });
 
   return (
     <div className="op-shell" data-big={settings.big || undefined} data-embed={isEmbed || undefined}>
@@ -507,7 +521,17 @@ function Shell({ schema }: { schema: Schema }) {
           </div>
         )}
 
-        <ErrorSummary ref={summary} items={errorList} lang={lang} schema={schema} onJump={f.goTo} />
+        <ErrorSummary
+          ref={summary}
+          items={errorList}
+          lang={lang}
+          schema={schema}
+          onJump={(id) => {
+            f.goTo(id);
+            const el = document.getElementById(id) || document.querySelector<HTMLElement>(`[name="${id}"]`);
+            el?.focus();
+          }}
+        />
 
         <p className="op-progress">{progress}</p>
 

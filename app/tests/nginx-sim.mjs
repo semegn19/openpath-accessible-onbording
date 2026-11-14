@@ -1,7 +1,8 @@
 // Serves dist/ exactly the way app/nginx.conf does — try_files fallback plus the real
-// security headers — so the production bundle can be tested without Docker.
+// security headers and gzip compression — so the production bundle can be tested without Docker.
 //   node tests/nginx-sim.mjs 8081
 import http from 'node:http';
+import zlib from 'node:zlib';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,6 +48,15 @@ http.createServer((req, res) => {
   const cache = url.startsWith('/assets/') ? 'public, max-age=31536000, immutable'
     : url.startsWith('/fonts/') ? 'public, max-age=2592000'
     : file.endsWith('index.html') ? 'no-cache' : 'public, max-age=3600';
-  res.writeHead(200, { ...HEADERS, 'Content-Type': type, 'Cache-Control': cache });
-  res.end(readFileSync(file));
+
+  let body = readFileSync(file);
+  const headers = { ...HEADERS, 'Content-Type': type, 'Cache-Control': cache };
+  const canGzip = extname(file) !== '.woff2' && body.length >= 1024 && (req.headers['accept-encoding'] || '').includes('gzip');
+  if (canGzip) {
+    headers['Content-Encoding'] = 'gzip';
+    headers['Vary'] = 'Accept-Encoding';
+    body = zlib.gzipSync(body);
+  }
+  res.writeHead(200, headers);
+  res.end(body);
 }).listen(port, '0.0.0.0', () => console.log(`serving dist on ${port} (nginx semantics)`));

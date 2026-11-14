@@ -5,6 +5,7 @@ import { Icon } from './icons';
 import { c } from './copy';
 
 const EC_MONTHS = ['መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'];
+const EC_MONTHS_OM = ['Fulbaana', 'Onkololeessa', 'Sadaasa', 'Muddee', 'Amajjii', 'Guraandhala', 'Bitooteessa', 'Ebla', 'Caamsaa', 'Waxabajjii', 'Adooleessa', 'Hagayya', 'Phaagumee'];
 
 const isGroup = (type: Step['type']) => type === 'radio' || type === 'checkbox' || type === 'language';
 
@@ -89,6 +90,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
               onChange={() => onChange(arr.includes(o.value) ? arr.filter((x) => x !== o.value) : [...arr, o.value])}
               aria-describedby={describedBy || undefined}
               aria-invalid={error ? true : undefined}
+              aria-errormessage={error ? errorId : undefined}
             />
             <span className="op-option-label">{optionText(o, lang, simple)}</span>
           </label>
@@ -119,6 +121,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
           />
         );
       }
@@ -133,6 +136,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
           />
         );
       case 'select':
@@ -145,6 +149,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
           >
             <option value="">{t(schema.ui?.choose, lang)}</option>
             {(step.options ?? []).map((o: Option) => (
@@ -163,6 +168,8 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
               accept={step.accept}
               onChange={(e) => setStr(e.target.files?.[0]?.name ?? '')}
               aria-describedby={describedBy || undefined}
+              aria-invalid={error ? true : undefined}
+              aria-errormessage={error ? errorId : undefined}
             />
             <p className="op-hint">
               {c('file.demoNote', lang)}
@@ -176,22 +183,25 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           <div className="op-date">
             <label className="op-sr" htmlFor={`${baseId}-year`}>{c('date.year', lang)}</label>
             <input id={`${baseId}-year`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.year', lang)}
-              value={v.year ?? ''} onChange={(e) => set({ year: e.target.value })} aria-describedby={describedBy || undefined} />
+              value={v.year ?? ''} onChange={(e) => set({ year: e.target.value })}
+              aria-describedby={describedBy || undefined} aria-invalid={error ? true : undefined} aria-errormessage={error ? errorId : undefined} />
             {!v.yearOnly && (
               <>
                 <label className="op-sr" htmlFor={`${baseId}-month`}>{c('date.month', lang)}</label>
                 <input id={`${baseId}-month`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.month', lang)}
-                  value={v.month ?? ''} onChange={(e) => set({ month: e.target.value })} aria-describedby={describedBy || undefined} />
+                  value={v.month ?? ''} onChange={(e) => set({ month: e.target.value })}
+                  aria-describedby={describedBy || undefined} aria-invalid={error ? true : undefined} aria-errormessage={error ? errorId : undefined} />
                 <label className="op-sr" htmlFor={`${baseId}-day`}>{c('date.day', lang)}</label>
                 <input id={`${baseId}-day`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.day', lang)}
-                  value={v.day ?? ''} onChange={(e) => set({ day: e.target.value })} aria-describedby={describedBy || undefined} />
+                  value={v.day ?? ''} onChange={(e) => set({ day: e.target.value })}
+                  aria-describedby={describedBy || undefined} aria-invalid={error ? true : undefined} aria-errormessage={error ? errorId : undefined} />
               </>
             )}
             <label className="op-check">
               <input type="checkbox" checked={!!v.yearOnly} onChange={(e) => set({ yearOnly: e.target.checked, month: undefined, day: undefined })} />
               <span>{c('date.yearOnly', lang)}</span>
             </label>
-            <p className="op-hint">{c('date.hint', lang)}{lang === 'am' ? '' : ` (${EC_MONTHS[0]}…)`}</p>
+            <p className="op-hint">{c('date.hint', lang)}{lang === 'am' || lang === 'ti' ? '' : ` (${lang === 'om' ? EC_MONTHS_OM[0] : EC_MONTHS[0]}…)`}</p>
           </div>
         );
       }
@@ -241,6 +251,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
                     onChange={() => (step.type === 'checkbox' ? toggleInArray(o.value, o.exclusive, exclusiveValue) : onChange(o.value))}
                     aria-describedby={describedBy || undefined}
                     aria-invalid={error ? true : undefined}
+                    aria-errormessage={error ? errorId : undefined}
                   />
                   <span className="op-option-label" lang={o.lang ?? undefined}>
                     {o.icon && <Icon name={o.icon} />}

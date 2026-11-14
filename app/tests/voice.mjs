@@ -58,7 +58,7 @@ const spoken = (await p.evaluate(() => window.__spoken)).join(' ');
 ok(/ቋንቋ/.test(spoken), 'read-aloud says the question', spoken.slice(0, 40));
 ok(/አስቀድመው|First choose/.test(spoken),
    'read-aloud also says the default intro', spoken.slice(0, 90));
-ok(/አማርኛ/.test(spoken) && /English/.test(spoken), 'read-aloud reads both language options');
+ok(/አማርኛ/.test(spoken) && /English|እንግሊዝኛ/.test(spoken), 'read-aloud reads both language options');
 
 /* ---------- simple words: the same screen, said in fewer words ---------- */
 const heading = () => p.locator('#op-q-title').innerText();
