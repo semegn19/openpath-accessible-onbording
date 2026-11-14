@@ -188,6 +188,58 @@ function Shell({ schema }: { schema: Schema }) {
 
   // Say the connection state once, politely. Not on every render, not every 5 seconds.
   const announcedNet = useRef<boolean | null>(null);
+  const [smsSent, setSmsSent] = useState(false);
+  const lastSmsPhone = useRef<string>('');
+
+  // Restore from URL query token if ?resume=<token>
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const resumeToken = params.get('resume');
+    if (!resumeToken) return;
+    fetch(`/api/checkpoints/${encodeURIComponent(resumeToken)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok && data.checkpoint) {
+          const cp = data.checkpoint;
+          f.restoreCheckpoint(cp.answers, cp.currentStep);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // When connection drops on an unfinished form with a phone number, send SMS resume link
+  useEffect(() => {
+    if (online) {
+      setSmsSent(false);
+      return;
+    }
+    const phone = f.values.phone as string | undefined;
+    if (!phone || f.submitted) return;
+    setSmsSent(true);
+    if (lastSmsPhone.current === phone) return;
+    lastSmsPhone.current = phone;
+    const payload = JSON.stringify({
+      phone,
+      answers: f.values,
+      currentStep: f.index,
+      stepId: step?.id,
+      formId: schema.id,
+      lang,
+      origin: window.location.origin,
+    });
+    try {
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        navigator.sendBeacon('/api/sms/send-resume', payload);
+      }
+    } catch { /* ignore */ }
+    fetch('/api/sms/send-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+    }).catch(() => {});
+  }, [online, f.values.phone, f.submitted, f.index, step?.id, schema.id, lang]);
+
   useEffect(() => {
     if (announcedNet.current === online) return;
     announcedNet.current = online;
@@ -496,6 +548,9 @@ function Shell({ schema }: { schema: Schema }) {
             <p>
               <strong>{c('offline.title', lang)}</strong>{' '}
               {c('offline.body', lang)}
+              {smsSent && (
+                <span> {c('offline.smsSent', lang)}</span>
+              )}
             </p>
           </div>
         )}

@@ -49,19 +49,19 @@ Three forms, three URLs, one engine. Each page stands alone — linkable, bookma
 ### The flow (learner sign-up)
 
 ```
-language → how should this form work for you? → would a person help? → name → phone
-        → identity route ─┬─ ID number ────────┐
-                          └─ no document / help me choose ─┴→ referral consent → review → submit
+language → accessibility preferences → name → phone
+        → identity route ─┬─ Fayda ID → Fayda ID number ─────────────┐
+                          └─ Kebele ID / Refugee / Other → Photo upload ─┴→ review → submit
 ```
 
 **One question per screen**, no time limit anywhere.
 
-- **Language first.** Amharic or English, chosen before anything else, changeable at any moment from the bar at the top.
-- **Then two separate questions**, because they are not the same kind of thing:
-  - *How would you like this form to work for you?* — read aloud, bigger text, simple words. These **act**: choosing one changes the form immediately, and **never leave the device**.
-  - *Would you like a person to help you?* — a real request, with an explicit yes/no, that **is** sent so somebody can call. A help button that reaches nobody is worse than no help button.
-- **Six identity routes**, including *"I do not have any of these"* and *"I need help choosing"* — because not everyone has a Fayda number, and a form that only accepts one document is a form that turns people away.
-- **Consent is never dictated.** The referral and confirmation screens have no microphone — a transcription must never look like consent. They do have read-aloud, because that is the one screen where hearing the words matters most.
+- **Language first.** Amharic, Afaan Oromoo, Tigrinya, or English, chosen before anything else, changeable at any moment from the bar at the top.
+- **Accessibility preferences.** *How would you like this form to work for you?* — read aloud, bigger text, simple words. These **act**: choosing one changes the form immediately, and **never leave the device**.
+- **Four identity routes.**
+  - *Fayda ID* — conditional next step asks for their Fayda ID number.
+  - *Kebele ID*, *Refugee ID*, or *Other document* — conditional next step asks for an ID photo upload, with automatic client-side image compression (HTML5 Canvas) to keep payloads lightweight and preserve privacy without requiring database storage.
+- **Connection Drop SMS Resume.** If connection drops while filling the form, an SMS resume link is automatically dispatched via SMSEthiopia (`https://smsethiopia.com`) to their entered phone number, allowing them to resume exactly where they left off.
 - **Review and edit** before submitting. Every answer is visible, editable, and never re-typed.
 - **Voice on every field.** Speak your answer, see what was heard, correct it, then accept. Nothing is ever written into the form without that extra press.
 
