@@ -151,11 +151,17 @@ await audit('9c review @200% zoom');
 
 // Text spacing (SC 1.4.12): the exact overrides from the Understanding document. If the layout
 // survives these, it survives any user stylesheet that does the same thing.
+// We use CSSOM insertRule to respect the production CSP (style-src 'self') without requiring unsafe-inline.
 await page.setViewportSize({ width: 390, height: 844 });
-await page.addStyleTag({ content: `
-  * { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }
-  p, li, h1, h2, h3, label, .op-progress, .op-review-row { margin-bottom: 2em !important; }
-` });
+await page.evaluate(() => {
+  const sheet = document.styleSheets[0] || (function() {
+    const s = document.createElement('style');
+    document.head.appendChild(s);
+    return s.sheet;
+  })();
+  sheet.insertRule('* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }', sheet.cssRules.length);
+  sheet.insertRule('p, li, h1, h2, h3, label, .op-progress, .op-review-row { margin-bottom: 2em !important; }', sheet.cssRules.length);
+});
 await page.waitForTimeout(250);
 const spacing = await page.evaluate(() => {
   // .op-sr is the visually-hidden live region: clipping is its job, not a defect.
@@ -199,8 +205,10 @@ if (leaksPrefs || !hasAssistance) failures++;
 
 // the offline banner is new UI, so it is audited like the rest. No reload: the dev server is
 // still reachable, we only flip the flag the banner reads.
+await page.evaluate(() => localStorage.clear());
 await page.goto(URL, { waitUntil: 'networkidle' });
 await page.context().setOffline(true);
+await page.evaluate(() => window.dispatchEvent(new Event('offline')));
 await page.waitForSelector('.op-net', { timeout: 5000 });
 const netText = (await page.locator('.op-net').innerText()).replace(/\s+/g, ' ');
 const netRole = await page.evaluate(() => {
