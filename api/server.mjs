@@ -26,7 +26,13 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN ?? '*';
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MIN ?? 30);
 const TRUST_PROXY = process.env.TRUST_PROXY !== '0';   // behind nginx, remoteAddress is nginx
 const MAX_BODY = Number(process.env.MAX_BODY_BYTES ?? 32 * 1024);
-const VERSION = '1.2.0';
+/** Speech-to-text is OPT-IN. Unset = the endpoint says so and the UI falls back to buttons.
+ *  Either an OpenAI-compatible endpoint or a self-hosted whisper.cpp server works. */
+const ASR_URL = process.env.ASR_URL ?? '';
+const ASR_KEY = process.env.ASR_KEY ?? '';
+const ASR_MODEL = process.env.ASR_MODEL ?? 'whisper-1';
+const MAX_AUDIO = Number(process.env.MAX_AUDIO_BYTES ?? 2 * 1024 * 1024);
+const VERSION = '1.3.0';
 
 /* ------------------------------------------------------- encryption at rest */
 
@@ -299,6 +305,22 @@ function readBody(req) {
   });
 }
 
+/** Raw bytes, for audio. Same cap discipline as JSON, with its own (larger) limit. */
+function readRaw(req, limit) {
+  return new Promise((resolve) => {
+    const chunks = [];
+    let size = 0;
+    let tooLarge = false;
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) { tooLarge = true; chunks.length = 0; req.destroy(); resolve({ tooLarge: true }); return; }
+      chunks.push(c);
+    });
+    req.on('end', () => resolve(tooLarge ? { tooLarge: true } : { body: Buffer.concat(chunks) }));
+    req.on('error', () => resolve({ tooLarge: false, body: Buffer.alloc(0) }));
+  });
+}
+
 /* ------------------------------------------------------------------- routes */
 
 const server = createServer(async (req, res) => {
@@ -318,6 +340,10 @@ const server = createServer(async (req, res) => {
       forms: [...schemas.keys()],
       submissions: store.size,
       uptimeSec: Math.round(process.uptime()),
+      // "none" means the browser's own speech recognition is the only option, and it has no
+      // Amharic model. An operator should never have to read source to learn that.
+      transcription: ASR_URL ? 'configured' : 'none',
+      encryption: KEY ? 'aes-256-gcm' : 'none',
     });
   }
 
@@ -401,6 +427,49 @@ const server = createServer(async (req, res) => {
       // support answers never arrived, rather than asking anyone to take it on trust
       stripped: result.stripped,
     }, { Location: `/api/submissions/${record.id}` });
+  }
+
+  /* ---- POST /api/transcribe — audio in, text out, through an engine the operator chose ---- */
+  if (path === '/api/transcribe' && req.method === 'POST') {
+    if (!ASR_URL) {
+      // Deliberately explicit: "not configured" is a different problem from "no speech heard",
+      // and an adopter debugging their deployment needs to tell them apart.
+      return error(res, 503, 'asr-not-configured',
+        'Speech-to-text is not configured on this server. Set ASR_URL to enable it, or the form will use the buttons.');
+    }
+    const type = String(req.headers['content-type'] ?? '');
+    if (!/^audio\//.test(type)) {
+      return error(res, 415, 'unsupported-media-type', 'Send audio/* (webm, ogg, wav or mp4).');
+    }
+    const read = await readRaw(req, MAX_AUDIO);
+    if (read.tooLarge) return error(res, 413, 'audio-too-large', `Audio over ${MAX_AUDIO} bytes. Keep it under 30 seconds.`);
+    if (!read.body?.length) return error(res, 400, 'empty-audio', 'No audio in the body.');
+
+    try {
+      // OpenAI-compatible multipart, which whisper.cpp's /inference and most servers also accept.
+      const form = new FormData();
+      form.append('file', new Blob([read.body], { type }), 'speech.webm');
+      form.append('model', ASR_MODEL);
+      const r = await fetch(ASR_URL, {
+        method: 'POST',
+        headers: ASR_KEY ? { Authorization: `Bearer ${ASR_KEY}` } : {},
+        body: form,
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!r.ok) {
+        console.log(`transcribe upstream ${r.status}`);
+        return error(res, 502, 'asr-failed', 'The speech engine did not accept the audio.');
+      }
+      const data = await r.json().catch(() => ({}));
+      const text = String(data.text ?? data.transcription ?? '').trim();
+      if (!text) return error(res, 422, 'no-speech', 'No speech was recognised in that recording.');
+      // The audio is NOT stored, ever: not on disk, not in memory beyond this request.
+      console.log(`transcribed ${read.body.length}B → ${text.length} chars`);
+      return send(res, 200, { text, engine: data.engine ?? 'remote' });
+    } catch (e) {
+      console.log(`transcribe error: ${e.message}`);
+      return error(res, 504, 'asr-timeout', 'The speech engine did not answer in time.');
+    }
   }
 
   const subMatch = path.match(/^\/api\/submissions\/([^/]+)$/);
