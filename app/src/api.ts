@@ -24,21 +24,40 @@ type FieldError = { error?: { fields?: { field: string; rule: string }[] } };
 /** 10 s: a 3G uplink with 400 ms RTT genuinely takes that long for a small JSON body, and
  *  timing out early turns a slow success into a confusing "we will send it later". */
 const DEFAULT_TIMEOUT = 10_000;
+const DEFAULT_SUBMISSION_ENDPOINT = '/api/submissions';
+
+let customEndpoint: string | null = null;
+
+export function setSubmissionEndpoint(url: string | null): void {
+  customEndpoint = url;
+}
+
+export function getSubmissionEndpoint(): string {
+  if (customEndpoint) return customEndpoint;
+  if (typeof window !== 'undefined' && (window as any).OPENPATH_API_ENDPOINT) {
+    return (window as any).OPENPATH_API_ENDPOINT;
+  }
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_ENDPOINT) {
+    return (import.meta as any).env.VITE_API_ENDPOINT;
+  }
+  return DEFAULT_SUBMISSION_ENDPOINT;
+}
 
 export async function postSubmission(
   formId: string,
   answers: Record<string, unknown>,
-  opts: { clientRef?: string; timeoutMs?: number } = {},
+  opts: { clientRef?: string; timeoutMs?: number; endpoint?: string } = {},
 ): Promise<SendResult> {
   // Cheap and local: no point waiting 10 s to learn what the OS already knows.
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return { state: 'unreachable', reason: 'offline' };
   }
 
+  const endpoint = opts.endpoint || getSubmissionEndpoint();
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT);
   try {
-    const res = await fetch('/api/submissions', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ formId, answers, clientRef: opts.clientRef }),
