@@ -8,8 +8,10 @@
     "predev": "npm run sync:schemas",
     "dev": "vite --host 0.0.0.0 --port 5173",
     "prebuild": "npm run sync:schemas",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && npm run build:roha",
+    "build:roha": "esbuild src/roha/index.ts --bundle --minify --format=iife --global-name=RohaBundle --outfile=dist/roha.js && cp dist/roha.js public/roha.js && esbuild src/admin/main.ts --bundle --minify --outfile=dist/roha-admin.js && cp dist/roha-admin.js public/roha-admin.js",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "test:roha": "node tests/roha_runtime.spec.mjs",
     "validate": "node ../schema/validate.mjs ../schema/*.json ../schema/templates/*.json",
     "a11y": "node tests/a11y.spec.mjs",
     "kb": "node tests/kb.mjs",
@@ -37,7 +39,11 @@
     "transcribe": "node tests/transcribe.mjs",
     "parity": "node tests/parity.mjs",
     "copy": "node tests/copy-source.mjs",
-    "precheck": "npm run sync:schemas"
+    "precheck": "npm run sync:schemas",
+    "test:access": "node tests/roha-access.mjs",
+    "test:settings": "node tests/roha-settings.mjs",
+    "check:roha": "npm run build && npm run test:roha && npm run test:access && npm run test:settings && npm run test:localisation && npm --prefix ../api test",
+    "test:localisation": "node tests/roha-localisation.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -48,6 +54,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^31.0.1",
     "playwright": "^1.65.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"

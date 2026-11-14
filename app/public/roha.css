@@ -1,0 +1,21 @@
+/* Roha owns these prefixed selectors; the host keeps its page styles. */
+.roha-aside { position: static; margin: 1rem; font: 1rem/1.5 system-ui, sans-serif; color: #172b4d; }
+.roha-aside *, .roha-aside *::before, .roha-aside *::after { box-sizing: border-box; }
+.roha-aside .roha-pill { display: inline-flex; }
+.roha-aside .roha-card { display: none; position: fixed; margin: auto; padding: 1rem; width: min(30rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); overflow: auto; border: 2px solid #002b56; border-radius: .5rem; background: white; color: #172b4d; font: inherit; }
+.roha-aside .roha-card[open] { display: block; }
+.roha-card::backdrop { background: rgb(0 0 0 / 45%); }
+.roha-aside button, .roha-aside input { min-height: 44px; min-width: 44px; font: inherit; border: 2px solid #526276; border-radius: .35rem; padding: .5rem; color: #172b4d; background: white; overflow-wrap: anywhere; }
+.roha-aside button { cursor: pointer; }
+.roha-aside button:focus-visible, .roha-aside input:focus-visible { outline: 3px solid #002b56; outline-offset: 3px; }
+.roha-aside .roha-pill, .roha-aside .roha-btn-primary-blue { background: #002b56; color: white; }
+.roha-aside .roha-header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.roha-aside .roha-title { font-size: 1.125rem; }
+.roha-aside .roha-command-form { display: grid; gap: .5rem; margin-block: 1rem; }
+.roha-aside .roha-command-form input { width: 100%; }
+.roha-aside .roha-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-block: 1rem; }
+.roha-aside .roha-transcript { overflow-wrap: anywhere; min-height: 3rem; color: #172b4d; font: inherit; }
+.roha-aside .roha-voice-notice { font-size: .95rem; }
+.roha-aside .roha-live-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 360px) { .roha-aside .roha-grid { grid-template-columns: 1fr; } }
+@media (forced-colors: active) { .roha-aside button, .roha-aside input, .roha-aside .roha-card { border: 2px solid ButtonText; } }

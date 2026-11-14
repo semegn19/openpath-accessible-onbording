@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roha Independent Blank Host Demo — Digital Bridge Track 1</title>
+  <style>
+    /* Unstyled baseline host to prove complete isolation & non-reliance on host frameworks */
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 2rem;
+      max-width: 650px;
+      line-height: 1.6;
+      color: #111;
+      background: #fafafa;
+    }
+    .host-card {
+      background: #fff;
+      padding: 1.5rem 2rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.4rem;
+      font-size: 1rem;
+      border: 1px solid #767676;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button[type="submit"] {
+      background: #004085;
+      color: #fff;
+      font-weight: bold;
+      margin-top: 1.5rem;
+      cursor: pointer;
+    }
+    .roha-info-banner {
+      background: #e9f2ff;
+      border-left: 4px solid #0056b3;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>ኢትዮጵያ የስልጠና ምዝገባ (Independent Blank Host)</h1>
+    <div class="roha-info-banner">
+      <strong>Roha Embedded Demonstration:</strong>
+      This is an independent, unstyled HTML page with zero Savanna dependencies.
+      Roha automatically discovers this form, provides voice navigation, handles barriers ("I'm stuck"),
+      and supports conversational corrections without requiring any hand-authored page schemas!
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="host-card">
+      <form id="learner-form" aria-labelledby="form-heading">
+        <h2 id="form-heading">የተማሪ ምዝገባ ቅጽ (Learner Registration)</h2>
+
+        <label for="learner-name">ስምዎን ይጻፉ (Full Name) *</label>
+        <input type="text" id="learner-name" name="learner-name" required placeholder="ሙሉ ስም">
+
+        <label for="learner-phone">ስልክ ቁጥር (Phone Number) *</label>
+        <input type="tel" id="learner-phone" name="learner-phone" required placeholder="0911223344">
+
+        <label for="id-document-type">የመታወቂያ ዓይነት (Identity Route) *</label>
+        <select id="id-document-type" name="id-document-type" required>
+          <option value="">ይምረጡ (Select document)</option>
+          <option value="fayda">ብሔራዊ መታወቂያ / ፋይዳ (National ID / Fayda)</option>
+          <option value="refugee">የስደተኛ መታወቂያ (Refugee ID)</option>
+          <option value="other">ሌላ መታወቂያ / ደብዳቤ (Student / Kebele letter)</option>
+          <option value="referral">መታወቂያ የለኝም - በአጋር ድርጅት እመራለሁ (No Document - Partner Referral)</option>
+        </select>
+
+        <label for="support-needs">የድጋፍ ፍላጎት (Support Preference - Kept 100% Private)</label>
+        <select id="support-needs" name="support-needs" data-roha-private="private-support">
+          <option value="none">ምንም ተጨማሪ ድጋፍ አያስፈልገኝም</option>
+          <option value="screen-reader">የስክሪን አንባቢ ድጋፍ (Screen reader)</option>
+          <option value="simple-language">ቀላል ቃላት (Plain language)</option>
+          <option value="prefer-not-to-say">መግለጽ አልፈልግም (Prefer not to say)</option>
+        </select>
+
+        <button type="submit" id="submit-btn">ምዝገባውን አጠናቅቅ (Complete Registration)</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Embed Roha using the declarative Custom Element -->
+  <roha-agent for="main" language="am"></roha-agent>
+
+  <!-- Drop-in standalone bundle -->
+  <script defer src="/roha.js"></script>
+
+</body>
+</html>
