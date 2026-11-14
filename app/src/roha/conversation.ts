@@ -71,6 +71,17 @@ export class ConversationManager {
     return this.questions[this.currentIndex];
   }
 
+  public refreshFieldLabels(resources: DiscoveredResource[]): void {
+    const fields = new Map(resources.map(resource => [resource.id, resource]));
+    for (const question of this.questions) {
+      const field = fields.get(question.fieldId);
+      if (field) {
+        question.name = field.name;
+        question.options = field.options;
+      }
+    }
+  }
+
   public getQuestionIndex(): number {
     return this.currentIndex;
   }
@@ -379,4 +390,3 @@ export class ConversationManager {
     return `${intro} ${items.join(', ')}. ${footer}`;
   }
 }
-

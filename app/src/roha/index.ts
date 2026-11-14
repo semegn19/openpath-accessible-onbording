@@ -60,6 +60,7 @@ export class RohaSDK {
   private validator: IntentValidator;
   private router: IntentRouter;
   private observer: PageObserver | null = null;
+  private languageObserver: MutationObserver | null = null;
 
   // Executors
   private textScale: TextScaleExecutor;
@@ -165,7 +166,7 @@ export class RohaSDK {
         : options.root || (document.querySelector('#main') as HTMLElement) || document.body;
 
     this.rootElement = root;
-    this.locale = options.language || 'en';
+    this.locale = options.language || (document.documentElement.lang.startsWith('am') ? 'am' : 'en');
     this.voice.setLocale(this.locale);
     this.conversation.setLocale(this.locale);
     this.smsService.setLocale(this.locale);
@@ -210,10 +211,48 @@ export class RohaSDK {
     this.renderAssistantUI();
 
     this.isMounted = true;
+    if (!options.language) {
+      this.languageObserver = new MutationObserver(() => {
+        this.setLanguage(document.documentElement.lang.startsWith('am') ? 'am' : 'en');
+      });
+      this.languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    }
     return this.currentMap;
   }
 
+  public setLanguage(language: Locale): void {
+    if (language === this.locale) return;
+    this.requestVersion++;
+    this.readExecutor.stop();
+    this.locale = language;
+    this.voice.setLocale(language);
+    this.conversation.setLocale(language);
+    this.smsService.setLocale(language);
+    const provider = this.router.getLLMProvider();
+    if (provider instanceof ServerLLMProvider) provider.consent(false);
+    if (!this.isMounted) return;
+    const wasOpen = this.assistantPanel?.querySelector('dialog')?.open;
+    const activeControl = this.assistantPanel?.contains(document.activeElement)
+      ? document.activeElement?.getAttribute('data-roha-control') : null;
+    const draft = this.assistantPanel?.querySelector<HTMLInputElement>('[data-roha-control="roha-command"]')?.value || '';
+    this.assistantPanel?.remove();
+    this.assistantPanel = null;
+    this.renderAssistantUI();
+    const panel = this.assistantPanel as HTMLElement | null;
+    const command = panel?.querySelector<HTMLInputElement>('[data-roha-control="roha-command"]');
+    if (command) command.value = draft;
+    if (wasOpen) {
+      panel?.querySelector('dialog')?.showModal();
+      panel?.querySelector('[data-roha-control="roha-launcher-pill"]')?.setAttribute('aria-expanded', 'true');
+    }
+    if (activeControl) panel?.querySelector<HTMLElement>(`[data-roha-control="${activeControl}"]`)?.focus();
+    this.updateVoiceStatusUI(this.voice.getState());
+    this.rescan();
+  }
+
   public unmount(): void {
+    this.languageObserver?.disconnect();
+    this.languageObserver = null;
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -251,6 +290,7 @@ export class RohaSDK {
 
     this.validator.setMap(this.currentMap);
     this.router.updateMap(this.currentMap);
+    this.conversation.refreshFieldLabels(this.currentMap.resources);
     return this.currentMap;
   }
 
@@ -501,6 +541,19 @@ export class RohaSDK {
     }
   }
 
+  private async enableVoice(): Promise<void> {
+    const panel = this.assistantPanel;
+    const button = panel?.querySelector<HTMLButtonElement>('[data-roha-control="roha-btn-mic"]');
+    if (button) button.disabled = true;
+    this.readExecutor.stop();
+    try {
+      const permitted = await this.voice.requestPermission();
+      if (permitted && this.isMounted && panel === this.assistantPanel) this.voice.startListening(true);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
   private closeAssistantForHostAction(): void {
     const dialog = this.assistantPanel?.querySelector('dialog');
     if (dialog?.open) dialog.close('host-action');
@@ -581,6 +634,7 @@ export class RohaSDK {
     };
     pill.addEventListener('click', () => {
       dialog.returnValue = ''; dialog.showModal(); pill.setAttribute('aria-expanded', 'true'); command.focus();
+      void this.enableVoice();
     });
     panel.querySelector('[data-roha-control="roha-btn-minimize"]')?.addEventListener('click', () => dialog.close());
     dialog.addEventListener('close', close);
@@ -611,12 +665,8 @@ export class RohaSDK {
     consent.onchange = () => { this.requestVersion++; serverProvider?.consent(consent.checked); };
 
     // Attach button event listeners
-    panel.querySelector('[data-roha-control="roha-btn-mic"]')?.addEventListener('click', async () => {
-      const permitted = await this.voice.requestPermission();
-      if (permitted) {
-        this.voice.startListening(true);
-        this.readExecutor.speak(text('roha.voiceWelcome'), this.locale);
-      }
+    panel.querySelector('[data-roha-control="roha-btn-mic"]')?.addEventListener('click', () => {
+      void this.enableVoice();
     });
 
     panel.querySelector('[data-roha-control="roha-btn-stop"]')?.addEventListener('click', () => {
@@ -635,7 +685,7 @@ export class RohaSDK {
     });
 
     panel.querySelector('[data-roha-control="roha-btn-bigger"]')?.addEventListener('click', () => {
-      const nextScale = this.textScale.getPercent() >= 200 ? 100 : this.textScale.getPercent() + 25;
+      const nextScale = Math.min(200, this.textScale.getPercent() + 25);
       this.executeIntent({
         schemaVersion: '2.0',
         utteranceId: 'ui-click',
@@ -750,7 +800,8 @@ if (typeof window !== 'undefined') {
     const autoMount = currentScript ? currentScript.getAttribute('data-roha-auto') !== 'false' : true;
 
     if (autoMount && !document.querySelector('roha-agent, roha-assistant')) {
-      const language = currentScript?.getAttribute('data-roha-language') === 'en' ? 'en' : 'am';
+      const declaredLanguage = currentScript?.getAttribute('data-roha-language');
+      const language = declaredLanguage === 'en' || declaredLanguage === 'am' ? declaredLanguage : undefined;
       const endpoint = currentScript?.getAttribute('data-roha-api');
       if (endpoint) roha.configureAPI({ provider: 'server', endpoint });
       let mounted = false;

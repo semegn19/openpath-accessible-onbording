@@ -81,6 +81,7 @@ export class IntentRouter {
     // 1. Text scale (A01)
     if (
       raw.includes('bigger') ||
+      raw.includes('zoom in') ||
       raw.includes('enlarge') ||
       raw.includes('larger') ||
       raw.includes('አግዝፍ') ||
@@ -101,6 +102,7 @@ export class IntentRouter {
 
     if (
       raw.includes('smaller') ||
+      raw.includes('zoom out') ||
       raw.includes('reduce text') ||
       raw.includes('አሳንስ')
     ) {

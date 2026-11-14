@@ -24,7 +24,9 @@ export class RohaAgentElement extends HTMLElement {
       this.sdk = new RohaSDK();
       const endpoint = this.getAttribute('api-endpoint');
       if (endpoint) this.sdk.configureAPI({ provider: 'server', endpoint });
-      const map = this.sdk.mount({ root, language: this.getAttribute('language') === 'en' ? 'en' : 'am' });
+      const declaredLanguage = this.getAttribute('language');
+      const language = declaredLanguage === 'en' || declaredLanguage === 'am' ? declaredLanguage : undefined;
+      const map = this.sdk.mount({ root, language });
       this.dispatchEvent(new CustomEvent('roha:ready', { bubbles: true, composed: true,
         detail: { mapId: map.mapId, mapVersion: map.mapVersion } }));
     });

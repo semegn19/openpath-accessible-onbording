@@ -9,8 +9,8 @@
       "am": "የሮሃ ረዳት"
     },
     "roha.open": {
-      "en": "Open Roha assistant",
-      "am": "የሮሃ ረዳትን ክፈት"
+      "en": "Open Roha and enable voice",
+      "am": "ሮሃን ክፈት እና ድምጽ አብራ"
     },
     "roha.close": {
       "en": "Close assistant",
@@ -351,6 +351,14 @@
     "roha.button": {
       "en": "Button",
       "am": "አዝራር"
+    },
+    "roha.microphoneSecure": {
+      "en": "Microphone access needs a secure page. Open this site using HTTPS, or type your request.",
+      "am": "ማይክሮፎን ለመጠቀም ደህንነቱ የተጠበቀ ገጽ ያስፈልጋል። ጣቢያውን በHTTPS ይክፈቱ ወይም ጥያቄዎን ይጻፉ።"
+    },
+    "roha.voiceNetwork": {
+      "en": "The speech service could not connect. Check your connection, then enable voice again, or type your request.",
+      "am": "የድምጽ አገልግሎቱ መገናኘት አልቻለም። ግንኙነትዎን ይፈትሹና ድምጽን እንደገና ያብሩ፤ ወይም ጥያቄዎን ይጻፉ።"
     }
   }
 }
