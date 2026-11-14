@@ -9,8 +9,8 @@
       "am": "የሮሃ ረዳት"
     },
     "roha.open": {
-      "en": "Open Roha and enable voice",
-      "am": "ሮሃን ክፈት እና ድምጽ አብራ"
+      "en": "Talk to Roha",
+      "am": "ሮሃን አነጋግር"
     },
     "roha.close": {
       "en": "Close assistant",
@@ -157,8 +157,8 @@
       "am": "ለጊዜው ቆመናል።"
     },
     "roha.undone": {
-      "en": "Undone last action",
-      "am": "የመጨረሻው ለውጥ ተመልሷል።"
+      "en": "Restored the previous text size. To change an answer, choose Help fill this form.",
+      "am": "የቀድሞው የጽሑፍ መጠን ተመልሷል። መልስ ለመቀየር ይህን ቅጽ ለመሙላት እርዳኝ ይምረጡ።"
     },
     "roha.resetDone": {
       "en": "Preferences reset to default",
@@ -359,6 +359,98 @@
     "roha.voiceNetwork": {
       "en": "The speech service could not connect. Check your connection, then enable voice again, or type your request.",
       "am": "የድምጽ አገልግሎቱ መገናኘት አልቻለም። ግንኙነትዎን ይፈትሹና ድምጽን እንደገና ያብሩ፤ ወይም ጥያቄዎን ይጻፉ።"
+    },
+    "roha.guide": {
+      "en": "Help fill this form",
+      "am": "ይህን ቅጽ ለመሙላት እርዳኝ"
+    },
+    "roha.forward": {
+      "en": "Continue with Roha",
+      "am": "በሮሃ ቀጥል"
+    },
+    "roha.backward": {
+      "en": "Previous step",
+      "am": "ያለፈው ደረጃ"
+    },
+    "roha.confirm": {
+      "en": "Confirm this action",
+      "am": "ይህን እርምጃ አረጋግጥ"
+    },
+    "roha.correct": {
+      "en": "Change it / cancel",
+      "am": "ቀይር / ሰርዝ"
+    },
+    "roha.pendingTitle": {
+      "en": "Your approval is needed",
+      "am": "የእርስዎ ፈቃድ ያስፈልጋል"
+    },
+    "roha.proposed": {
+      "en": "For “{name}”, use “{value}”? Say confirm or cancel.",
+      "am": "ለ«{name}» «{value}» ይጠቀም? አረጋግጥ ወይም ሰርዝ ይበሉ።"
+    },
+    "roha.askField": {
+      "en": "Answer “{name}”. {choices} I will show your answer before changing the form.",
+      "am": "ለ«{name}» መልስ ይስጡ። {choices} ቅጹን ከመቀየሬ በፊት መልስዎን አሳያለሁ።"
+    },
+    "roha.chooseOne": {
+      "en": "Choices: {choices}.",
+      "am": "ምርጫዎች፦ {choices}።"
+    },
+    "roha.noFields": {
+      "en": "There is no supported answer field on this step. Read the page or use Continue with Roha. File uploads need the file chooser.",
+      "am": "በዚህ ደረጃ የሚደገፍ የመልስ ቦታ የለም። ገጹን ያንብቡ ወይም በሮሃ ቀጥል ይጠቀሙ። ፋይል ለመጫን የፋይል መምረጫውን ይጠቀሙ።"
+    },
+    "roha.cancelled": {
+      "en": "Cancelled. Nothing was changed. Say or type a corrected answer, or choose another action.",
+      "am": "ተሰርዟል። ምንም አልተቀየረም። የተስተካከለ መልስ ይናገሩ ወይም ይጻፉ፤ ሌላ እርምጃም መምረጥ ይችላሉ።"
+    },
+    "roha.staleAction": {
+      "en": "The question or answer changed. Ask again so you can approve the current action.",
+      "am": "ጥያቄው ወይም መልሱ ተቀይሯል። ያለውን እርምጃ ለማረጋገጥ እንደገና ይጠይቁ።"
+    },
+    "roha.nothingPending": {
+      "en": "There is no action waiting for approval. Choose Help fill this form to begin.",
+      "am": "ማረጋገጫ የሚጠብቅ እርምጃ የለም። ለመጀመር ይህን ቅጽ ለመሙላት እርዳኝ ይምረጡ።"
+    },
+    "roha.choiceMismatch": {
+      "en": "I could not match that answer to one choice. Say a choice exactly as shown, or use its number.",
+      "am": "ያንን መልስ ከአንድ ምርጫ ጋር ማዛመድ አልቻልኩም። ምርጫውን እንደተጻፈው ይበሉ ወይም ቁጥሩን ይጠቀሙ።"
+    },
+    "roha.submitApproval": {
+      "en": "Send this form using “{name}”? Review your answers and the page’s sharing information first. Say confirm to send, or cancel.",
+      "am": "ይህ ቅጽ በ«{name}» ይላክ? መልሶችዎን እና የገጹን የማጋራት መረጃ መጀመሪያ ይመልከቱ። ለመላክ አረጋግጥ፣ ለማቋረጥ ሰርዝ ይበሉ።"
+    },
+    "roha.submitRequested": {
+      "en": "The form’s send action was requested. Check the page for validation errors or its delivery status.",
+      "am": "የቅጹ የመላኪያ እርምጃ ተጠይቋል። ስህተቶችን ወይም የመላኪያ ሁኔታውን በገጹ ላይ ይመልከቱ።"
+    },
+    "roha.stepChanged": {
+      "en": "The page handled your request. Check the question and any errors before continuing.",
+      "am": "ገጹ ጥያቄዎን አስተናግዷል። ከመቀጠልዎ በፊት ጥያቄውን እና ስህተቶችን ይመልከቱ።"
+    },
+    "roha.currentAnswers": {
+      "en": "Answers on this step: {answers}",
+      "am": "በዚህ ደረጃ ያሉ መልሶች፦ {answers}"
+    },
+    "roha.emptyAnswer": {
+      "en": "No answer yet",
+      "am": "ገና መልስ የለም"
+    },
+    "roha.checked": {
+      "en": "Selected",
+      "am": "ተመርጧል"
+    },
+    "roha.unchecked": {
+      "en": "Not selected",
+      "am": "አልተመረጠም"
+    },
+    "roha.guideHint": {
+      "en": "Say “help fill this form”, answer the question, then say “confirm”. Say “next step”, “go back”, “bigger text” or “stop”. You can also type or use the buttons.",
+      "am": "«ቅጹን ሙላ» ይበሉ፣ ጥያቄውን ይመልሱ፣ ከዚያ «አረጋግጥ» ይበሉ። «ቀጣይ»፣ «ተመለስ»፣ «ትልቅ ጽሑፍ» ወይም «አቁም» ይበሉ። መጻፍ ወይም አዝራሮቹን መጠቀምም ይችላሉ።"
+    },
+    "roha.inlineIntro": {
+      "en": "I can help with this form, one answer at a time. You decide what changes and what gets sent.",
+      "am": "ይህን ቅጽ አንድ መልስ በአንድ ለመሙላት ልረዳዎት እችላለሁ። ምን እንደሚቀየር እና እንደሚላክ እርስዎ ይወስናሉ።"
     }
   }
 }
