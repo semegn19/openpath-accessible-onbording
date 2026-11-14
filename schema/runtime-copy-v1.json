@@ -1,0 +1,300 @@
+{
+  "id": "runtime-copy-v1",
+  "kind": "runtime-copy",
+  "version": "1.0.0",
+  "description": "Copy the app itself prints: status, connectivity, microphone errors, date field labels. It is separate from the forms because it is shared by all three and is not a question. Every entry needs both languages and the same {placeholders} in each.",
+  "strings": {
+    "status.complete": {
+      "am": "ምዝገባው ተጠናቅቋል",
+      "en": "Sign-up complete"
+    },
+    "status.sending": {
+      "am": "በመላክ ላይ…",
+      "en": "Sending…"
+    },
+    "status.rejected": {
+      "am": "አልተላከም",
+      "en": "Not sent yet"
+    },
+    "status.saved": {
+      "am": "በዚህ መሣሪያ ላይ ተቀምጧል",
+      "en": "Saved on this device"
+    },
+    "receipt.reference": {
+      "am": "የማጣቀሻ ቁጥርዎ፦",
+      "en": "Your reference:"
+    },
+    "receipt.keep": {
+      "am": "ይህን ቁጥር ይያዙት።",
+      "en": "Keep this number."
+    },
+    "status.wait": {
+      "am": "እባክዎ ይጠብቁ።",
+      "en": "Please wait."
+    },
+    "status.thanks": {
+      "am": "አመሰግናለሁ።",
+      "en": "Thank you."
+    },
+    "settings.group": {
+      "am": "ቅንብሮች",
+      "en": "Settings"
+    },
+    "settings.language": {
+      "am": "ቋንቋ",
+      "en": "Language"
+    },
+    "settings.help": {
+      "am": "እርዳታ",
+      "en": "Help options"
+    },
+    "settings.simple": {
+      "am": "ቀላል ቃላት",
+      "en": "Simple words"
+    },
+    "settings.big": {
+      "am": "ትልቅ ጽሑፍ",
+      "en": "Bigger text"
+    },
+    "settings.autoRead": {
+      "am": "ጥያቄ አንብብ",
+      "en": "Read aloud"
+    },
+    "date.year": {
+      "am": "ዓመት",
+      "en": "Year"
+    },
+    "date.month": {
+      "am": "ወር",
+      "en": "Month"
+    },
+    "date.day": {
+      "am": "ቀን",
+      "en": "Day"
+    },
+    "date.yearOnly": {
+      "am": "ዓመቱን ብቻ አውቃለሁ",
+      "en": "I only know the year"
+    },
+    "date.yearOnlyShort": {
+      "am": "(ዓመት ብቻ)",
+      "en": "(year only)"
+    },
+    "date.hint": {
+      "am": "የኢትዮጵያ ዓመት — ለምሳሌ 1988",
+      "en": "Ethiopian year — for example 1988"
+    },
+    "file.demoNote": {
+      "am": "በዚህ ሙከራ ውስጥ ፋይሉ አይላክም። ስሙ ብቻ ይታያል።",
+      "en": "In this demo the file is not uploaded. Only its name is used."
+    },
+    "announce.backOnline": {
+      "am": "ግንኙነቱ ተመልሷል።",
+      "en": "You are back online."
+    },
+    "announce.offline": {
+      "am": "ግንኙነት የለም። መልሶችዎ በዚህ መሣሪያ ላይ ይቀመጣሉ።",
+      "en": "You are offline. Your answers are being kept on this device."
+    },
+    "announce.saved": {
+      "am": "መልሶችዎ ተቀምጠዋል።",
+      "en": "Your answers were saved."
+    },
+    "announce.langChanged": {
+      "am": "ቋንቋ ወደ አማርኛ ተቀይሯል።",
+      "en": "Language changed to English."
+    },
+    "announce.readAloudOn": {
+      "am": "ጥያቄዎች ይነበባሉ",
+      "en": "questions will be read aloud"
+    },
+    "announce.bigOn": {
+      "am": "ጽሑፉ ጨምሯል",
+      "en": "text is now bigger"
+    },
+    "announce.simpleOn": {
+      "am": "ቀላል ቃላት በርተዋል",
+      "en": "simple words are on"
+    },
+    "announce.choicesCleared": {
+      "am": "ሌሎቹ ምርጫዎች ተነስተዋል።",
+      "en": "Your other choices were cleared."
+    },
+    "announce.sending": {
+      "am": "በመላክ ላይ። እባክዎ ይጠብቁ።",
+      "en": "Sending. Please wait."
+    },
+    "announce.newQuestion": {
+      "am": "አዲስ ጥያቄ ተጨምሯል።",
+      "en": "a new question was added."
+    },
+    "offline.title": {
+      "am": "ግንኙነት የለም።",
+      "en": "No connection."
+    },
+    "offline.body": {
+      "am": "መልሶችዎ በዚህ መሣሪያ ላይ ይቀመጣሉ፤ ግንኙነት ሲመጣ በራሳቸው ይላካሉ።",
+      "en": "Your answers are kept on this device and will send themselves when the connection returns."
+    },
+    "nav.skip": {
+      "am": "ወደ ዋና ይዘት ዝለል",
+      "en": "Skip to main content"
+    },
+    "banner.lastSent": {
+      "am": "የመጨረሻው ምዝገባ ተልኳል። የማጣቀሻ ቁጥር፦ ",
+      "en": "Your last sign-up was sent. Reference: "
+    },
+    "banner.dismiss": {
+      "am": "ዝጋ",
+      "en": "Dismiss"
+    },
+    "resume.title": {
+      "am": "ያልተጠናቀቀ ምዝገባ አለ። መልሶችዎ ተቀምጠዋል።",
+      "en": "You have an unfinished form. Your answers were restored."
+    },
+    "resume.startAgain": {
+      "am": "አዲስ ጀምር",
+      "en": "Start again"
+    },
+    "review.intro": {
+      "am": "እነዚህን መልሶች ይሰሙ። ትክክል ካልሆኑ ይቀይሩ።",
+      "en": "Listen to your answers. If something is wrong, change it."
+    },
+    "review.nextHint": {
+      "am": "ትክክል ከሆነ ቀጣይን ይጫኑ።",
+      "en": "If it is right, press Next."
+    },
+    "send.storageFull": {
+      "am": "ይህ መሣሪያ ማስቀመጥ አልቻለም። መልሶችዎ አሁንም በዚህ ገጽ ላይ አሉ። እባክዎ ገጹን አይዝጉ።",
+      "en": "This device would not store it. Your answers are still on this page — please do not close it."
+    },
+    "send.unreachable": {
+      "am": "አገልጋዩን ማግኘት አልቻልንም። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል እና ግንኙነት ሲመጣ በራሳቸው ይላካሉ። ገጹን መዝጋት ይችላሉ።",
+      "en": "We could not reach the server. Your answers are saved on this device and will send themselves when the connection comes back. You can close this page."
+    },
+    "send.queued": {
+      "am": "መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል። ግንኙነት ሲመጣ በራሳቸው ይላካሉ። ገጹን መዝጋት ይችላሉ።",
+      "en": "Your answers are saved on this device. They will send themselves when the connection returns. You can close this page."
+    },
+    "send.rejected": {
+      "am": "አገልጋዩ እነዚህን መልሶች መቀበል አልቻለም። ",
+      "en": "The server could not accept these answers. "
+    },
+    "retry.trying": {
+      "am": "በመሞከር ላይ…",
+      "en": "Trying…"
+    },
+    "retry.now": {
+      "am": "አሁን እንደገና ሞክር",
+      "en": "Try sending now"
+    },
+    "sent.wasSent": {
+      "am": "የተላከው መረጃ",
+      "en": "What was sent"
+    },
+    "sent.willSend": {
+      "am": "ምን ይላካል",
+      "en": "What will be sent"
+    },
+    "announce.complete": {
+      "am": "ምዝገባው ተጠናቅቋል። የማጣቀሻ ቁጥርዎ {ref}። ይህን ቁጥር ይያዙት።",
+      "en": "Sign-up complete. Your reference is {ref}. Keep this number."
+    },
+    "voice.noVoice": {
+      "am": "ይህ መሣሪያ በአማርኛ ማንበብ አይችልም። ጽሑፉ ከዚህ በታች አለ።",
+      "en": "This device has no voice for this language. The text is below."
+    },
+    "voice.unsupported": {
+      "am": "ድምጽ በዚህ አሳሽ አይሠራም። የስልኩን ማይክሮፎን ይጠቀሙ ወይም ይጻፉ።",
+      "en": "Voice does not work in this browser. Use your keyboard microphone, or type."
+    },
+    "voice.recording": {
+      "am": "በመቅዳት ላይ… ይናገሩ።",
+      "en": "Recording… speak now."
+    },
+    "voice.transcribing": {
+      "am": "በመቀየር ላይ…",
+      "en": "Transcribing…"
+    },
+    "voice.finished": {
+      "am": "ተናገርኩ",
+      "en": "I have finished"
+    },
+    "voice.pickOne": {
+      "am": "ይህን አልገባኝም። ከዚህ ይምረጡ፦",
+      "en": "I did not catch that. Pick one:"
+    },
+    "voice.chooseWithButtons": {
+      "am": "በአዝራር መምረጥ",
+      "en": "Choose with buttons"
+    },
+    "voice.listening": {
+      "am": "በማዳመጥ ላይ…",
+      "en": "Listening…"
+    },
+    "voice.privacy": {
+      "am": "ድምጽዎ ለግል መረጃ ብቻ ወደዚህ አገልጋይ ይላካል፣ ከዚያ ይሰረዛል።",
+      "en": "Your voice is sent to this server only to be written down, then deleted."
+    },
+    "voice.buttonsOrType": {
+      "am": "እባክዎ በአዝራሮቹ ይምረጡ ወይም ይጻፉ።",
+      "en": "Please use the buttons or type instead."
+    },
+    "voice.noEngine": {
+      "am": " በዚህ አገልጋይም የድምጽ መለወጫ አገልግሎት የለም።",
+      "en": " This server also has no transcription service configured, so there is nothing to fall back on."
+    },
+    "voice.nameAm": {
+      "am": "አማርኛ",
+      "en": "Amharic"
+    },
+    "voice.nameEn": {
+      "am": "እንግሊዝኛ",
+      "en": "English"
+    },
+    "voice.or": {
+      "am": " ወይም ",
+      "en": " or "
+    },
+    "voice.weWillUse": {
+      "am": "የሚመረጠው፦",
+      "en": "We will use:"
+    },
+    "voice.err.insecure": {
+      "am": "ማይክሮፎኑ ደህንነቱ የተጠበቀ ገጽ ይፈልጋል። ገጹን በhttps ከፍተው እንደገና ይሞክሩ።",
+      "en": "The microphone needs a secure page. Open this form over https (or on localhost) and try again."
+    },
+    "voice.err.framed": {
+      "am": "ማይክሮፎኑ በተካተተው ገጽ ውስጥ ተከልክሏል። ቅጹን በራሱ ትር ከፍተው ይሞክሩ።",
+      "en": "The microphone is blocked inside an embedded frame. Open the form in its own tab and try again."
+    },
+    "voice.err.blocked": {
+      "am": "ማይክሮፎኑ ተከልክሏል። በአድራሻ አሞሌው ላይ የማይክሮፎን ፈቃድ ስጡ፣ ከዚያ ይሞክሩ።",
+      "en": "The microphone is blocked. Allow microphone access for this site in the address bar, then try again."
+    },
+    "voice.err.service": {
+      "am": "ይህ ገጽ በድምጽ መስማት እንዲጠቀም አልተፈቀደም። ገጹን በhttps በራሱ ትር ይክፈቱ።",
+      "en": "This page is not allowed to use speech recognition — usually a secure-page or embedding restriction. Open the form in its own tab over https."
+    },
+    "voice.err.network": {
+      "am": "በድምጽ መስማት የአሳሹ አገልግሎት ግንኙነት ይፈልጋል፣ እሱም አልተገኘም።",
+      "en": "Speech recognition needs a connection to the browser's speech service, and it could not be reached."
+    },
+    "voice.err.noMic": {
+      "am": "በዚህ መሣሪያ ላይ ማይክሮፎን አልተገኘም።",
+      "en": "No microphone was found on this device."
+    },
+    "voice.err.noModel": {
+      "am": "አሳሹ ለ{langs} የድምጽ ሞዴል የለውም።",
+      "en": "The browser has no speech model for {langs}."
+    },
+    "voice.err.unknown": {
+      "am": "በድምጽ መስማት በዚህ መሣሪያ አልተጀመረም።",
+      "en": "Speech input did not start on this device."
+    },
+    "sent.supportHidden": {
+      "am": "የእርዳታ መልሶች በዚህ ዝርዝር ውስጥ የሉም።",
+      "en": "The support answers are not in this payload — they never left the phone."
+    }
+  }
+}

@@ -33,6 +33,43 @@ function checkI18n(file, step, path, val, { required = true } = {}) {
   if (extra.length) warning(file, step, 'W01', `${path} has unknown language keys: ${extra.join(',')}`);
 }
 
+
+/** Runtime copy: the strings the app prints that are not form questions.
+ *  Shared by all three forms, so it lives once, in its own document. */
+function validateRuntimeCopy(file, doc) {
+  const strings = doc.strings;
+  if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
+    err(file, null, 'E26', 'strings must be an object of key -> {am,en}');
+    return;
+  }
+  const seen = new Map();
+  for (const [key, val] of Object.entries(strings)) {
+    if (!/^[a-z][A-Za-z0-9]*(\.[a-zA-Z0-9]+)+$/.test(key)) {
+      err(file, key, 'E26', 'key must look like "area.name" — dot-separated, lowerCamel segments');
+    }
+    if (!val || typeof val !== 'object' || Array.isArray(val)) {
+      err(file, key, 'E26', 'must be an object {am,en}');
+      continue;
+    }
+    for (const l of LANGS) {
+      if (typeof val[l] !== 'string' || val[l].trim() === '') err(file, key, 'E26', `missing or empty .${l}`);
+    }
+    // A placeholder that exists in one language and not the other renders "{count}" to a user.
+    const holes = (txt) => new Set([...(txt ?? '').matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+    const a = holes(val.am); const b = holes(val.en);
+    for (const h of a) if (!b.has(h)) err(file, key, 'E27', `{${h}} is in .am but not .en`);
+    for (const h of b) if (!a.has(h)) err(file, key, 'E27', `{${h}} is in .en but not .am`);
+    // Identical sentences under two keys become two clips and two things to keep in step.
+    for (const l of LANGS) {
+      const t = val[l]?.trim();
+      if (!t) continue;
+      if (seen.has(t)) warning(file, key, 'W12', `.${l} is identical to ${seen.get(t)}`);
+      else seen.set(t, key);
+    }
+  }
+  console.log(`${file.padEnd(42)} ${Object.keys(strings).length} runtime string(s)`);
+}
+
 for (const file of process.argv.slice(2)) {
   let raw;
   try {
@@ -49,6 +86,8 @@ for (const file of process.argv.slice(2)) {
     continue;
   }
 
+  if (s.kind === 'runtime-copy') { validateRuntimeCopy(file, s); continue; }
+
   for (const k of ['id', 'version', 'defaultLang', 'langs', 'title', 'steps']) {
     if (s[k] === undefined) err(file, null, 'E02', `missing top-level "${k}"`);
   }
@@ -59,6 +98,9 @@ for (const file of process.argv.slice(2)) {
   if (s.defaultLang && !LANGS.includes(s.defaultLang)) err(file, null, 'E03', `defaultLang "${s.defaultLang}" not in ${LANGS}`);
   checkI18n(file, null, 'title', s.title);
   if (s.intro) checkI18n(file, null, 'intro', s.intro, { required: false });
+  // The simple-words intro is optional, but when it exists every language must have it —
+  // otherwise the simplest screen falls back to the long paragraph in one language only.
+  if (s.introSimple) checkI18n(file, null, 'introSimple', s.introSimple, { required: false });
   if (s.contentStatus !== 'reviewed' && !String(s.contentStatus || '').includes('unreviewed')) {
     warning(file, null, 'W02', 'contentStatus should be "reviewed" or contain "unreviewed" while Amharic is draft');
   }
@@ -78,8 +120,13 @@ for (const file of process.argv.slice(2)) {
     const labelKey = CHOICE_TYPES.has(st.type) ? 'legend' : 'label';
     checkI18n(file, step, labelKey, st[CHOICE_TYPES.has(st.type) ? 'legend' : 'label']);
     if (st.label && CHOICE_TYPES.has(st.type)) checkI18n(file, step, 'label', st.label, { required: false });
-    for (const opt of ['hint', 'why', 'simple', 'body', 'submitLabel']) {
+    for (const opt of ['hint', 'why', 'simple', 'simpleHint', 'simpleWhy', 'simpleBody', 'body', 'submitLabel']) {
       if (st[opt] !== undefined) checkI18n(file, step, opt, st[opt], { required: false });
+    }
+    // Option labels have a simple-words form too; a missing translation there leaves one language
+    // reading the long label while the other reads the short one, with nothing failing.
+    for (const o of st.options ?? []) {
+      if (o.simple !== undefined) checkI18n(file, step, `option[${o.value}].simple`, o.simple, { required: false });
     }
 
     if (st.type === 'language') {
@@ -128,15 +175,15 @@ for (const file of process.argv.slice(2)) {
     }
 
     // conditional routing must point backwards only
-    if (st.showIf) {
-      if (!st.showIf.step) err(file, step, 'E09', 'showIf.step missing');
-      else if (!ids.has(st.showIf.step)) err(file, step, 'E09', `showIf.step "${st.showIf.step}" does not exist before this step`);
-      if (!Array.isArray(st.showIf.in) || st.showIf.in.length === 0) err(file, step, 'E09', 'showIf.in must be a non-empty array');
+    if (st.showIf) for (const cond of (Array.isArray(st.showIf) ? st.showIf : [st.showIf])) {
+      if (!cond.step) err(file, step, 'E09', 'showIf.step missing');
+      else if (!ids.has(cond.step)) err(file, step, 'E09', `showIf.step "${cond.step}" does not exist before this step`);
+      if (!Array.isArray(cond.in) || cond.in.length === 0) err(file, step, 'E09', 'showIf.in must be a non-empty array');
       // A typo in here ("referal") hides a step for ever, silently. Check against real options.
-      const dep = s.steps.find((x) => x.id === st.showIf.step);
-      if (dep && Array.isArray(st.showIf.in)) {
+      const dep = s.steps.find((x) => x.id === cond.step);
+      if (dep && Array.isArray(cond.in)) {
         const allowed = new Set((dep.options ?? []).map((o) => o.value));
-        for (const v of st.showIf.in) {
+        for (const v of cond.in) {
           if (allowed.size && !allowed.has(v)) err(file, step, 'E09', `showIf.in "${v}" is not an option of "${dep.id}" (has: ${[...allowed].join(', ')})`);
         }
       }
@@ -160,6 +207,19 @@ for (const file of process.argv.slice(2)) {
       if (st.readAloud !== true) err(file, step, 'E13', 'readAloud:true missing — brief requires read-aloud questions');
     }
 
+    // A dropdown cannot show an option's icon, and this form puts an icon on every option so a
+    // low-literacy reader can scan the choices instead of reading them. `job-category` was a
+    // `select` with six icons that rendered as none, in a control that also hid all six choices
+    // behind one tap. If the options carry icons, the widget has to be one that can draw them.
+    if (st.type === 'select' && (st.options ?? []).some((o) => o.icon)) {
+      err(file, step, 'E25', 'a "select" dropdown cannot show option icons — use type "radio"');
+    }
+    // The voice path matches what someone says against a list of option labels. A dropdown used
+    // to hand the transcript nowhere, so a spoken answer was accepted and then thrown away.
+    if (st.type === 'select' && st.voice === true) {
+      warning(file, step, 'W11', 'voice on a dropdown has no option list to match against — a radio group is the voice-answerable choice widget');
+    }
+
     // A transcript must never look like consent, and a consent body must be readable aloud.
     if (st.type === 'statement' || st.type === 'submit') {
       if (st.voice === true) err(file, step, 'E22', 'voice must not be true on a consent screen — dictation must never fill a consent box');
@@ -172,6 +232,19 @@ for (const file of process.argv.slice(2)) {
       if (!['personal', 'sensitive'].includes(st.pii)) err(file, step, 'E23', 'a step with sharing must be pii:personal or sensitive');
       if (!Array.isArray(st.sharing.fields) || st.sharing.fields.length === 0) err(file, step, 'E23', 'sharing.fields must name what is shared');
       if (!st.sharing.recipient) err(file, step, 'E23', 'sharing.recipient missing — say who receives it');
+      // A step that IS shared must not tell the person that only they (and the programme) see it.
+      // This exact contradiction shipped in the job form: the hint said "shown to the employer"
+      // and the why, one line below, said "only you and the programme team see this".
+      // The pattern is deliberately narrow — "only your name and phone number" is a true and
+      // common sentence about sharing, and must not trip it.
+      const claims = (obj) => ['am', 'en'].map((l) => obj?.[l]).filter(Boolean);
+      for (const [key, val] of Object.entries({ hint: st.hint, simpleHint: st.simpleHint, why: st.why, simpleWhy: st.simpleWhy, body: st.body, simpleBody: st.simpleBody })) {
+        for (const text of claims(val)) {
+          if (/only you and/i.test(text) || /እርስዎና[^።]{0,40}ብቻ/.test(text)) {
+            err(file, step, 'E24', `${key} claims only the person sees this, but the step declares sharing with "${st.sharing.recipient}"`);
+          }
+        }
+      }
       if (st.sharing.recipient === 'partner' && !s.partner) {
         warning(file, step, 'W09', 'sharing.recipient is "partner" but the schema has no top-level "partner" block naming it');
       }
@@ -228,7 +301,12 @@ for (const file of process.argv.slice(2)) {
     }
 
     // simple-mode support
-    if (INPUT_TYPES.has(st.type) && st.type !== 'statement' && !st.simple) warning(file, step, 'W04', 'no "simple" label — SimpleMode will fall back to the full label');
+    // A heading of one or two words needs no simpler twin — the fallback IS the simple version.
+    // The same threshold is used by tests/parity.mjs, so the two cannot disagree.
+    const headingEn = (st.label?.en ?? st.legend?.en ?? '');
+    if (INPUT_TYPES.has(st.type) && st.type !== 'statement' && !st.simple && headingEn.length > 20) {
+      warning(file, step, 'W04', 'no "simple" label — SimpleMode will fall back to the full label');
+    }
     if (INPUT_TYPES.has(st.type) && !st.icon) warning(file, step, 'W05', 'no icon — low-literacy path loses its visual cue');
   });
 
