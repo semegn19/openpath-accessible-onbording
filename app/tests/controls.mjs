@@ -110,7 +110,7 @@ for (const form of FORMS) {
   // language they read. Those two exceptions are the rule, not an oversight.
   // A microphone is expected wherever a person produces an answer. It is absent only on consent
   // screens — a dictated consent is not consent. The language question now has one too.
-  const NO_MIC_BY_DESIGN = ['statement', 'submit'];
+  const NO_MIC_BY_DESIGN = ['statement', 'submit', 'file'];
   const answering = seen
     .map((s, i) => ({ s, i }))
     .filter(({ s }) => !s.isReview && !s.finished && !NO_MIC_BY_DESIGN.includes(s.stepType));

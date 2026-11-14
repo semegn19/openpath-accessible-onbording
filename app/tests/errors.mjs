@@ -45,9 +45,6 @@ await p.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await p.waitForTimeout(150);
 await p.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await p.waitForTimeout(150);
-await p.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
-await p.getByRole('button', { name: /ቀጣይ|Next/ }).click();
-await p.waitForTimeout(200);
 
 // one letter is under the minimum of three
 await p.locator('input[type="text"]').first().fill('ሳ');

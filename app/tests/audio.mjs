@@ -12,7 +12,7 @@ const ok = (c, label, extra = '') => { if (!c) fail++; console.log(`${c ? '✓' 
 const strings = collect();
 // Deliberate tripwire: the counts change only when the copy changes, and every change means new
 // clips to record. If this fails after an intended edit, update the numbers beside this comment.
-const EXPECTED = { total: 700, am: 175, om: 175, ti: 175 };
+const EXPECTED = { total: 644, am: 161, om: 161, ti: 161 };
 ok(strings.length === EXPECTED.total, 'every spoken string is derived from the schema',
    `${strings.length} strings — ${strings.length === EXPECTED.total ? 'unchanged' : 'copy changed: update EXPECTED and re-run npm run audio'}`);
 ok(strings.filter((s) => s.lang === 'am').length === EXPECTED.am, `the Amharic set is ${EXPECTED.am} clips`,

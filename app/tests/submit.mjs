@@ -31,7 +31,7 @@ const c = await b.newContext({ viewport: { width: 390, height: 844 } });
 const p = await c.newPage();
 /* ---------- 1. with the API: a real reference comes back ---------- */
 await goto(p, PAGE_URL);
-await answer(p, { assistance: 'call-me' });
+await answer(p);
 await submitFromReview(p);
 await p.waitForTimeout(1200);
 

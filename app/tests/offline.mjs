@@ -116,9 +116,6 @@ await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await wait(150);
 await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await wait(150);
-await page.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
-await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
-await wait(150);
 await page.locator('input[type="text"]').first().fill('ሳራ በቀለ ታደሰ');
 await wait(700);                                  // let the 500 ms autosave land
 
@@ -150,7 +147,7 @@ await ctx.setOffline(false);
  * Nothing may be lost, and the page must not claim a sign-up that did not happen. */
 await goto(page, SITE);
 await page.waitForFunction(() => Boolean(navigator.serviceWorker?.controller), null, { timeout: 15_000 });
-await answer(page, { assistance: 'call-me' });
+await answer(page);
 await ctx.setOffline(true);
 await submitFromReview(page);
 await wait(900);
@@ -216,7 +213,7 @@ const flushed = await page.evaluate(async () => {
     body: JSON.stringify({
       formId: 'savanna-onboard',
       clientRef: raw.ref,
-      answers: { language: 'am', assistance: 'call-me', name: 'ሳራ በቀለ ታደሰ', phone: '+251912345678' },
+      answers: { language: 'am', name: 'ሳራ በቀለ ታደሰ', phone: '+251912345678' },
     }),
   });
   return { status: res.status, body: await res.json() };

@@ -34,7 +34,7 @@ for (let i = 0; i < 60; i++) {
 const VALID = {
   formId: 'savanna-onboard-v1',
   // the answer keys are step ids, exactly as the form sends them (`submit` holds the consent box)
-  answers: { language: 'am', assistance: 'no-thanks', name: 'ሳራ ተስፋዬ', phone: '0912345678',
+  answers: { language: 'am', name: 'ሳራ ተስፋዬ', phone: '0912345678',
              'id-route': 'fayda', 'id-value': '3910028475', submit: ['consent-programme'] },
 };
 

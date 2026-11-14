@@ -119,9 +119,6 @@ await page.getByRole('radio', { name: /አማርኛ/ }).check();
 await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await page.waitForTimeout(150);
 await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
-await page.waitForTimeout(150);
-await page.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
-await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await page.waitForTimeout(200);
 
 const before = engineCalls;

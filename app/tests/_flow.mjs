@@ -15,9 +15,8 @@ export const LABELS = {
   agree: /ተስማምቻለሁ|agree|walii nan gala|ተሰማሚዐ ኣለኹ/i,
   callMe: /አዎ፣ ይደውሉልኝ|Yes, call me|Eeyyee, naaf bilbilaa|እወ፣ ደውሉለይ/,
   noThanks: /አይ፣ ራሴ|No, I will fill it myself|Lakki, anumatu guuta|ኣይፋል፣ ባዕለይ ክመልኦ እየ/,
-  noDocument: /ምንም መታወቂያ|do not have any|tokkollee hin qabu|ዝኾነ መለለዪ የብለይን/,
-  helpChoosing: /የትኛውን እንድመርጥ|need help choosing|gargaarsi na barbaachisa|ምምራጽ ሓገዝ የድልየኒ/,
   fayda: /የፋይዳ|Fayda|Faayidaa|ፋይዳ/,
+  kebele: /ቀበሌ|Kebele|Gandaa/,
 };
 
 export const goto = async (page, url) => {
@@ -32,10 +31,10 @@ export const next = (page) => page.getByRole('button', { name: LABELS.next }).cl
 export async function answer(page, {
   lang = 'am',
   prefs = [],              // accessibility-prefs values: read-aloud | large-text | simple-words
-  assistance = 'no-thanks',
+  assistance = 'no-thanks', // kept for backwards-compat with callers passing it
   name = 'ሳራ በቀለ ታደሰ',
   phone = '0912345678',
-  route = 'fayda',         // fayda | refugee | passport | other | no-document | help-choosing
+  route = 'fayda',         // fayda | refugee | kebele | other
   idValue = '3910028475',
 } = {}) {
   // 1. language
@@ -53,39 +52,30 @@ export async function answer(page, {
   await next(page);
   await page.waitForTimeout(120);
 
-  // 3. assistance — always answered explicitly
-  await page.getByRole('radio', { name: assistance === 'call-me' ? LABELS.callMe : LABELS.noThanks }).check();
-  await next(page);
-  await page.waitForTimeout(120);
-
-  // 4. name
+  // 3. name
   await page.locator('input[type="text"]').first().fill(name);
   await next(page);
   await page.waitForTimeout(120);
 
-  // 5. phone
+  // 4. phone
   await page.locator('input[type="tel"]').fill(phone);
   await next(page);
   await page.waitForTimeout(120);
 
-  // 6. identity route
+  // 5. identity route
   const routeLabel = {
     fayda: LABELS.fayda,
     refugee: /ስደተኛ|Refugee/,
-    passport: /ፓስፖርት|Passport/,
+    kebele: LABELS.kebele,
     other: /ሌላ ሰነድ|Another document/,
-    'no-document': LABELS.noDocument,
-    'help-choosing': LABELS.helpChoosing,
-  }[route];
+  }[route] || LABELS.fayda;
   await page.getByRole('radio', { name: routeLabel }).check();
   await next(page);
   await page.waitForTimeout(150);
 
-  // 7. conditional: ID number, or the referral consent
-  if (route === 'fayda' || route === 'refugee' || route === 'passport' || route === 'other') {
+  // 6. conditional: Fayda ID number, or document upload (optional)
+  if (route === 'fayda') {
     if (idValue !== null) await page.locator('input[type="text"]').first().fill(idValue);
-  } else {
-    await page.getByRole('checkbox', { name: LABELS.agree }).first().check();
   }
   await next(page);
   await page.waitForTimeout(150);
