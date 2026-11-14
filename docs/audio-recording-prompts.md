@@ -13,17 +13,15 @@ onboard_language.am.mp3 : "ቋንቋ ይምረጡ አስቀድመው ቋንቋ�
 
 accessibility-prefs.am.mp3 : "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ? ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ። ጥያቄዎች እንዲነበቡልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
-assistance.am.mp3 : "አንድ ሰው እንዲያግዝዎ ይፈልጋሉ? የሚፈልጉት ከሆነ አንድ ሰው ይደውልልዎታል። ስምዎንና ስልክ ቁጥርዎን ብቻ ለአጋር ድርጅት እንሰጣለን። ስለ ጤናዎ ምንም አንሰጥም። አዎ፣ ይደውሉልኝ አይ፣ ራሴ እሞላለሁ"
-
 name.am.mp3 : "ስምዎን ይጻፉ ይህ ስም በትምህርት መዝገብዎ ላይ ይታያል። ስም፣ የአባት ስም፣ የአያት ስም"
 
 phone.am.mp3 : "ስልክ ቁጥርዎን ይጻፉ የምዝገባ መልእክት በዚህ ስልክ እንልካለን። ምሳሌ፦ 0912 345 678"
 
-id-route.am.mp3 : "ማንነትዎን እንዴት እናውቃለን? መታወቂያ ባይኖርዎትም መመዝገብ ይችላሉ። መታወቂያ ከሌለዎ ምንም ችግር የለም። የትኛውን መምረጥ እንደሚፈልጉ ካላወቁ እኛ እንረዳዎታለን። የፋይዳ ቁጥር የስደተኛ መታወቂያ ፓስፖርት ሌላ ሰነድ ምንም መታወቂያ የለኝም የትኛውን እንድመርጥ እርዳታ እፈልጋለሁ"
+id-route.am.mp3 : "ማንነትዎን እንዴት እናውቃለን? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ የሚመርጡትን ሰነድ ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ"
 
-id-value.am.mp3 : "የመታወቂያ ቁጥር ይህ ቁጥር ከሰነድዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁ ይህን ይዝለሉ። ባይሞሉም ይቻላል"
+id-value.am.mp3 : "የፋይዳ ቁጥር ይህ ቁጥር ከፋይዳ መታወቂያዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁ ይህን ይዝለሉ። ባይሞሉም ይቻላል"
 
-referral.am.mp3 : "ወደ አጋር መመራት አጋር ድርጅት ይደውልልዎታል። ስምዎንና ስልክ ቁጥርዎን ብቻ እናጋራለን። ስለ ጤናዎ ምንም አንሰጥም። በስልክ ላይ \"አልፈልግም\" ብለው መሰረዝ ይችላሉ። ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።"
+id-document-image.am.mp3 : "የመታወቂያዎን ፎቶ ያንሱ ወይም ይስቀሉ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ፎቶው በስልክዎ ላይ በራስ-ሰር ተጨምቆ ይቀመጣል። ካልፈለጉ መዝለል ይችላሉ። ባይሞሉም ይቻላል"
 
 onboard_submit.am.mp3 : "ማረጋገጫ መረጃዬ ለትምህርት ፕሮግራሙ እንዲውል ተስማምቻለሁ።"
 
@@ -33,17 +31,15 @@ onboard_language.am.simple.mp3 : "ቋንቋ ያለምንም ችኮላ ቀስ ብ
 
 accessibility-prefs.am.simple.mp3 : "ቅጹ እንዲመችዎ ይምረጡ ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል። የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ። ጥያቄዎቹን ያንብብልኝ ትልቅ ጽሑፍ ቀላል ቃላት"
 
-assistance.am.simple.mp3 : "እርዳታ በስልክ ስለ ጤናዎ ምንም አንሰጥም። አንድ ረዳት ይደውልልዎታል። ስምዎንና ስልክዎን ብቻ ነው የምንሰጠው። አዎ፣ ይደውሉልኝ በራሴ እሞላለሁ"
-
 name.am.simple.mp3 : "ስም ይህ ስም በትምህርት መዝገብዎ ላይ ይታያል። ስም፣ የአባት ስም፣ የአያት ስም"
 
 phone.am.simple.mp3 : "ስልክ የምዝገባ መልእክት በዚህ ስልክ እንልካለን። ምሳሌ፦ 0912 345 678"
 
-id-route.am.simple.mp3 : "መታወቂያ አለዎት? መታወቂያ ባይኖርዎትም መመዝገብ ይችላሉ። መታወቂያ ባይኖርዎትም ችግር የለም። እንረዳዎታለን። የፋይዳ ቁጥር የስደተኛ መታወቂያ ፓስፖርት ሌላ ሰነድ መታወቂያ የለኝም እርዳታ እፈልጋለሁ"
+!need no id first id-route.am.simple.mp3 : "መታወቂያ አለዎት? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ አንዱን ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ"
 
-id-value.am.simple.mp3 : "ቁጥር ይህ ቁጥር ከሰነድዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁት መዝለል ይችላሉ። ባይሞሉም ይቻላል"
+id-value.am.simple.mp3 : "የፋይዳ ቁጥር ይህ ቁጥር ከፋይዳ መታወቂያዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁት መዝለል ይችላሉ። ባይሞሉም ይቻላል"
 
-referral.am.simple.mp3 : "በስልክ እርዳታ ማግኘት ምዝገባዎን እንዲጨርሱ አንድ ረዳት ይደውልልዎታል። ስምዎንና ስልክዎን ብቻ ነው የምንሰጠው። ሀሳብዎን ከቀየሩ ስልኩ ሲደወል \"አልፈልግም\" ማለት ይችላሉ። አዎ፣ ስሜና ስልኬ ይሰጥ"
+id-document-image.am.simple.mp3 : "የመታወቂያ ፎቶ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ፎቶ ካላችሁ ስቀሉ፣ ወይም ዝለሉት። ባይሞሉም ይቻላል"
 
 onboard_submit.am.simple.mp3 : "ለመጨረስ ዝግጁ ነዎት? መረጃዬ ለትምህርቴ እንዲውል ተስማምቻለሁ።"
 
@@ -53,17 +49,15 @@ onboard_language.om.mp3 : "Afaan keessan filadhaa Waa'ee keessan gaaffilee muraa
 
 accessibility-prefs.om.mp3 : "Waraqaan kun akkamitti akka isiniif hojjetu barbaaddu? Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Wanti filattan waraqaa kana yeruma sana jijjiira. Boodas jijjiiruu dandeessu. Gaaffileen akka naaf dubbifaman Barreeffama guddaa Jechoota salphaa"
 
-assistance.om.mp3 : "Namni akka isin gargaaru barbaadduu? Yoo barbaaddan, namni tokko bilbilaan isiniif bilbila. Maqaa fi lakkoofsa bilbilaa keessan qofa dhaabbata michuu ta'eef kennina. Waa'ee fayyaa keessanii homaa hin qoodnu. Eeyyee, naaf bilbilaa Lakki, anumatu guuta"
-
 name.om.mp3 : "Maqaa keessan barreessaa Maqaan kun galmee barumsaa keessan irratti mul'ata. Maqaa keessan, maqaa abbaa, maqaa akaakayyuu"
 
 phone.om.mp3 : "Lakkoofsa bilbilaa keessan barreessaa Ergaa galmee keessanii bilbila kanatti ergina. Fakkeenyaaf: 0912 345 678"
 
-id-route.om.mp3 : "Eenyummaa keessan akkamitti mirkaneessina? Waraqaa eenyummaa malees galmaa'uu dandeessu. Sanada yoo hin qabaanne rakkoo hin qabu. Isa kam akka filattan yoo hin beekne, isin gargaarra. Lakkoofsa Faayidaa Waraqaa baqattummaa Paaspoortii Sanada biraa Kanneen keessaa tokkollee hin qabu Filachuuf gargaarsi na barbaachisa"
+id-route.om.mp3 : "Eenyummaa keessan akkamitti mirkaneessina? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf sanada filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa"
 
-id-value.om.mp3 : "Lakkoofsa waraqaa eenyummaa Lakkoofsa kanaan sanada keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne, bira darbaa. Dirqama miti"
+id-value.om.mp3 : "Lakkoofsa Faayidaa Lakkoofsa kanaan sanada Faayidaa keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne, bira darbaa. Dirqama miti"
 
-referral.om.mp3 : "Gara dhaabbata michuutti qajeelfamuu Dhaabbanni michuu ta'e isiniif bilbila. Maqaa fi lakkoofsa bilbilaa keessan qofa qoodna. Waa'ee fayyaa keessanii homaa hin kenninu. Bilbilaarratti 'hin barbaadu' jechuun haquu dandeessu. Maqaan koo fi bilbilli koo dhaabbata michuutti akka kennamu walii nan gala."
+id-document-image.om.mp3 : "Suuraa waraqaa eenyummaa keessanii kaasaa ykn fe'aa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraan bilbila keessanirratti ofumaan salphata. Yoo hin barbaanne bira darbuu dandeessu. Dirqama miti"
 
 onboard_submit.om.mp3 : "Mirkaneessa Odeeffannoon koo sagantaa barumsaatiif akka oolu walii nan gala."
 
@@ -73,17 +67,15 @@ onboard_language.om.simple.mp3 : "Afaan filadhaa Suuta jedhaa guutaa. Jarjarri h
 
 accessibility-prefs.om.simple.mp3 : "Itti fayyadama salphisaa Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara. Gargaarsa isin barbaachisu filadhaa. Boodas jijjiiruu dandeessu. Naaf dubbisi Barreeffama guddaa Jechoota salphaa"
 
-assistance.om.simple.mp3 : "Bilbilaan gargaarsa Waa'ee fayyaa keessanii homaa hin qoodnu. Gargaaraan tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Eeyyee, naaf bilbilaa Ofuman guuta"
-
 name.om.simple.mp3 : "Maqaa Maqaan kun galmee barumsaa keessan irratti mul'ata. Maqaa keessan, maqaa abbaa, maqaa akaakayyuu"
 
 phone.om.simple.mp3 : "Bilbila Ergaa galmee keessanii bilbila kanatti ergina. Fakkeenyaaf: 0912 345 678"
 
-id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Waraqaa eenyummaa malees galmaa'uu dandeessu. Waraqaa eenyummaa hin qabdanii? Rakkoo hin qabu. Galmaa'uuf isin gargaarra. Lakkoofsa Faayidaa Waraqaa baqattummaa Paaspoortii Sanada biraa Sanada hin qabu Gargaarsi na barbaachisa"
+id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf tokko filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa"
 
-id-value.om.simple.mp3 : "Lakkoofsa Lakkoofsa kanaan sanada keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne bira darbuu dandeessu. Dirqama miti"
+id-value.om.simple.mp3 : "Lakkoofsa Faayidaa Lakkoofsa kanaan sanada Faayidaa keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne bira darbuu dandeessu. Dirqama miti"
 
-referral.om.simple.mp3 : "Bilbilaan gargaarsa argadhaa Galmee xumuruuf gargaaraan tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaa fi bilbilli koo haa kennamu"
+id-document-image.om.simple.mp3 : "Suuraa waraqaa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa yoo qabaattan fe'aa, ykn bira darbaa. Dirqama miti"
 
 onboard_submit.om.simple.mp3 : "Xumuruuf qophiidhaa? Odeeffannoon koo haa galu"
 
@@ -93,17 +85,15 @@ onboard_language.ti.mp3 : "ቋንቋኹም ምረጹ ቅድሚ ምጅማርኩ�
 
 accessibility-prefs.ti.mp3 : "እዚ ቅጥዒ ብኸመይ ክሰርሓልኩም ትመርጹ? እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዝመረጽክምዎ ነገር ነዚ ቅጥዒ ብኡብኡ ይቕይሮ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ሕቶታት ክንበቡለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
 
-assistance.ti.mp3 : "ሓጋዚ ሰብ ክድውለልኩም ትደልዩዶ? ክትደልዩ እንተኾይንኩም ሓደ ሰብ ክድውለልኩም እዩ። ስምኩምን ናይ ስልኪ ቍጽርኹምን ጥራይ ንመሻርኽቲ ትካል ንህብ። ብዛዕባ ጥዕናኹም ዋላ ሓንቲ ኣይንህብን። እወ፣ ደውሉለይ ኣይፋል፣ ባዕለይ ክመልኦ እየ"
-
 name.ti.mp3 : "ስምኩም ጽሓፉ እዚ ስም ኣብ ናይ ትምህርቲ መዝገብኩም ክርአ እዩ። ስምኩም፣ ስም ኣቦኹም፣ ስም ኣቦሓጎኹም።"
 
 phone.ti.mp3 : "ናይ ስልኪ ቍጽርኹም ጽሓፉ ናይ ምዝገባ መልእኽቲ በዚ ስልኪ ክንሰድድ ኢና። ንኣብነት፦ 0912 345 678"
 
-id-route.ti.mp3 : "መንነትኩም ብኸመይ ነረጋግጽ? መታወቒ እንተዘይብልኩም'ውን ክትምዝገቡ ትኽእሉ ኢኹም። መታወቒ ሰነድ እንተዘይብልኩም ዋላ ሓንቲ ጸገም የለን። ኣየናይ ክትመርጹ ከም ዘለኩም እንተዘይፈሊጥኩም ድማ ክንሕግዘኩም ኢና። ናይ ፋይዳ ቍጽሪ ናይ ስደተኛ መታወቒ ፓስፖርት ካልእ ሰነድ ካብዚኣቶም ዋላ ሓደ የብለይን ንምምራጽ ሓገዝ የድልየኒ"
+id-route.ti.mp3 : "መንነትኩም ብኸመይ ነረጋግጽ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሰነድ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ"
 
-id-value.ti.mp3 : "ናይ መታወቒ ቍጽሪ እዚ ቍጽሪ ምስ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ሕለፍዎ። ግዴታ ኣይኮነን"
+id-value.ti.mp3 : "ናይ ፋይዳ ቍጽሪ እዚ ቍጽሪ ምስ ናይ ፋይዳ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ሕለፍዎ። ግዴታ ኣይኮነን"
 
-referral.ti.mp3 : "ናብ መሻርኽቲ ትካል ምምራሕ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ብዛዕባ ጥዕናኹም ዋላ ሓደ ኣይንህብን። ኣብ ስልኪ \"ኣይደልን\" ኢልኩም ክትሰርዙ ትኽእሉ ኢኹም። ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
+id-document-image.ti.mp3 : "ናይ መታወቒኹም ስእሊ ኣልዕሉ ወይ ስደዱ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። እቲ ስእሊ ኣብ ስልክኹም ብባዕሉ ይቕነስ። እንተዘይደሊኹም ክትሓልፍዎ ትኽእሉ ኢኹም። ግዴታ ኣይኮነን"
 
 onboard_submit.ti.mp3 : "መረጋገጺ ሓበሬታይ ነቲ ናይ ትምህርቲ ፕሮግራም ክውዕል ተሰማሚዐ ኣለኹ።"
 
@@ -113,17 +103,15 @@ onboard_language.ti.simple.mp3 : "ቋንቋ ብዘይ ህጹጽነት ቀስ ኢ
 
 accessibility-prefs.ti.simple.mp3 : "ቅጥዒ ንምቕላል እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ። ዘድልየኩም ሓገዝ ምረጹ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም። ኣንብበለይ ዓቢ ጽሑፍ ቀለልቲ ቃላት"
 
-assistance.ti.simple.mp3 : "ናይ ስልኪ ሓገዝ ብዛዕባ ጥዕናኹም ዋላ ሓደ ኣይንህብን። ሓደ ሓጋዚ ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ኢና እንህብ። እወ፣ ደውሉለይ ባዕለይ ይምልኦ"
-
 name.ti.simple.mp3 : "ስም እዚ ስም ኣብ ናይ ትምህርቲ መዝገብኩም ክርአ እዩ። ስምኩም፣ ስም ኣቦኹም፣ ስም ኣቦሓጎኹም።"
 
 phone.ti.simple.mp3 : "ናይ ርክብ ስልኪ ናይ ምዝገባ መልእኽቲ በዚ ስልኪ ክንሰድድ ኢና። ንኣብነት፦ 0912 345 678"
 
-id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መታወቒ እንተዘይብልኩም'ውን ክትምዝገቡ ትኽእሉ ኢኹም። መታወቒ እንተዘይብልኩም'ውን ጸገም የለን። ክንሕግዘኩም ኢና። ናይ ፋይዳ ቍጽሪ ናይ ስደተኛ መታወቒ ፓስፖርት ካልእ ሰነድ መታወቒ የብለይን ሓገዝ የድልየኒ"
+id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሓደ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ"
 
-id-value.ti.simple.mp3 : "ቍጽሪ እዚ ቍጽሪ ምስ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ክትሓልፍዎ ትኽእሉ ኢኹም። ግዴታ ኣይኮነን"
+id-value.ti.simple.mp3 : "ናይ ፋይዳ ቍጽሪ እዚ ቍጽሪ ምስ ናይ ፋይዳ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ክትሓልፍዎ ትኽእሉ ኢኹም። ግዴታ ኣይኮነን"
 
-referral.ti.simple.mp3 : "ብሓገዝቲ ምምራሕ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። እወ፣ ስመይን ስልከይን ይወሃብ"
+id-document-image.ti.simple.mp3 : "ናይ መታወቒ ስእሊ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ስእሊ እንተለኩም ስደዱ፣ ወይ ሕለፍዎ። ግዴታ ኣይኮነን"
 
 onboard_submit.ti.simple.mp3 : "ክትውድኡ ድሉዋት ዲኹም? ሓበሬታይ ንትምህርተይ ክውዕል ተሰማሚዐ ኣለኹ።"
 

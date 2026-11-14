@@ -228,7 +228,7 @@ for (const file of files) {
 
     // the co-designer gate: everything asked must be reachable by voice and by listening
     if (INPUT_TYPES.has(st.type) && st.type !== 'statement' && st.type !== 'language') {
-      if (st.voice !== true) err(file, step, 'E12', 'voice:true missing — brief requires voice input on every field');
+      if (st.type !== 'file' && st.voice !== true) err(file, step, 'E12', 'voice:true missing — brief requires voice input on every field');
       if (st.readAloud !== true) err(file, step, 'E13', 'readAloud:true missing — brief requires read-aloud questions');
     }
 

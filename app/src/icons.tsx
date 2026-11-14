@@ -32,6 +32,7 @@ const P: Record<string, ReactNode> = {
   // A speech bubble with two lines of writing: the question mark for "which language", without
   // the "which country" reading a flag carries.
   chat: <><path d="M20.5 12.1c0 3.5-3.8 6.3-8.5 6.3-.9 0-1.8-.1-2.6-.3L4.5 20.2l1.2-3.2c-1.3-1.2-2.2-2.9-2.2-4.9 0-3.5 3.8-6.3 8.5-6.3s8.5 2.8 8.5 6.3Z" /><path d="M8.6 10.6h6.8M8.6 13.8h4.4" /></>,
+  camera: <><path d="M4 8h3l2-3h6l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" /><circle cx="12" cy="14" r="3.5" /></>,
   alert: <><path d="M12 4 2.8 20h18.4Z" /><path d="M12 10v4.5" /><circle cx="12" cy="17.4" r=".9" fill="currentColor" stroke="none" /></>,
 };
 
