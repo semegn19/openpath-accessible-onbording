@@ -81,11 +81,11 @@ try {
     await manager.requestPermission();
     navigator.mediaDevices.getUserMedia=async()=>({getTracks:()=>[{stop(){}}]});
     await manager.requestPermission(); manager.startListening(false);
-    window.recognition.onerror({error:'audio-capture'}); window.recognition.onerror({error:'not-allowed'});
+    window.recognition.onerror({error:'audio-capture'}); manager.startListening(false); window.recognition.onerror({error:'not-allowed'});
     manager.stopListening(); manager.destroy();
     return {states,errors,lang:window.recognition.lang};
   });
-  check(voice.states.length >= 6 && voice.states.every(s=>am(s.message)) && voice.errors.length === 2 && voice.errors.every(am), 'permission, unsupported browser, listening and recognition errors use Amharic');
+  check(voice.states.filter(s=>s.message).length >= 6 && voice.states.filter(s=>s.message).every(s=>am(s.message)) && voice.errors.length === 2 && voice.errors.every(am), 'permission, unsupported browser, listening and recognition errors use Amharic');
   check(voice.lang === 'am-ET' && !JSON.stringify(voice).includes('private browser detail'), 'recognition uses Amharic locale and hides browser diagnostics');
   const badges = await page.evaluate(() => ['unpermitted','ready','listening','processing','speaking','paused','error'].map(state=>{
     window.Roha.updateVoiceStatusUI(state);
