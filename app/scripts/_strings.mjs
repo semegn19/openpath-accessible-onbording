@@ -7,6 +7,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const FORMS = ['savanna-onboard-v1', 'savanna-job-v1', 'employer-accommodations-v1'];
 export const LANGS = ['am', 'en'];
@@ -25,7 +26,7 @@ export const clipId = (lang, text) => hash(`${lang}|${text.trim()}`);
 
 /** Every static string that could be spoken: { form, where, lang, text, id } */
 export function collect(schemaDir) {
-  const dir = schemaDir ?? new URL('../../schema/', import.meta.url).pathname;
+  const dir = schemaDir ?? fileURLToPath(new URL('../../schema/', import.meta.url));
   const out = [];
   const add = (form, where, obj) => {
     if (!obj || typeof obj !== 'object') return;

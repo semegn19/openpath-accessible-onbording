@@ -15,8 +15,9 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SRC = new URL('../src/', import.meta.url).pathname;
+const SRC = fileURLToPath(new URL('../src/', import.meta.url));
 const FILES = readdirSync(SRC).filter((f) => /\.(ts|tsx)$/.test(f) && f !== 'i18n.ts');
 /** Sentences that live in TSX and have no schema key yet: offline, saved, language changed, the
  *  "this browser cannot read Amharic" note, the file-demo notice. Wave 1 moves them into the schema

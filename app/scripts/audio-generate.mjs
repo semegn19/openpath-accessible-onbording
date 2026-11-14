@@ -21,6 +21,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { collect } from './_strings.mjs';
 
 const args = process.argv.slice(2);
@@ -29,7 +30,7 @@ const val = (f, d) => { const a = args.find((x) => x.startsWith(`${f}=`)); retur
 
 const provider = val('--provider', 'none');
 const WRITE = has('--write');
-const OUT = val('--out', new URL('../public/audio/', import.meta.url).pathname);
+const OUT = val('--out', fileURLToPath(new URL('../public/audio/', import.meta.url)));
 const LIMIT = Number(val('--limit-chars', '0')) || Infinity;
 const LANGS_ONLY = val('--lang', null);
 const KEY = process.env.TTS_API_KEY ?? '';

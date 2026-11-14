@@ -2,7 +2,8 @@
 // schema/validate.mjs — no dependencies. `node schema/validate.mjs schema/*.json`
 // Exit 0 clean, 1 on any error. Errors are printed as file:step: CODE message.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, basename, join } from 'node:path';
 
 const INPUT_TYPES = new Set(['text', 'tel', 'email', 'number', 'textarea', 'select', 'radio', 'checkbox', 'file', 'date-ec-gc', 'language', 'statement']);
 const STEP_TYPES = new Set([...INPUT_TYPES, 'review', 'submit']);
@@ -70,7 +71,18 @@ function validateRuntimeCopy(file, doc) {
   console.log(`${file.padEnd(42)} ${Object.keys(strings).length} runtime string(s)`);
 }
 
-for (const file of process.argv.slice(2)) {
+const files = process.argv.slice(2).flatMap((p) => {
+  if (!p.includes('*') && !p.includes('?')) return [p];
+  const d = dirname(p);
+  const re = new RegExp('^' + basename(p).replace(/\./g, '\\.').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+  try {
+    return readdirSync(d).filter((f) => re.test(f)).map((f) => join(d, f));
+  } catch {
+    return [p];
+  }
+});
+
+for (const file of files) {
   let raw;
   try {
     raw = readFileSync(file, 'utf8');

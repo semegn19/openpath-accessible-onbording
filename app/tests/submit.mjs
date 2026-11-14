@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // NB: do not name this URL — it shadows the global URL constructor used below
 const PAGE_URL = process.env.URL || 'http://127.0.0.1:5173/onboard';
@@ -18,7 +19,7 @@ const up = await fetch(`${API}/health`).then((r) => r.ok).catch(() => false);
 if (!up) {
   child = spawn('node', ['../api/server.mjs'], {
     env: { ...process.env, PORT: '8080', DATA_DIR: mkdtempSync(join(tmpdir(), 'openpath-e2e-')),
-           SCHEMA_DIR: new URL('../../schema', import.meta.url).pathname, RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0' },
+           SCHEMA_DIR: fileURLToPath(new URL('../../schema', import.meta.url)), RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0' },
     stdio: 'ignore', detached: false,
   });
   for (let i = 0; i < 50; i++) { if (await fetch(`${API}/health`).then((r) => r.ok).catch(() => false)) break; await new Promise((r) => setTimeout(r, 100)); }

@@ -10,6 +10,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const PORT = 8085;
 const API_PORT = 8091;
@@ -22,7 +23,7 @@ const ok = (c, label, extra = '') => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-if (!existsSync(new URL('../dist/index.html', import.meta.url).pathname)) {
+if (!existsSync(fileURLToPath(new URL('../dist/index.html', import.meta.url)))) {
   console.error('build dist first: npm run build');
   process.exit(1);
 }
@@ -32,7 +33,7 @@ const dataDir = mkdtempSync(join(tmpdir(), 'openpath-offline-'));
 const api = spawn('node', ['../api/server.mjs'], {
   env: {
     ...process.env, PORT: String(API_PORT), DATA_DIR: dataDir,
-    SCHEMA_DIR: new URL('../../schema', import.meta.url).pathname,
+    SCHEMA_DIR: fileURLToPath(new URL('../../schema', import.meta.url)),
     RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0',
   },
   stdio: 'ignore',

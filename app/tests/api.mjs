@@ -3,10 +3,11 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const PORT = 8099;
 const DATA = mkdtempSync(join(tmpdir(), 'openpath-api-'));
-const SCHEMA = new URL('../../schema', import.meta.url).pathname;
+const SCHEMA = fileURLToPath(new URL('../../schema', import.meta.url));
 const B = `http://127.0.0.1:${PORT}/api`;
 
 const srv = spawn('node', ['../api/server.mjs'], {

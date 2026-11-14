@@ -10,8 +10,9 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const DIR = new URL('../../schema/', import.meta.url).pathname;
+const DIR = fileURLToPath(new URL('../../schema/', import.meta.url));
 const FORMS = ['savanna-onboard-v1', 'savanna-job-v1', 'employer-accommodations-v1'];
 /** Forms being brought up to parity on purpose, with the reason. Remove an entry by fixing it.
  *  Empty as of 13 Nov: all three forms are measured against the richest one. */

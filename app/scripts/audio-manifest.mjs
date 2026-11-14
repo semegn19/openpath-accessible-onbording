@@ -14,11 +14,12 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { collect } from './_strings.mjs';
 
-const SCHEMA_DIR = new URL('../../schema/', import.meta.url).pathname;
-const AUDIO_DIR = new URL('../public/audio/', import.meta.url).pathname;
-const DOC = new URL('../../docs/audio-recording-list.md', import.meta.url).pathname;
+const SCHEMA_DIR = fileURLToPath(new URL('../../schema/', import.meta.url));
+const AUDIO_DIR = fileURLToPath(new URL('../public/audio/', import.meta.url));
+const DOC = fileURLToPath(new URL('../../docs/audio-recording-list.md', import.meta.url));
 
 /** FNV-1a 32-bit. Identical to clipName() in src/audio.ts — change both or neither. */
 const hash = (s) => {

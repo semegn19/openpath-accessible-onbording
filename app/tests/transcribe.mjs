@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const ASR_PORT = 8093;
 const API_OK = 8094;      // with an engine configured
@@ -32,7 +33,7 @@ const mk = (port, env = {}) => spawn('node', ['../api/server.mjs'], {
   env: {
     ...process.env, PORT: String(port),
     DATA_DIR: mkdtempSync(join(tmpdir(), `openpath-asr-${port}-`)),
-    SCHEMA_DIR: new URL('../../schema', import.meta.url).pathname,
+    SCHEMA_DIR: fileURLToPath(new URL('../../schema', import.meta.url)),
     RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0', ...env,
   },
   stdio: 'ignore',
