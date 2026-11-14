@@ -16,7 +16,7 @@
     "pages": "node tests/pages.mjs",
     "announce": "node tests/announce.mjs",
     "shots": "node tests/shots.mjs",
-    "check": "npm run validate && npm run a11y && npm run pages && npm run api && npm run submit && npm run voice && npm run focus && npm run hosts && npm run build && npm run offline",
+    "check": "npm run validate && npm run a11y && npm run pages && npm run api && npm run submit && npm run voice && npm run errors && npm run parity && npm run copy && npm run transcribe && npm run focus && npm run hosts && npm run build && npm run audio:check && npm run controls && npm run literacy && npm run offline",
     "voice": "node tests/voice.mjs",
     "serve:dist": "node tests/nginx-sim.mjs 8081",
     "csp": "node tests/csp.mjs",
@@ -26,7 +26,18 @@
     "api:dev": "node ../api/server.mjs",
     "focus": "node tests/focus-obscured.mjs",
     "hosts": "node tests/no-third-party.mjs",
-    "offline": "node tests/offline.mjs"
+    "offline": "node tests/offline.mjs",
+    "audio": "node scripts/audio-manifest.mjs",
+    "audio:check": "node tests/audio.mjs",
+    "audio:generate": "node scripts/audio-generate.mjs",
+    "controls": "node tests/controls.mjs",
+    "literacy": "node tests/simple.mjs",
+    "literacy:strict": "node tests/simple.mjs --strict",
+    "errors": "node tests/errors.mjs",
+    "transcribe": "node tests/transcribe.mjs",
+    "parity": "node tests/parity.mjs",
+    "copy": "node tests/copy-source.mjs",
+    "precheck": "npm run sync:schemas"
   },
   "dependencies": {
     "react": "^18.3.1",

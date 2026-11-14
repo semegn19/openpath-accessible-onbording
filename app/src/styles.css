@@ -328,3 +328,10 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
 }
 .op-net svg { flex: none; margin-top: 0.15rem; color: var(--op-primary); }
 .op-net p { margin: 0; }
+
+/* Script-glyph icons on the language choice: a letter, not a picture, so it needs no stroke. */
+.op-svg-letter text {
+  font-size: 19px;
+  font-weight: 700;
+  fill: currentColor;
+}

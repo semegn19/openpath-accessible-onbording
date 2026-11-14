@@ -4,8 +4,9 @@
 import http from 'node:http';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('../dist/', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const port = Number(process.argv[2] ?? 8081);
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.json': 'application/json', '.svg': 'image/svg+xml' };
 

@@ -142,8 +142,8 @@
     },
     {
       "id": "course",
-      "type": "select",
-      "label": {
+      "type": "radio",
+      "legend": {
         "am": "የትኛውን ኮርስ ይመርጣሉ?",
         "en": "Which course do you want?"
       },
@@ -408,7 +408,7 @@
       "en": "That is too long."
     },
     "exclusiveOption": {
-      "am": "ይህን ከመረጡ ሌላ ማምረጥ አያስፈልግም።",
+      "am": "ይህን ከመረጡ ሌላ መምረጥ አያስፈልግም።",
       "en": "If you choose this, you do not need to choose anything else."
     }
   }

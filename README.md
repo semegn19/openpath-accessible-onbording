@@ -237,7 +237,16 @@ Two containers, no database, no secrets, no API keys:
 
 ### Local development
 
+Copy that is not a form question — status, connectivity, the microphone's error messages,
+the date field's labels — lives in `schema/runtime-copy-v1.json`, not in each form's `ui`
+block, because all three forms share it. It is validated for missing languages and for
+mismatched `{placeholders}`, and `tests/copy-source.mjs` fails if a key is used but
+undeclared or declared but unused. Nothing else may hardcode a UI string.
+
 ```bash
+# schema/*.json is the only source of truth. app/src/schemas/ is generated from it by
+# `npm run sync:schemas`, which runs automatically on predev, prebuild and precheck —
+# so a fresh clone has no schema files under app/src/ until you start something.
 cd app && npm ci
 npm run dev          # http://localhost:5173/onboard
 npm run api:dev      # optional, in a second terminal: the API on :8080
@@ -264,7 +273,8 @@ Base: `/api`. Full spec: **`api/openapi.yaml`** (OpenAPI 3.1, clean under `opena
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/health` | liveness, forms, submission count |
+| `GET /api/health` | liveness, forms, submission count, `transcription` + `encryption` state |
+| `POST /api/transcribe` | audio in, text out. Off unless `ASR_URL` is set. **Audio is never stored** |
 | `GET /api/forms` | which forms this deployment accepts |
 | `GET /api/forms/{id}` | the full form definition — the renderer's input |
 | `POST /api/submissions` | validate, store, return an id |
@@ -324,6 +334,12 @@ docs/
   schema-audit-review.md adjudication of the external schema audit
   fix-plan.md            the plan this implementation followed
   parallel-build-plan.md **3-person split**: what the code lacks, file ownership, 2-day calendar
+  low-literacy-copy-spec.md how to write simple words + icons, with the measured state
+  amharic-voice.md       **why read-aloud is pre-recorded**: Android has no Amharic TTS
+  audio-generation.md    generating missing clips once with the adopter's key (no database needed)
+  integration-levels.md  L1 script tag · L2 REST+OpenAPI (done) · L3 standard — status and effort
+  backlog.md             **everything still open**, P0 → P2, with acceptance tests
+  audio-recording-list.md generated: the 158 clips, their file names, their text
 docker-compose.yml      nginx + API
 ```
 
@@ -343,6 +359,10 @@ docker-compose.yml      nginx + API
 | `ALLOWED_ORIGIN` | `*` | CORS. Narrow it if you deploy publicly |
 | `TRUST_PROXY` | `1` | read `X-Forwarded-For` when behind nginx |
 | `DATA_KEY` | *(unset)* | 32-byte base64 key. Encrypts names, phones and ID numbers at rest. **Set this in production.** |
+| `ASR_URL` | *(unset)* | Speech-to-text endpoint (OpenAI-compatible multipart, e.g. `http://127.0.0.1:8080/inference` for `whisper.cpp`). **Unset = browser speech only**, and the UI says so. Browsers have no Amharic model, so this is what makes Amharic voice input work |
+| `ASR_KEY` | *(unset)* | Bearer key for `ASR_URL`, if the engine needs one. Server-side only — never shipped to the browser |
+| `ASR_MODEL` | `whisper-1` | Model name passed to the engine |
+| `MAX_AUDIO_BYTES` | `2097152` | Largest recording accepted by `/api/transcribe` (2 MB ≈ 30 s of Opus) |
 
 ---
 
@@ -359,6 +379,13 @@ npm run check        # everything below, in about 60 s
 | `npm run a11y` | **17 axe audits**, 0 serious/critical · error state · 320 px reflow · no mic on consent · payload privacy · stale-answer check · offline banner · **200 % zoom** |
 | `npm run pages` | `/onboard`, `/job`, `/employer` · deep links · old `#/` links · skip link · back button (21 checks) |
 | `npm run api` | **41 assertions** — contract, server-side validation, privacy stripping, **encryption at rest**, **idempotent retries**, rate limit, 413/415, spec parity |
+| `npm run audio` | generates `public/audio/index.json` + the recording list from the schema; flags orphaned clips |
+| `npm run audio:generate` | dry run by default; `--provider=… --write` creates the missing clips once. Dedupes by content, caps characters, refuses without a key | generates `public/audio/index.json` + the recording list from the schema; flags orphaned clips |
+| `npm run parity` | every form as rich as the richest: complete `ui` strings, a written message for every rule, *why* under every personal field, a simple twin for every long label — and no simple twin that is a word-for-word copy |
+| `npm run errors` | sweeps every `{placeholder}` in every schema error string and renders `minLength` live — no raw braces may reach a person |
+| `npm run transcribe` | `/api/transcribe` against a fake engine: 503 unconfigured, real transcript, 415/413, and the browser falling through to it with no engine of its own |
+| `npm run controls` | **all three forms** walked to the end: read-aloud on every screen, microphone on every answering screen, none on consent |
+| `npm run literacy` | simple-mode walk: renders every screen, flags noun-only headings (`--strict` fails on them) |
 | `npm run offline` | **22 assertions** — Slow 3G budget, a draft that survives a reload with no signal, submit-with-no-connection, reconnect flush, one record on disk |
 | `npm run submit` | form → API → stored record; and the no-API path that refuses to lie |
 | `npm run voice` | spoken Amharic digits → `911234567`; "a new question was added" announcement |

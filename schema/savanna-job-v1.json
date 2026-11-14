@@ -1,8 +1,8 @@
 {
   "id": "savanna-job-v1",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "kind": "job-application",
-  "contentStatus": "reviewed",
+  "contentStatus": "partly-unreviewed",
   "defaultLang": "am",
   "langs": [
     "am",
@@ -10,7 +10,7 @@
   ],
   "calendar": "EC",
   "title": {
-    "am": "ለሥራ ማመልከቻ",
+    "am": "የሥራ ማመልከቻ",
     "en": "Apply for a job"
   },
   "reuses": "savanna-onboard-v1",
@@ -20,6 +20,118 @@
     "allowResume": true
   },
   "steps": [
+    {
+      "id": "language",
+      "type": "language",
+      "legend": {
+        "am": "ቋንቋ ይምረጡ",
+        "en": "Choose your language"
+      },
+      "label": {
+        "am": "ቋንቋ ይምረጡ",
+        "en": "Choose your language"
+      },
+      "simple": {
+        "am": "ቋንቋ",
+        "en": "Pick your language"
+      },
+      "hint": {
+        "am": "ይህን በማንኛውም ጊዜ መቀየር ይችላሉ።",
+        "en": "You can change this at any time."
+      },
+      "icon": "chat",
+      "required": true,
+      "voice": true,
+      "readAloud": false,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "am",
+          "label": {
+            "am": "አማርኛ",
+            "en": "Amharic"
+          },
+          "icon": "letter-am"
+        },
+        {
+          "value": "en",
+          "label": {
+            "am": "English",
+            "en": "English"
+          },
+          "icon": "letter-en"
+        }
+      ]
+    },
+    {
+      "id": "accessibility-prefs",
+      "type": "checkbox",
+      "legend": {
+        "am": "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ?",
+        "en": "How would you like this form to work for you?"
+      },
+      "simple": {
+        "am": "ቅጹ እንዲመችዎ ይምረጡ",
+        "en": "Make this easier to use"
+      },
+      "hint": {
+        "am": "የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ።",
+        "en": "What you choose changes this form straight away. You can change it later."
+      },
+      "why": {
+        "am": "ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል።",
+        "en": "This helps you read the form in the way that suits you."
+      },
+      "icon": "hands",
+      "required": false,
+      "voice": true,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": true,
+      "options": [
+        {
+          "value": "read-aloud",
+          "label": {
+            "am": "ጥያቄዎች እንዲነበቡልኝ",
+            "en": "Read the questions to me"
+          },
+          "icon": "speaker",
+          "applies": "readAloud",
+          "simple": {
+            "am": "ጥያቄዎቹን ያንብብልኝ",
+            "en": "Read questions aloud"
+          }
+        },
+        {
+          "value": "large-text",
+          "label": {
+            "am": "ትልቅ ጽሑፍ",
+            "en": "Bigger text"
+          },
+          "icon": "text-large",
+          "applies": "big"
+        },
+        {
+          "value": "simple-words",
+          "label": {
+            "am": "ቀላል ቃላት",
+            "en": "Simple words"
+          },
+          "icon": "simple",
+          "applies": "simple"
+        }
+      ],
+      "simpleHint": {
+        "am": "የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ።",
+        "en": "Pick any help you need. You can change this later."
+      }
+    },
     {
       "id": "job-name",
       "type": "text",
@@ -44,9 +156,25 @@
       "validation": [
         {
           "rule": "required"
+        },
+        {
+          "rule": "minLength",
+          "value": 2
         }
       ],
-      "autocomplete": "name"
+      "autocomplete": "name",
+      "hint": {
+        "am": "ስም፣ የአባት ስም፣ የአያት ስም",
+        "en": "Name, father's name, grandfather's name"
+      },
+      "simpleHint": {
+        "am": "ሙሉ ስምዎ።",
+        "en": "Your full name."
+      },
+      "why": {
+        "am": "አሠሪው ይህን ስም ያያል።",
+        "en": "The employer will see this name."
+      }
     },
     {
       "id": "job-phone",
@@ -82,7 +210,11 @@
           "rule": "phone-et"
         }
       ],
-      "autocomplete": "tel"
+      "autocomplete": "tel",
+      "why": {
+        "am": "አሠሪው በዚህ ቁጥር ይደውላል።",
+        "en": "The employer will call this number."
+      }
     },
     {
       "id": "years-experience",
@@ -116,26 +248,38 @@
           "rule": "maxValue",
           "value": 60
         }
-      ]
+      ],
+      "simpleHint": {
+        "am": "ቁጥር ብቻ። ካልሠሩ 0።",
+        "en": "A number. 0 if none."
+      },
+      "why": {
+        "am": "ይህ ሥራው ለእርስዎ መስማማቱን ለአሠሪው ያሳያል።",
+        "en": "This shows the employer whether the job fits what you have done."
+      },
+      "simpleWhy": {
+        "am": "የሠሩበትን ጊዜ ለአሠሪው ያሳያል።",
+        "en": "This shows the employer your past work."
+      }
     },
     {
       "id": "experience",
       "type": "textarea",
       "label": {
-        "am": "ያደረጉትን ሥራ ይንገሩን",
+        "am": "ከዚህ በፊት የሠሩትን ሥራ ይንገሩን",
         "en": "Tell us about work you have done"
       },
       "simple": {
-        "am": "ሥራ",
-        "en": "Work"
+        "am": "የቀድሞ ሥራ",
+        "en": "Past work"
       },
       "hint": {
         "am": "አንድ ወይም ሁለት ዓረፍተ ነገር በቂ ነው።",
         "en": "One or two sentences is enough."
       },
       "why": {
-        "am": "ልምድዎ ሥራውን ለማወቅ ይረዳል።",
-        "en": "This helps the employer understand your experience."
+        "am": "ልምድዎን ለአሠሪው ያሳያል።",
+        "en": "It shows your experience to the employer."
       },
       "icon": "work",
       "required": false,
@@ -149,16 +293,20 @@
           "rule": "maxLength",
           "value": 600
         }
-      ]
+      ],
+      "simpleHint": {
+        "am": "በአጭሩ ይጻፉ።",
+        "en": "Write it briefly."
+      },
+      "simpleWhy": {
+        "am": "ምን ማድረግ እንደሚችሉ ያሳያል።",
+        "en": "It shows what you can do."
+      }
     },
     {
       "id": "job-email",
       "type": "email",
       "label": {
-        "am": "ኢሜይል",
-        "en": "Email"
-      },
-      "simple": {
         "am": "ኢሜይል",
         "en": "Email"
       },
@@ -183,7 +331,11 @@
           "rule": "email"
         }
       ],
-      "autocomplete": "email"
+      "autocomplete": "email",
+      "simpleWhy": {
+        "am": "ለመገናኘት።",
+        "en": "So they can reach you."
+      }
     },
     {
       "id": "availability",
@@ -211,7 +363,11 @@
             "am": "ከቤት መሥራት",
             "en": "From home"
           },
-          "icon": "home"
+          "icon": "home",
+          "simple": {
+            "am": "ከቤት",
+            "en": "At home"
+          }
         },
         {
           "value": "flexible",
@@ -219,7 +375,11 @@
             "am": "ተለዋዋጭ ሰዓት",
             "en": "Flexible hours"
           },
-          "icon": "clock"
+          "icon": "clock",
+          "simple": {
+            "am": "በሚመች ሰዓት",
+            "en": "Hours that suit you"
+          }
         },
         {
           "value": "onsite",
@@ -227,9 +387,29 @@
             "am": "በቢሮ መሥራት",
             "en": "At the office"
           },
-          "icon": "building"
+          "icon": "building",
+          "simple": {
+            "am": "በቢሮ",
+            "en": "Office"
+          }
         }
-      ]
+      ],
+      "hint": {
+        "am": "ለእርስዎ የሚስማማውን ይምረጡ። ከአንድ በላይ መምረጥ ይችላሉ።",
+        "en": "Choose what suits you. You can pick more than one."
+      },
+      "simpleHint": {
+        "am": "የሚመችዎን ይምረጡ።",
+        "en": "Pick what suits you."
+      },
+      "why": {
+        "am": "አሠሪው የሥራ ሰዓቱን በዚህ ያዘጋጃል።",
+        "en": "The employer plans the shifts with this."
+      },
+      "simpleWhy": {
+        "am": "አሠሪው የሚመችዎትን ሰዓት እንዲያውቅ ይረዳል።",
+        "en": "Helps the employer know what hours suit you."
+      }
     },
     {
       "id": "job-support",
@@ -243,12 +423,12 @@
         "en": "Help"
       },
       "hint": {
-        "am": "የመረጡት ነገር ለቀጣሪው ይታያል። ስለ ጤናዎ ምንም አንሰጥም።",
+        "am": "የመረጡት ነገር ለአሠሪው ይታያል። ስለ ጤናዎ ምንም አንሰጥም።",
         "en": "What you choose is shown to the employer. We share nothing about your health."
       },
       "why": {
-        "am": "ይህ መረጃ ለእርስዎና ለማህበረሰቡ ቡድን ብቻ ነው።",
-        "en": "Only you and the programme team see this."
+        "am": "አሠሪው የሚያስፈልግዎትን እንዲያዘጋጅ ይረዳዋል።",
+        "en": "So the employer can prepare what you need."
       },
       "icon": "help",
       "required": false,
@@ -278,7 +458,11 @@
             "am": "የምልክት ቋንቋ አስተርጓሚ",
             "en": "Sign language interpreter"
           },
-          "icon": "hands"
+          "icon": "hands",
+          "simple": {
+            "am": "አስተርጓሚ",
+            "en": "An interpreter"
+          }
         },
         {
           "value": "extra-time",
@@ -303,7 +487,11 @@
             "en": "I prefer not to say"
           },
           "icon": "none",
-          "exclusive": true
+          "exclusive": true,
+          "simple": {
+            "am": "መናገር አልፈልግም",
+            "en": "Prefer not to say"
+          }
         }
       ],
       "sharing": {
@@ -313,6 +501,14 @@
         ],
         "purpose": "interview-accommodation",
         "consentRequired": false
+      },
+      "simpleHint": {
+        "am": "አሠሪው የመረጡትን ያያል። ስለ ጤናዎ ምንም አይታይም።",
+        "en": "The employer sees what you pick. Nothing about your health."
+      },
+      "simpleWhy": {
+        "am": "ለቃለ መጠይቁ እንዲረዱዎት።",
+        "en": "So they can help you at the interview."
       }
     },
     {
@@ -322,7 +518,11 @@
         "am": "መረጃዎን ይመልከቱ",
         "en": "Check your information"
       },
-      "icon": "check"
+      "icon": "check",
+      "hint": {
+        "am": "የፈለጉትን ማስተካከል ይችላሉ።",
+        "en": "You can change anything here."
+      }
     },
     {
       "id": "submit",
@@ -348,13 +548,21 @@
         {
           "value": "consent-employer",
           "label": {
-            "am": "ስሜንና ስልክ ቁጥሬን ለአሠሪው እንዲሰጥ ተስማምቻለሁ።",
-            "en": "I agree to share my name and phone number with the employer."
+            "am": "ስሜን፣ ስልክ ቁጥሬን፣ ኢሜይል አድራሻዬን፣ የሥራ ልምዴን፣ የሥራ ሰዓቴንና የቃለ መጠይቅ ድጋፍ ፍላጎቴን ለአሠሪው እንዲሰጥ ተስማምቻለሁ።",
+            "en": "I agree to share my name, phone, email, work history, working hours and interview support with the employer."
           },
-          "required": true
+          "required": true,
+          "simple": {
+            "am": "እነዚህን ለአሠሪው እንዲሰጥ ተስማምቻለሁ፦ ስሜ፣ ስልኬ፣ ኢሜይሌ፣ የቀድሞ ሥራዬ፣ ሰዓቴና የቃለ መጠይቅ እርዳታ።",
+            "en": "I agree to share these with the employer: name, phone, email, past work, hours, interview help."
+          }
         }
       ],
-      "readAloud": true
+      "readAloud": true,
+      "simple": {
+        "am": "ለመላክ ዝግጁ ነዎት?",
+        "en": "Ready to send?"
+      }
     }
   ],
   "errors": {
@@ -371,7 +579,7 @@
       "en": "That is too long."
     },
     "exclusiveOption": {
-      "am": "ይህን ከመረጡ ሌላ ማምረጥ አያስፈልግም።",
+      "am": "ይህን ከመረጡ ሌላ መምረጥ አያስፈልግም።",
       "en": "If you choose this, you do not need to choose anything else."
     },
     "minValue": {
@@ -385,16 +593,80 @@
     "email": {
       "am": "ኢሜይሉ ትክክል አይመስልም።",
       "en": "That email does not look right."
+    },
+    "minLength": {
+      "am": "ቢያንስ {n} ፊደሎች ያስፈልጋሉ።",
+      "en": "Please write at least {n} letters."
     }
   },
   "contentReview": {
-    "am": "በአማርኛ ተናጋሪ ተረጋግጧል",
-    "en": "Reviewed by a native Amharic speaker, 13 Nov 2026"
+    "am": "የመጀመሪያዎቹ መስመሮች በአማርኛ ተናጋሪ ተረጋግጠዋል። በ13 ኅዳር የተጨመሩት አዲስ መስመሮች ገና አልተረጋገጡም።",
+    "en": "The original lines were reviewed by a native Amharic speaker. Lines added 13 Nov are awaiting review."
   },
   "ui": {
+    "next": {
+      "am": "ቀጣይ",
+      "en": "Next"
+    },
+    "back": {
+      "am": "ተመለስ",
+      "en": "Back"
+    },
+    "edit": {
+      "am": "አስተካክል",
+      "en": "Change"
+    },
+    "readAloud": {
+      "am": "ያዳምጡ",
+      "en": "Read the question"
+    },
+    "speak": {
+      "am": "በድምጽ ይመልሱ",
+      "en": "Speak your answer"
+    },
+    "weHeard": {
+      "am": "የሰማነው፦",
+      "en": "We heard:"
+    },
+    "accept": {
+      "am": "ትክክል ነው",
+      "en": "That is right"
+    },
+    "retry": {
+      "am": "እንደገና ሞክር",
+      "en": "Try again"
+    },
+    "typeInstead": {
+      "am": "በጽሑፍ መጻፍ",
+      "en": "Type instead"
+    },
+    "optional": {
+      "am": "ባይሞሉም ይቻላል",
+      "en": "Optional"
+    },
+    "errorSummary": {
+      "am": "እባክዎ እነዚህን ያስተካክሉ",
+      "en": "Please fix these"
+    },
+    "notShared": {
+      "am": "ይህ መረጃ ወደ ማንም አይላክም።",
+      "en": "This is not sent to anyone."
+    },
+    "stepOf": {
+      "am": "ደረጃ {n} ከ {total}",
+      "en": "Step {n} of {total}"
+    },
     "choose": {
-      "am": "ከዝርዝሩ ይምረጡ",
+      "am": "አንዱን ይምረጡ",
       "en": "Choose one"
     }
+  },
+  "intro": {
+    "am": "ስለ ሥራዎ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም።",
+    "en": "Answer a few questions about your work. There is no time limit."
+  },
+  "introSimple": {
+    "am": "ያለምንም ችኮላ ቀስ ብለው ይሙሉ።",
+    "en": "Take your time. No rush."
   }
 }

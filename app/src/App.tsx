@@ -2,15 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Lang, Schema, Step } from './types';
 import { t, tpl } from './i18n';
 import { useForm, useCancelSpeechOnKey } from './useForm';
-import { Field, questionText } from './fields';
-import { ErrorSummary, ReviewScreen, SettingsBar } from './screens';
+import { Field, questionText, hintText, bodyText, optionText } from './fields';
+import { ErrorSummary, ReviewScreen, SettingsBar, reviewText } from './screens';
 import { ReadAloudButton, speak } from './speech';
+import { stopAudio } from './audio';
 import { Icon } from './icons';
 
 import { useSlug, type Slug } from './router';
 import { flush, type SendState } from './api';
 import * as outbox from './outbox';
 
+import { c } from './copy';
 import onboard from './schemas/savanna-onboard-v1.json';
 import job from './schemas/savanna-job-v1.json';
 import employer from './schemas/employer-accommodations-v1.json';
@@ -126,12 +128,15 @@ function Shell({ schema }: { schema: Schema }) {
     announcedNet.current = online;
     setAnnounce(
       online
-        ? lang === 'am' ? 'ግንኙነቱ ተመልሷል።' : 'You are back online.'
-        : lang === 'am' ? 'ግንኙነት የለም። መልሶችዎ በዚህ መሣሪያ ላይ ይቀመጣሉ።' : 'You are offline. Your answers are being kept on this device.',
+        ? c('announce.backOnline', lang)
+        : c('announce.offline', lang),
     );
   }, [online, lang]);
 
-  useCancelSpeechOnKey(() => window.speechSynthesis?.cancel());
+  useCancelSpeechOnKey(() => {
+    window.speechSynthesis?.cancel();
+    stopAudio();                       // any keypress stops a recording too, not only TTS
+  });
 
   // Move focus to the question on every step CHANGE. Not on first load — stealing focus
   // before the user does anything hides the skip link and surprises screen-reader users.
@@ -155,7 +160,7 @@ function Shell({ schema }: { schema: Schema }) {
       const now = Date.now();
       if (now - savedSpokenAt.current < 15_000) return;
       savedSpokenAt.current = now;
-      setAnnounce(lang === 'am' ? 'መልሶችዎ ተቀምጠዋል።' : 'Your answers were saved.');
+      setAnnounce(c('announce.saved', lang));
     }, 1500);
     return () => clearTimeout(id);
   }, [f.values, f.submitted, lang]);
@@ -176,10 +181,10 @@ function Shell({ schema }: { schema: Schema }) {
     prevCount.current = stepCount;
     if (!grew) return;
     setAnnounce(
-      tpl(t(schema.ui?.stepOf, lang, lang === 'am' ? 'ደረጃ {n} ከ {total}' : 'Step {n} of {total}'), {
+      tpl(t(schema.ui?.stepOf, lang), {
         n: index + 1,
         total: stepCount,
-      }) + (lang === 'am' ? ' — አዲስ ጥያቄ ተጨምሯል።' : ' — a new question was added.'),
+      }) + (' — ' + c('announce.newQuestion', lang)),
     );
   }, [stepCount]);   // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -194,15 +199,47 @@ function Shell({ schema }: { schema: Schema }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId, settings.readAloud, lang, settings.simple]);
 
-  /** The support question *is* the settings panel: choosing support turns it on.
-   *  Nothing ever turns an accommodation off automatically — only the user can, at the top. */
+  /** The support question *is* the settings panel: the boxes show what is on, and ticking or
+   *  un-ticking one changes it immediately — in both directions, because a checkbox that cannot be
+   *  un-ticked while it sits in the "on" position is a lie about the state of the page. */
   const applySupport = (picked: string[]) =>
     setSettings((s) => ({
       ...s,
-      readAloud: s.readAloud || picked.includes('read-aloud'),
-      big: s.big || picked.includes('large-text'),
-      simple: s.simple || picked.includes('simple-words'),
+      readAloud: picked.includes('read-aloud'),
+      big: picked.includes('large-text'),
+      simple: picked.includes('simple-words'),
     }));
+
+  /** What is applied *right now*. The settings bar at the top can change these at any moment, so a
+   *  step that displays them must read the settings, not a value typed into it earlier — otherwise
+   *  the box and the chip above disagree about the same switch. */
+  const appliedValue = (st: Step): unknown => {
+    if (st.type === 'language') return settings.lang;
+    if ((st.options ?? []).some((o) => o.applies)) {
+      return (st.options ?? [])
+        .filter((o) => o.applies && settings[o.applies as 'readAloud' | 'big' | 'simple'])
+        .map((o) => o.value);
+    }
+    return values[st.id];
+  };
+
+  /** The two opening steps are not ordinary answers: they describe the form's own state. Keep the
+   *  stored answer in step with what is applied, so validation, the review screen and the submitted
+   *  payload all agree with the radio and the checkboxes the person can see. */
+  useEffect(() => {
+    const langStep = schema.steps.find((st) => st.type === 'language');
+    if (langStep && values[langStep.id] !== settings.lang) f.setValue(langStep.id, settings.lang);
+    const prefStep = schema.steps.find((st) => (st.options ?? []).some((o) => o.applies));
+    if (prefStep) {
+      const applied = (prefStep.options ?? [])
+        .filter((o) => o.applies && settings[o.applies as 'readAloud' | 'big' | 'simple'])
+        .map((o) => o.value);
+      const stored = Array.isArray(values[prefStep.id]) ? (values[prefStep.id] as string[]) : [];
+      const same = applied.length === stored.length && applied.every((v) => stored.includes(v));
+      if (!same) f.setValue(prefStep.id, applied);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.lang, settings.readAloud, settings.big, settings.simple, schema.id]);
 
   const handleChange = (s: Step, v: unknown) => {
     f.setValue(s.id, v);
@@ -210,22 +247,24 @@ function Shell({ schema }: { schema: Schema }) {
     if (s.type === 'language' && (v === 'am' || v === 'en')) {
       setSettings((prev) => ({ ...prev, lang: v }));
       // A language change re-renders every string; say so, in the new language.
-      setAnnounce(v === 'am' ? 'ቋንቋ ወደ አማርኛ ተቀይሯል።' : 'Language changed to English.');
+      setAnnounce(c('announce.langChanged', lang));
     }
 
-    if (s.id === 'accessibility-prefs' && (s.options ?? []).some((o) => o.applies)) {
+    // Any step whose options declare what they change about the page — not one hardcoded id,
+    // so every form can offer the same accessibility choices.
+    if ((s.options ?? []).some((o) => o.applies)) {
       const picked = Array.isArray(v) ? (v as string[]) : [];
       const exclusive = (s.options ?? []).find((o) => o.exclusive)?.value;
       // Turning an accommodation on changes the page under the user's feet. Announce it.
       const before = settings;
       applySupport(picked);
       const on: string[] = [];
-      if (!before.readAloud && picked.includes('read-aloud')) on.push(lang === 'am' ? 'ጥያቄዎች ይነበባሉ' : 'questions will be read aloud');
-      if (!before.big && picked.includes('large-text')) on.push(lang === 'am' ? 'ጽሑፉ ጨምሯል' : 'text is now bigger');
-      if (!before.simple && picked.includes('simple-words')) on.push(lang === 'am' ? 'ቀላል ቃላት በርተዋል' : 'simple words are on');
+      if (!before.readAloud && picked.includes('read-aloud')) on.push(c('announce.readAloudOn', lang));
+      if (!before.big && picked.includes('large-text')) on.push(c('announce.bigOn', lang));
+      if (!before.simple && picked.includes('simple-words')) on.push(c('announce.simpleOn', lang));
       // Choosing the exclusive option silently wipes the others — that is a surprise, so say it.
       if (exclusive && picked.includes(exclusive) && picked.length === 1) {
-        setAnnounce(lang === 'am' ? 'ሌሎቹ ምርጫዎች ተነስተዋል።' : 'Your other choices were cleared.');
+        setAnnounce(c('announce.choicesCleared', lang));
       } else if (on.length) {
         setAnnounce(on.join(lang === 'am' ? '፣ ' : ', ') + '.');
       }
@@ -242,38 +281,34 @@ function Shell({ schema }: { schema: Schema }) {
           <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
             <Icon name={send.state === 'sent' ? 'check' : send.state === 'sending' ? 'clock' : 'alert'} />
             {send.state === 'sent'
-              ? (lang === 'am' ? 'ምዝገባው ተጠናቅቋል' : 'Sign-up complete')
+              ? (c('status.complete', lang))
               : send.state === 'sending'
-                ? (lang === 'am' ? 'በመላክ ላይ…' : 'Sending…')
+                ? (c('status.sending', lang))
                 : send.state === 'rejected'
-                  ? (lang === 'am' ? 'አልተላከም' : 'Not sent yet')
-                  : (lang === 'am' ? 'በዚህ መሣሪያ ላይ ተቀምጧል' : 'Saved on this device')}
+                  ? (c('status.rejected', lang))
+                  : (c('status.saved', lang))}
           </h1>
 
           <p role="status" aria-live="polite" className="op-receipt">
             {send.state === 'sent' && (
               <>
-                <span>{lang === 'am' ? 'የማጣቀሻ ቁጥርዎ፦' : 'Your reference:'}</span>
+                <span>{c('receipt.reference', lang)}</span>
                 {/* on its own line: an id broken mid-token reads like a rendering bug */}
                 <span className="op-mono op-ref">{send.id}</span>
-                <span className="op-hint">{lang === 'am' ? 'ይህን ቁጥር ይያዙት።' : 'Keep this number.'}</span>
+                <span className="op-hint">{c('receipt.keep', lang)}</span>
               </>
             )}
-            {send.state === 'sending' && (lang === 'am' ? 'እባክዎ ይጠብቁ።' : 'Please wait.')}
+            {send.state === 'sending' && (c('status.wait', lang))}
             {send.state === 'queued' && (
               <>
                 {send.reason === 'full'
-                  ? lang === 'am'
-                    ? 'ይህ መሣሪያ ማስቀመጥ አልቻለም። መልሶችዎ አሁንም በዚህ ገጽ ላይ አሉ። እባክዎ ገጹን አይዝጉ።'
-                    : 'This device would not store it. Your answers are still on this page — please do not close it.'
-                  : lang === 'am'
-                    ? 'አገልጋዩን ማግኘት አልቻልንም። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል እና ግንኙነት ሲመጣ በራሳቸው ይላካሉ። ገጹን መዝጋት ይችላሉ።'
-                    : 'We could not reach the server. Your answers are saved on this device and will send themselves when the connection comes back. You can close this page.'}
+                  ? c('send.storageFull', lang)
+                  : c('send.unreachable', lang)}
               </>
             )}
             {send.state === 'rejected' && (
               <>
-                {lang === 'am' ? 'አገልጋዩ እነዚህን መልሶች መቀበል አልቻለም። ' : 'The server could not accept these answers. '}
+                {c('send.rejected', lang)}
                 <span className="op-hint">{send.detail}</span>
               </>
             )}
@@ -283,20 +318,16 @@ function Shell({ schema }: { schema: Schema }) {
           <ReadAloudButton
             text={
               (send.state === 'sent'
-                ? lang === 'am'
-                  ? `ምዝገባው ተጠናቅቋል። የማጣቀሻ ቁጥርዎ ${send.id.split('').join(' ')}። ይህን ቁጥር ይያዙት።`
-                  : `Sign-up complete. Your reference is ${send.id.split('').join(' ')}. Keep this number.`
+                ? tpl(c('announce.complete', lang), { ref: send.id.split('').join(' ') })
                 : send.state === 'sending'
-                  ? lang === 'am' ? 'በመላክ ላይ። እባክዎ ይጠብቁ።' : 'Sending. Please wait.'
-                  : lang === 'am'
-                    ? 'መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል። ግንኙነት ሲመጣ በራሳቸው ይላካሉ። ገጹን መዝጋት ይችላሉ።'
-                    : 'Your answers are saved on this device. They will send themselves when the connection returns. You can close this page.')
+                  ? c('announce.sending', lang)
+                  : c('send.queued', lang))
             }
             lang={lang}
             schema={schema}
           />
 
-          {send.state === 'sent' && <p>{lang === 'am' ? 'አመሰግናለሁ።' : 'Thank you.'}</p>}
+          {send.state === 'sent' && <p>{c('status.thanks', lang)}</p>}
 
           {send.state === 'queued' && send.reason !== 'full' && (
             <div className="op-nav">
@@ -311,20 +342,18 @@ function Shell({ schema }: { schema: Schema }) {
                 }}
               >
                 {retrying
-                  ? lang === 'am' ? 'በመሞከር ላይ…' : 'Trying…'
-                  : lang === 'am' ? 'አሁን እንደገና ሞክር' : 'Try sending now'}
+                  ? c('retry.trying', lang)
+                  : c('retry.now', lang)}
               </button>
             </div>
           )}
           <details>
             <summary>{send.state === 'sent'
-              ? lang === 'am' ? 'የተላከው መረጃ' : 'What was sent'
-              : lang === 'am' ? 'ምን ይላካል' : 'What will be sent'}</summary>
+              ? c('sent.wasSent', lang)
+              : c('sent.willSend', lang)}</summary>
             <pre className="op-payload">{JSON.stringify(f.submitted, null, 2)}</pre>
             <p className="op-hint">
-              {lang === 'am'
-                ? 'የእርዳታ መልሶች በዚህ ዝርዝር ውስጥ የሉም።'
-                : 'The support answers are not in this payload — they never left the phone.'}
+              {c('sent.supportHidden', lang)}
             </p>
           </details>
         </main>
@@ -336,23 +365,35 @@ function Shell({ schema }: { schema: Schema }) {
   const isSubmit = step?.type === 'submit';
   // Read-aloud is available on every screen EXCEPT language (we cannot know which voice yet)
   // and review (it is a summary, not a question). It is REQUIRED on consent screens.
-  const showReadAloud = step && !isReview && step.type !== 'language';
+  // Every screen that shows something to read gets a read-aloud button. That now includes the
+  // language question (the FIRST screen — it used to be the one screen with no way to hear the
+  // question) and the review screen (the last one).
+  const showReadAloud = Boolean(step) && !isReview;
 
   // On a consent screen the question alone ("Confirmation") says nothing — read the body too.
+  // Simple words change the intro too, not just the question: the first screen is where a person
+  // decides whether this form is for them, so it is the worst place to fall back to a long sentence.
+  const introText = () => (settings.simple && schema.introSimple ? schema.introSimple : schema.intro);
+
   const readAloudText = (st: Step): string => {
-    const parts = [questionText(st, lang, settings.simple), t(st.hint, lang)];
-    if (st.body) parts.push(t(st.body, lang));
-    if (st.type === 'statement' || st.type === 'submit') {
-      for (const o of st.options ?? []) parts.push(t(o.label, lang));
+    // The intro used to be left out of this. It is the one paragraph that tells a person they
+    // can get help and that there is no time limit — nothing that only appears on the first
+    // screen should be the one thing that is never spoken.
+    const parts = [questionText(st, lang, settings.simple)];
+    if (index === 0 && schema.intro) parts.push(t(introText(), lang));
+    parts.push(hintText(st, lang, settings.simple));
+    if (st.body) parts.push(bodyText(st, lang, settings.simple));
+    if (st.type === 'statement' || st.type === 'submit' || st.type === 'language') {
+      for (const o of st.options ?? []) parts.push(optionText(o, lang, settings.simple));
     }
     return parts.filter(Boolean).join(' ');
   };
-  const progress = tpl(t(schema.ui?.stepOf, lang, lang === 'am' ? 'ደረጃ {n} ከ {total}' : 'Step {n} of {total}'), { n: index + 1, total: steps.length });
+  const progress = tpl(t(schema.ui?.stepOf, lang), { n: index + 1, total: steps.length });
 
   return (
     <div className="op-shell" data-big={settings.big || undefined}>
       <a className="op-skip" href="#op-main">
-        {lang === 'am' ? 'ወደ ዋና ይዘት ዝለል' : 'Skip to main content'}
+        {c('nav.skip', lang)}
       </a>
       <header className="op-band">
         <p className="op-brand">{t(schema.title, lang)}</p>
@@ -369,15 +410,14 @@ function Shell({ schema }: { schema: Schema }) {
 
       <p className="op-sr" role="status" aria-live="polite">{announce}</p>
 
-      <main className="op-root" id="op-main" tabIndex={-1}>
+      {/* data-step-type lets a test assert on what a screen IS, not on guessing from its text */}
+      <main className="op-root" id="op-main" tabIndex={-1} data-step-type={step?.type ?? 'done'}>
         {!online && !f.submitted && (
           <div className="op-net">
             <Icon name="alert" />
             <p>
-              <strong>{lang === 'am' ? 'ግንኙነት የለም።' : 'No connection.'}</strong>{' '}
-              {lang === 'am'
-                ? 'መልሶችዎ በዚህ መሣሪያ ላይ ይቀመጣሉ፤ ግንኙነት ሲመጣ በራሳቸው ይላካሉ።'
-                : 'Your answers are kept on this device and will send themselves when the connection returns.'}
+              <strong>{c('offline.title', lang)}</strong>{' '}
+              {c('offline.body', lang)}
             </p>
           </div>
         )}
@@ -385,20 +425,20 @@ function Shell({ schema }: { schema: Schema }) {
         {receipt && !f.submitted && (
           <div className="op-banner" role="status">
             <p>
-              {lang === 'am' ? 'የመጨረሻው ምዝገባ ተልኳል። የማጣቀሻ ቁጥር፦ ' : 'Your last sign-up was sent. Reference: '}
+              {c('banner.lastSent', lang)}
               <span className="op-mono op-ref">{receipt.id}</span>
             </p>
             <button type="button" className="op-btn" onClick={() => { outbox.clearReceipts(); setReceipt(null); }}>
-              {lang === 'am' ? 'ዝጋ' : 'Dismiss'}
+              {c('banner.dismiss', lang)}
             </button>
           </div>
         )}
 
         {f.restored && (
           <div className="op-banner" role="status">
-            <p>{lang === 'am' ? 'ያልተጠናቀቀ ምዝገባ አለ። መልሶችዎ ተቀምጠዋል።' : 'You have an unfinished form. Your answers were restored.'}</p>
+            <p>{c('resume.title', lang)}</p>
             <button type="button" className="op-btn" onClick={() => f.discardDraft()}>
-              {lang === 'am' ? 'አዲስ ጀምር' : 'Start again'}
+              {c('resume.startAgain', lang)}
             </button>
           </div>
         )}
@@ -442,13 +482,24 @@ function Shell({ schema }: { schema: Schema }) {
         >
           <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
             {step.icon && !isReview && !isSubmit && <Icon name={step.icon} />}
-            {isReview || isSubmit ? t(step.label, lang) : questionText(step, lang, settings.simple)}
+            {isReview ? t(step.label, lang) : questionText(step, lang, settings.simple)}
           </h1>
 
-          {index === 0 && schema.intro && <p className="op-intro">{t(schema.intro, lang)}</p>}
+          {index === 0 && schema.intro && <p className="op-intro">{t(introText(), lang)}</p>}
 
           {isReview ? (
-            <ReviewScreen steps={steps} values={values} lang={lang} schema={schema} onEdit={f.goTo} />
+            <>
+              <ReadAloudButton
+                text={reviewText(
+                  steps, values, lang, settings.simple,
+                  c('review.intro', lang),
+                  c('review.nextHint', lang),
+                )}
+                lang={lang}
+                schema={schema}
+              />
+              <ReviewScreen steps={steps} values={values} lang={lang} simple={settings.simple} schema={schema} onEdit={f.goTo} />
+            </>
           ) : (
             <>
               {showReadAloud && (
@@ -457,7 +508,7 @@ function Shell({ schema }: { schema: Schema }) {
               <Field
                 headingId="op-q-title"
                 step={step} schema={schema} lang={lang} simple={settings.simple}
-                value={values[step.id]} errorRule={errors[step.id]}
+                value={appliedValue(step)} errorRule={errors[step.id]}
                 onChange={(v) => handleChange(step, v)}
               />
             </>
@@ -466,11 +517,11 @@ function Shell({ schema }: { schema: Schema }) {
           <div className="op-nav">
             {index > 0 && (
               <button type="button" className="op-btn op-btn-back" onClick={f.back}>
-                <span aria-hidden="true">← </span>{t(schema.ui?.back, lang, lang === 'am' ? 'ተመለስ' : 'Back')}
+                <span aria-hidden="true">← </span>{t(schema.ui?.back, lang)}
               </button>
             )}
             <button type="submit" className="op-btn op-btn-primary">
-              {isSubmit ? t(step.submitLabel, lang) : t(schema.ui?.next, lang, lang === 'am' ? 'ቀጣይ' : 'Next')}
+              {isSubmit ? t(step.submitLabel, lang) : t(schema.ui?.next, lang)}
             </button>
           </div>
         </form>

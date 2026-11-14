@@ -1,8 +1,8 @@
 {
   "id": "employer-accommodations-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "employer",
-  "contentStatus": "reviewed",
+  "contentStatus": "partly-unreviewed",
   "defaultLang": "am",
   "langs": [
     "am",
@@ -10,12 +10,12 @@
   ],
   "calendar": "EC",
   "title": {
-    "am": "ድርጅት ምዝገባ",
+    "am": "የድርጅት ምዝገባ",
     "en": "Employer sign-up"
   },
   "intro": {
-    "am": "ድርጅትዎ ምን ዓይነት እርዳታ ይሰጣል?",
-    "en": "What support does your workplace offer?"
+    "am": "ስለ ድርጅትዎ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም።",
+    "en": "Answer a few questions about your workplace. There is no time limit."
   },
   "settings": {
     "progress": true,
@@ -24,6 +24,118 @@
   },
   "generates": "schema.org/JobPosting",
   "steps": [
+    {
+      "id": "language",
+      "type": "language",
+      "legend": {
+        "am": "ቋንቋ ይምረጡ",
+        "en": "Choose your language"
+      },
+      "label": {
+        "am": "ቋንቋ ይምረጡ",
+        "en": "Choose your language"
+      },
+      "simple": {
+        "am": "ቋንቋ",
+        "en": "Pick your language"
+      },
+      "hint": {
+        "am": "ይህን በማንኛውም ጊዜ መቀየር ይችላሉ።",
+        "en": "You can change this at any time."
+      },
+      "icon": "chat",
+      "required": true,
+      "voice": true,
+      "readAloud": false,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "am",
+          "label": {
+            "am": "አማርኛ",
+            "en": "Amharic"
+          },
+          "icon": "letter-am"
+        },
+        {
+          "value": "en",
+          "label": {
+            "am": "English",
+            "en": "English"
+          },
+          "icon": "letter-en"
+        }
+      ]
+    },
+    {
+      "id": "accessibility-prefs",
+      "type": "checkbox",
+      "legend": {
+        "am": "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ?",
+        "en": "How would you like this form to work for you?"
+      },
+      "simple": {
+        "am": "ቅጹ እንዲመችዎ ይምረጡ",
+        "en": "Make this easier to use"
+      },
+      "hint": {
+        "am": "የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ።",
+        "en": "What you choose changes this form straight away. You can change it later."
+      },
+      "why": {
+        "am": "ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል።",
+        "en": "This helps you read the form in the way that suits you."
+      },
+      "icon": "hands",
+      "required": false,
+      "voice": true,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": true,
+      "options": [
+        {
+          "value": "read-aloud",
+          "label": {
+            "am": "ጥያቄዎች እንዲነበቡልኝ",
+            "en": "Read the questions to me"
+          },
+          "icon": "speaker",
+          "applies": "readAloud",
+          "simple": {
+            "am": "ጥያቄዎቹን ያንብብልኝ",
+            "en": "Read questions aloud"
+          }
+        },
+        {
+          "value": "large-text",
+          "label": {
+            "am": "ትልቅ ጽሑፍ",
+            "en": "Bigger text"
+          },
+          "icon": "text-large",
+          "applies": "big"
+        },
+        {
+          "value": "simple-words",
+          "label": {
+            "am": "ቀላል ቃላት",
+            "en": "Simple words"
+          },
+          "icon": "simple",
+          "applies": "simple"
+        }
+      ],
+      "simpleHint": {
+        "am": "የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ።",
+        "en": "Pick any help you need. You can change this later."
+      }
+    },
     {
       "id": "company",
       "type": "text",
@@ -44,9 +156,25 @@
       "validation": [
         {
           "rule": "required"
+        },
+        {
+          "rule": "minLength",
+          "value": 2
         }
       ],
-      "autocomplete": "organization"
+      "autocomplete": "organization",
+      "hint": {
+        "am": "ሙሉ ስም፣ በምዝገባ ሰነድዎ ላይ እንዳለው።",
+        "en": "The full name, as it is on your registration document."
+      },
+      "simpleHint": {
+        "am": "የድርጅቱ ሙሉ ስም።",
+        "en": "The full name."
+      },
+      "why": {
+        "am": "ተማሪዎች ይህን ስም ያያሉ።",
+        "en": "Learners will see this name."
+      }
     },
     {
       "id": "role",
@@ -73,12 +201,20 @@
         {
           "rule": "required"
         }
-      ]
+      ],
+      "simpleHint": {
+        "am": "ምሳሌ፦ የሽያጭ ሠራተኛ።",
+        "en": "Example: sales assistant."
+      },
+      "why": {
+        "am": "ተማሪዎች በሥራው ስም ይፈልጋሉ።",
+        "en": "Learners search for jobs by this title."
+      }
     },
     {
       "id": "job-category",
-      "type": "select",
-      "label": {
+      "type": "radio",
+      "legend": {
         "am": "የሥራው ክፍል",
         "en": "Job category"
       },
@@ -87,7 +223,7 @@
         "en": "Category"
       },
       "hint": {
-        "am": "ከዝርዝሩ ይምረጡ።",
+        "am": "አንዱን ይምረጡ።",
         "en": "Choose one from the list."
       },
       "icon": "list",
@@ -134,7 +270,7 @@
         {
           "value": "hospitality",
           "label": {
-            "am": "እንግዳ አገልግሎት",
+            "am": "ሆቴል እና መስተንግዶ",
             "en": "Hospitality"
           },
           "icon": "building"
@@ -147,7 +283,11 @@
           },
           "icon": "doc"
         }
-      ]
+      ],
+      "why": {
+        "am": "ተማሪዎች በዘርፋቸው ውስጥ ያለውን ሥራ እንዲያገኙ ይረዳል።",
+        "en": "It helps learners find the jobs that match their field."
+      }
     },
     {
       "id": "accommodations",
@@ -180,7 +320,7 @@
         {
           "value": "step-free",
           "label": {
-            "am": "ያለ ደረጃ መግቢያ",
+            "am": "ደረጃ የሌለው መግቢያ",
             "en": "Step-free entrance"
           },
           "icon": "door"
@@ -207,7 +347,11 @@
             "am": "የስክሪን አንባቢ ሶፍትዌር",
             "en": "Screen-reader software"
           },
-          "icon": "speaker"
+          "icon": "speaker",
+          "simple": {
+            "am": "የስክሪን አንባቢ",
+            "en": "Screen reader"
+          }
         },
         {
           "value": "sign-language",
@@ -215,17 +359,25 @@
             "am": "የምልክት ቋንቋ አስተርጓሚ",
             "en": "Sign language interpreter"
           },
-          "icon": "hands"
+          "icon": "hands",
+          "simple": {
+            "am": "አስተርጓሚ",
+            "en": "Interpreter"
+          }
         },
         {
           "value": "adapted-desk",
           "label": {
-            "am": "የተስተካከለ ጠረጴዛ",
+            "am": "ምቹ የሥራ ጠረጴዛ",
             "en": "Adapted desk"
           },
           "icon": "desk"
         }
-      ]
+      ],
+      "simpleWhy": {
+        "am": "ተማሪዎች ሥራውን ከማመልከታቸው በፊት ያለውን እርዳታ ያያሉ።",
+        "en": "Learners see this before they apply, so you can get help without saying you have a disability."
+      }
     },
     {
       "id": "contact",
@@ -255,7 +407,15 @@
           "rule": "phone-et"
         }
       ],
-      "autocomplete": "tel"
+      "autocomplete": "tel",
+      "why": {
+        "am": "ተማሪዎች ስለ ሥራው ለመጠየቅ ሊደውሉ ይችላሉ።",
+        "en": "Learners may call this number to ask about the job."
+      },
+      "simpleWhy": {
+        "am": "ተማሪዎች ስለ ሥራው እንዲጠይቁ።",
+        "en": "So learners can ask about the job."
+      }
     },
     {
       "id": "review",
@@ -264,7 +424,11 @@
         "am": "መረጃዎን ይመልከቱ",
         "en": "Check your information"
       },
-      "icon": "check"
+      "icon": "check",
+      "hint": {
+        "am": "የፈለጉትን ማስተካከል ይችላሉ።",
+        "en": "You can change anything here."
+      }
     },
     {
       "id": "submit",
@@ -293,10 +457,18 @@
             "am": "የሰጠሁት መረጃ እውነት ነው።",
             "en": "The information I gave is true."
           },
-          "required": true
+          "required": true,
+          "simple": {
+            "am": "መረጃዬ እውነት ነው።",
+            "en": "The details I gave are true."
+          }
         }
       ],
-      "readAloud": true
+      "readAloud": true,
+      "simple": {
+        "am": "ለመላክ ዝግጁ ነዎት?",
+        "en": "Ready to send?"
+      }
     }
   ],
   "errors": {
@@ -307,16 +479,96 @@
     "phone-et": {
       "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
       "en": "That phone number does not look right. Example: 0912345678"
+    },
+    "maxLength": {
+      "am": "በጣም ረጅም ነው።",
+      "en": "That is too long."
+    },
+    "exclusiveOption": {
+      "am": "ይህን ከመረጡ ሌላ መምረጥ አያስፈልግም።",
+      "en": "If you choose this, you do not need to choose anything else."
+    },
+    "minValue": {
+      "am": "ቁጥሩ በጣም ትንሽ ነው።",
+      "en": "That number is too small."
+    },
+    "maxValue": {
+      "am": "ቁጥሩ በጣም ትልቅ ነው።",
+      "en": "That number is too large."
+    },
+    "email": {
+      "am": "ኢሜይሉ ትክክል አይመስልም።",
+      "en": "That email does not look right."
+    },
+    "minLength": {
+      "am": "ቢያንስ {n} ፊደሎች ያስፈልጋሉ።",
+      "en": "Please write at least {n} letters."
     }
   },
   "contentReview": {
-    "am": "በአማርኛ ተናጋሪ ተረጋግጧል",
-    "en": "Reviewed by a native Amharic speaker, 13 Nov 2026"
+    "am": "የመጀመሪያዎቹ መስመሮች በአማርኛ ተናጋሪ ተረጋግጠዋል። በ13 ኅዳር የተጨመሩት አዲስ መስመሮች ገና አልተረጋገጡም።",
+    "en": "The original lines were reviewed by a native Amharic speaker. Lines added 13 Nov are awaiting review."
   },
   "ui": {
+    "next": {
+      "am": "ቀጣይ",
+      "en": "Next"
+    },
+    "back": {
+      "am": "ተመለስ",
+      "en": "Back"
+    },
+    "edit": {
+      "am": "አስተካክል",
+      "en": "Change"
+    },
+    "readAloud": {
+      "am": "ያዳምጡ",
+      "en": "Read the question"
+    },
+    "speak": {
+      "am": "በድምጽ ይመልሱ",
+      "en": "Speak your answer"
+    },
+    "weHeard": {
+      "am": "የሰማነው፦",
+      "en": "We heard:"
+    },
+    "accept": {
+      "am": "ትክክል ነው",
+      "en": "That is right"
+    },
+    "retry": {
+      "am": "እንደገና ሞክር",
+      "en": "Try again"
+    },
+    "typeInstead": {
+      "am": "በጽሑፍ መጻፍ",
+      "en": "Type instead"
+    },
+    "optional": {
+      "am": "ባይሞሉም ይቻላል",
+      "en": "Optional"
+    },
+    "errorSummary": {
+      "am": "እባክዎ እነዚህን ያስተካክሉ",
+      "en": "Please fix these"
+    },
+    "notShared": {
+      "am": "ይህ መረጃ ወደ ማንም አይላክም።",
+      "en": "This is not sent to anyone."
+    },
+    "stepOf": {
+      "am": "ደረጃ {n} ከ {total}",
+      "en": "Step {n} of {total}"
+    },
     "choose": {
-      "am": "ከዝርዝሩ ይምረጡ",
+      "am": "አንዱን ይምረጡ",
       "en": "Choose one"
     }
+  },
+  "introSimple": {
+    "am": "ያለምንም ችኮላ ቀስ ብለው ይሙሉ።",
+    "en": "Take your time. No rush."
   }
 }

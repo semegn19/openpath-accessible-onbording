@@ -14,8 +14,14 @@ const draftKey = (id: string) => `openpath:draft:${id}`;
 export function visibleSteps(schema: Schema, values: Values): Step[] {
   return schema.steps.filter((s) => {
     if (!s.showIf) return true;
-    const dep = values[s.showIf.step];
-    return typeof dep === 'string' && s.showIf.in.includes(dep);
+    // Several conditions = all of them. A step that depends on two answers cannot be expressed
+    // with one, and the failure mode of getting that wrong is asking a person the same question
+    // twice (see `referral` in the onboarding schema).
+    const conds = Array.isArray(s.showIf) ? s.showIf : [s.showIf];
+    return conds.every((c) => {
+      const dep = values[c.step];
+      return typeof dep === 'string' && c.in.includes(dep);
+    });
   });
 }
 
@@ -161,7 +167,7 @@ export function useForm(schema: Schema) {
     () =>
       Object.entries(errors)
         .map(([id, rule]) => ({ step: steps.find((s) => s.id === id), rule }))
-        .filter((x): x is { step: Step; rule: string } => Boolean(x.step)),
+        .filter((x): x is { step: Step; rule: { rule: string; params?: Record<string, string | number> } } => Boolean(x.step)),
     [errors, steps],
   );
 

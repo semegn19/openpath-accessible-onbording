@@ -1,5 +1,9 @@
 import type { Rule, Step } from './types';
 
+/** A failed rule, plus the numbers the message needs. Returning only the rule name is what left
+ *  "{n}" printed literally in the interface: the message had no value to interpolate. */
+export type Failure = { rule: string; params?: Record<string, string | number> };
+
 /** Ethiopian mobile numbers: 09…/07…, +251…, 251…, spaces and dashes allowed. */
 export function normalizePhoneET(raw: string): string | null {
   const digits = raw.replace(/[\s\-()]/g, '');
@@ -19,8 +23,8 @@ const num = (v: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** Returns the failing rule name, or null. The message comes from schema.errors. */
-export function firstFailure(step: Step, value: unknown): string | null {
+/** Returns the failing rule and its parameters, or null. The wording comes from schema.errors. */
+export function firstFailure(step: Step, value: unknown): Failure | null {
   const rules: Rule[] = step.validation ?? [];
   for (const r of rules) {
     switch (r.rule) {
@@ -28,31 +32,39 @@ export function firstFailure(step: Step, value: unknown): string | null {
         if (step.type === 'submit' || step.type === 'statement') {
           const requiredOptions = (step.options ?? []).filter((o) => o.required).map((o) => o.value);
           if (requiredOptions.length && !requiredOptions.every((v) => (value as string[] | undefined)?.includes?.(v)))
-            return 'required';
-        } else if (isEmpty(value)) return 'required';
+            return { rule: 'required' };
+        } else if (isEmpty(value)) return { rule: 'required' };
         break;
       case 'phone-et':
-        if (!isEmpty(value) && !normalizePhoneET(String(value))) return 'phone-et';
+        if (!isEmpty(value) && !normalizePhoneET(String(value))) return { rule: 'phone-et' };
         break;
       case 'email':
-        if (!isEmpty(value) && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value).trim())) return 'email';
+        if (!isEmpty(value) && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value).trim())) return { rule: 'email' };
         break;
       case 'minLength':
-        if (!isEmpty(value) && String(value).trim().length < (r.value ?? 1)) return 'minLength';
+        if (!isEmpty(value) && String(value).trim().length < (r.value ?? 1)) {
+          return { rule: 'minLength', params: { n: r.value ?? 1 } };
+        }
         break;
       case 'maxLength':
-        if (!isEmpty(value) && String(value).trim().length > (r.value ?? Infinity)) return 'maxLength';
+        if (!isEmpty(value) && String(value).trim().length > (r.value ?? Infinity)) {
+          return { rule: 'maxLength', params: { n: r.value ?? '' } };
+        }
         break;
       case 'minValue':
-        if (num(value) !== null && (num(value) as number) < (r.value ?? -Infinity)) return 'minValue';
+        if (num(value) !== null && (num(value) as number) < (r.value ?? -Infinity)) {
+          return { rule: 'minValue', params: { n: r.value ?? 0 } };
+        }
         break;
       case 'maxValue':
-        if (num(value) !== null && (num(value) as number) > (r.value ?? Infinity)) return 'maxValue';
+        if (num(value) !== null && (num(value) as number) > (r.value ?? Infinity)) {
+          return { rule: 'maxValue', params: { n: r.value ?? 0 } };
+        }
         break;
       case 'exclusiveOption': {
         const arr = value as string[] | undefined;
         const exclusive = (step.options ?? []).find((o) => o.exclusive)?.value;
-        if (arr && exclusive && arr.includes(exclusive) && arr.length > 1) return 'exclusiveOption';
+        if (arr && exclusive && arr.includes(exclusive) && arr.length > 1) return { rule: 'exclusiveOption' };
         break;
       }
       default:
