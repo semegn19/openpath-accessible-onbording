@@ -1,7 +1,7 @@
 /**
  * OpenPath forms API — Level 2 of the adoptability ladder.
  *
- * Four endpoints, zero dependencies, zero secrets to configure, no database.
+ * Development JSONL store or production PostgreSQL with server-owned AI settings.
  *   GET  /api/health
  *   GET  /api/forms/{formId}
  *   POST /api/submissions
@@ -16,6 +16,9 @@ import { randomBytes, createCipheriv, createDecipheriv } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createAssistant } from './assistant.mjs';
+import { connectDatabase } from './database.mjs';
+import { createHash } from 'node:crypto';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -24,8 +27,15 @@ const DATA_DIR = process.env.DATA_DIR ?? join(here, 'data');
 const SCHEMA_DIR = process.env.SCHEMA_DIR ?? join(here, '..', 'schema');
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN ?? '*';
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MIN ?? 30);
-const TRUST_PROXY = process.env.TRUST_PROXY !== '0';   // behind nginx, remoteAddress is nginx
+const TRUST_PROXY = process.env.TRUST_PROXY === '1';   // opt in only behind a trusted proxy
 const MAX_BODY = Number(process.env.MAX_BODY_BYTES ?? 32 * 1024);
+const PRODUCTION = process.env.ROHA_DEPLOYMENT === 'production';
+if (PRODUCTION && (!process.env.DATABASE_URL || !process.env.DATA_KEY || !/^https:\/\//.test(ALLOWED_ORIGIN) || !/^https:\/\//.test(process.env.ROHA_ADMIN_ORIGIN || '') || (process.env.ROHA_ADMIN_TOKEN || '').length < 32)) {
+  throw new Error('Production requires DATABASE_URL, DATA_KEY, HTTPS ALLOWED_ORIGIN/ROHA_ADMIN_ORIGIN and a strong ROHA_ADMIN_TOKEN');
+}
+const database = process.env.DATABASE_URL ? await connectDatabase(process.env.DATABASE_URL) : null;
+if (database) await database.ready();
+const assistant = createAssistant({ directory: DATA_DIR, persistence: database });
 /** Speech-to-text is OPT-IN. Unset = the endpoint says so and the UI falls back to buttons.
  *  Either an OpenAI-compatible endpoint or a self-hosted whisper.cpp server works. */
 const ASR_URL = process.env.ASR_URL ?? '';
@@ -106,7 +116,7 @@ function initStore() {
     }
   }
 }
-initStore();
+if (!database) initStore();
 
 
 /** step ids whose answers must never touch the disk in the clear */
@@ -132,9 +142,9 @@ const rememberRef = (ref, id) => {
 
 // Rebuild the index from disk, so a restart does not resurrect the double-submit that the
 // retry was protecting against.
-for (const rec of store.values()) if (rec.clientRef) byClientRef.set(rec.clientRef, rec.id);
+for (const rec of store.values()) if (rec.clientRef) byClientRef.set(`${rec.formId}:${rec.clientRef}`, rec.id);
 
-function save(record) {
+async function save(record) {
   // append + rename-free: an interrupted write leaves a partial LAST line, which initStore
   // skips on the next boot. Nothing before it is ever damaged.
   let forDisk = record;
@@ -146,8 +156,10 @@ function save(record) {
     }
     forDisk = { ...record, answers, encryptedFields: [...Object.keys(record.answers)].filter((k) => ids.has(k)) };
   }
+  if (database) return database.saveSubmission(forDisk);
   appendFileSync(DATA_FILE, JSON.stringify(forDisk) + '\n', { mode: 0o600 });
-  store.set(record.id, record);          // memory keeps the plaintext: the API returns what was sent
+  store.set(record.id, record);          // development file store
+  return { record, duplicate: false };
 }
 
 /* --------------------------------------------------------------- validation */
@@ -261,7 +273,8 @@ function validateSubmission(body) {
 /* ------------------------------------------------------------ rate limiting */
 
 const hits = new Map();          // ip -> { count, resetAt }
-function limited(ip) {
+async function limited(ip) {
+  if (database) return !await database.reserve('submission:'+createHash('sha256').update(ip).digest('hex'), RATE_LIMIT, 60000);
   const now = Date.now();
   const e = hits.get(ip);
   if (!e || now > e.resetAt) { hits.set(ip, { count: 1, resetAt: now + 60_000 }); return false; }
@@ -323,9 +336,20 @@ function readRaw(req, limit) {
 
 /* ------------------------------------------------------------------- routes */
 
-const server = createServer(async (req, res) => {
+const server = createServer((req,res) => {
+  void handleRequest(req,res).catch(() => {
+    console.error('request failed');
+    if (!res.headersSent) error(res,503,'service-unavailable','The service is temporarily unavailable. Your saved draft can be retried.');
+    else res.end();
+  });
+});
+server.requestTimeout = 30000;
+server.headersTimeout = 15000;
+server.maxRequestsPerSocket = 1000;
+async function handleRequest(req, res) {
   const url = new URL(req.url ?? '/', 'http://localhost');
   const path = url.pathname.replace(/\/+$/, '') || '/';
+  if (await assistant.handle(req, res, path)) return;
   // Behind nginx every request appears to come from the proxy, which would turn a per-IP
   // limit into one global bucket. Take the first hop X-Forwarded-For when we are proxied.
   const forwarded = TRUST_PROXY ? (req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() : '';
@@ -334,11 +358,13 @@ const server = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, '');
 
   if (path === '/api/health' && req.method === 'GET') {
+    if (database) await database.ready();
     return send(res, 200, {
       ok: true,
       version: VERSION,
       forms: [...schemas.keys()],
-      submissions: store.size,
+      submissions: database ? undefined : store.size,
+      storage: database ? 'postgresql' : 'development-file',
       uptimeSec: Math.round(process.uptime()),
       // "none" means the browser's own speech recognition is the only option, and it has no
       // Amharic model. An operator should never have to read source to learn that.
@@ -367,7 +393,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (path === '/api/submissions' && req.method === 'POST') {
-    if (limited(ip)) return error(res, 429, 'rate-limited', `Too many submissions. Limit is ${RATE_LIMIT} per minute.`);
+    if (await limited(ip)) return error(res, 429, 'rate-limited', `Too many submissions. Limit is ${RATE_LIMIT} per minute.`);
     const type = (req.headers['content-type'] ?? '').split(';')[0].trim();
     if (type !== 'application/json') return error(res, 415, 'unsupported-media-type', 'Send application/json.');
 
@@ -391,9 +417,10 @@ const server = createServer(async (req, res) => {
     if (clientRef && !REF_RE.test(clientRef)) {
       return error(res, 422, 'invalid', 'Some answers need fixing.', { fields: [{ field: 'clientRef', rule: 'format' }] });
     }
-    const seenId = clientRef ? byClientRef.get(clientRef) : undefined;
-    if (seenId) {
-      const seen = store.get(seenId);
+    const refKey = `${body?.formId}:${clientRef}`;
+    const seen = clientRef ? (database ? await database.findSubmission(String(body?.formId || ''), clientRef) : store.get(byClientRef.get(refKey))) : undefined;
+    if (seen) {
+      const seenId = seen.id;
       return send(res, 200, {
         id: seenId,
         receivedAt: seen?.receivedAt ?? new Date().toISOString(),
@@ -417,8 +444,9 @@ const server = createServer(async (req, res) => {
       stripped: result.stripped,                // field NAMES only — proves what never arrived
       ...(clientRef ? { clientRef } : {}),      // opaque token, not personal data
     };
-    save(record);
-    rememberRef(clientRef, record.id);
+    const saved = await save(record);
+    if (saved.duplicate) return send(res,200,{id:saved.record.id,receivedAt:saved.record.receivedAt,stripped:saved.record.stripped,duplicate:true});
+    if (!database) rememberRef(clientRef ? refKey : undefined, record.id);
     console.log(`stored ${record.id} form=${record.formId}${result.stripped.length ? ` stripped=${result.stripped.join(',')}` : ''}`);
     return send(res, 201, {
       id: record.id,
@@ -474,13 +502,15 @@ const server = createServer(async (req, res) => {
 
   const subMatch = path.match(/^\/api\/submissions\/([^/]+)$/);
   if (subMatch && req.method === 'GET') {
-    const rec = store.get(decodeURIComponent(subMatch[1]));
+    const id = decodeURIComponent(subMatch[1]);
+    const rec = database ? await database.getSubmission(id) : store.get(id);
     if (!rec) return error(res, 404, 'not-found', 'No submission with that id.');
-    return send(res, 200, rec);
+    // Receipt IDs are bearer capabilities. Production returns receipt metadata only.
+    return send(res, 200, PRODUCTION ? {id:rec.id,receivedAt:rec.receivedAt,formId:rec.formId} : rec);
   }
 
   return error(res, 404, 'not-found', `${req.method} ${path} is not an endpoint. See /api/openapi.yaml.`);
-});
+}
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`openpath api ${VERSION} on :${PORT} — ${schemas.size} form(s), ${store.size} submission(s), ${DATA_FILE}`);
@@ -490,7 +520,7 @@ for (const sig of ['SIGTERM', 'SIGINT']) {
   // Do not wait on keep-alive connections: a container that ignores SIGTERM for 10 s is a
   // container that gets SIGKILLed, and a test that hangs is a test nobody runs.
   process.on(sig, () => {
-    server.close(() => process.exit(0));
+    server.close(async () => { await database?.close(); process.exit(0); });
     setTimeout(() => process.exit(0), 2000).unref();
   });
 }
