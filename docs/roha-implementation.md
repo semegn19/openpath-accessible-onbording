@@ -66,3 +66,13 @@ Do not mark the pilot or WCAG conformance complete until these observations exis
 Provider formats were checked against [OpenAI Responses](https://developers.openai.com/api/reference/resources/responses/methods/create), [Gemini generateContent](https://ai.google.dev/api/generate-content), [Claude Messages](https://platform.claude.com/docs/en/api/http/messages), and [Ollama generate](https://docs.ollama.com/api/generate). SQL values use [node-postgres parameterized queries](https://node-postgres.com/features/queries).
 
 See [the operations guide](roha-operations.md) for configuration, limitations and recovery commands. `api/openapi.yaml` is the specification served by the running API; the older root `openapi.yaml` contains proposed contracts and should not be treated as implemented endpoint parity.
+
+## Command-flow fixes — 15 November 2026
+
+A browser probe measured the reported language and speech defects: after choosing English the document had `lang=en` but Roha and recognition stayed `am`/`am-ET`; microphone activation immediately started a spoken welcome and muted incoming commands; a completed voice action was then overwritten by the processing message. The same probe measured typed “bigger test” increasing the question from 23.2px to 34.8px, so the sizing executor itself was working.
+
+The assistant now inherits live document-language changes unless explicitly pinned, starts permission/listening on opening, and does not speak a welcome over the first command. Stop/close cancels pending permission and late recognition callbacks. Recognition restarts preserve the visible response. Explicit read-aloud still pauses recognition to prevent echo, then resumes it. “Zoom in/out” are local text-size commands, and the Bigger text button stops at 200% instead of wrapping back to 100%.
+
+`npm --prefix app run test:commands` measures rendered font sizes and covers the opening/permission flow, live language changes, transcript handling, speech echo prevention, Stop, denied permission and startup errors. Speech recognition, synthesis and permission responses in this suite are simulated; no real-device microphone or speech-service quality claim is made. Native Amharic review and participant testing remain pending.
+
+Verification for this fix: full baseline and final `npm --prefix app run check` both exited 0 with 261 pass markers and zero failure markers; `test:commands` 19/19, `test:roha` 109/109, `test:localisation` 27/27, `test:access` 14/14 and `test:settings` 23/23 passed. `verify:prod` exited 0 with 17 axe audits without reported violations and CSP checks passing for all three forms and the administrator page. Schema validation reported zero errors/warnings.
