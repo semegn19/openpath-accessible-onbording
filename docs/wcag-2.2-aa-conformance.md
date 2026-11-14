@@ -10,9 +10,10 @@
 
 ## 1. Conformance claim
 
-> **The OpenPath forms are designed and built to meet WCAG 2.2 Level AA. All 55 applicable
-> success criteria are supported by automated, keyboard and code-level evidence; zero criteria
-> are known to fail, and zero are untested. A claim of *conformance* is withheld until the
+> **The OpenPath forms are designed and built to meet WCAG 2.2 Level AA. All 55 success criteria
+> are supported by automated, keyboard and code-level evidence — 6 of them vacuously, because the
+> thing they govern (audio, video, a help mechanism repeated across pages) does not exist in this
+> product; zero criteria are known to fail, and zero are untested. A claim of *conformance* is withheld until the
 > co-designer sessions in §7 are complete, because conformance is something people with
 > disabilities demonstrate, not something a test suite asserts.**
 
@@ -24,7 +25,7 @@ and `cd app && npm run check` reproduces all of it in about 80 seconds on any ma
 |---|---|
 | Success criteria in scope | 55 (WCAG 2.2 A + AA) |
 | Supported | **55** |
-| Not applicable (vacuously satisfied) | 5 — all in 1.2.x, no audio or video content exists |
+| Not applicable (vacuously satisfied) | 6 — 5 in 1.2.x (no audio or video content exists) + 3.2.6 (no help mechanism is repeated across pages) |
 | Known failures | **0** |
 | Partial support | **0** |
 | Verified with disabled users | **Not yet — scheduled, §7** |
@@ -89,10 +90,11 @@ and `cd app && npm run check` reproduces all of it in about 80 seconds on any ma
 | 3.1.1 | Language of Page | **Supports** | `<html lang>` is set from the chosen language and updated live; asserted in every axe run. Language is chosen before the first question. |
 | 3.2.1 | On Focus | **Supports** | Focus never changes context. No auto-advance, no focus-triggered navigation. |
 | 3.2.2 | On Input | **Supports** | Changing a presentation setting (bigger text, read aloud) changes no context. Choosing an identity route reveals the next step; it does not navigate or submit. |
-| 3.2.6 | Consistent Help | **Supports** | The help mechanism — the assistance step plus the read-aloud control in a fixed position — appears in the same relative order on all three forms and every step. |
+| 3.2.6 | Consistent Help | **N/A** | Not claimed. The support request is a *step inside the form*, not a help mechanism repeated across pages: it sits at position 3 of 10 in the learner form, 9 of 11 in the job form, and does not exist in the employer form. Read-aloud is a presentation control, not help. The criterion only bites when a help mechanism is repeated on more than one page, so there is nothing here to be inconsistent about — but the earlier "Supports … in the same relative order on all three forms and every step" was overstated and is withdrawn. If a persistent help link is added, it must sit in the same relative position on all three. |
 | 3.3.1 | Error Identification | **Supports** | Errors named in text, linked with `aria-describedby`, marked `aria-invalid`, and listed in a `role="alert"` summary with jump links. |
 | 3.3.2 | Labels or Instructions | **Supports** | Every field has a label; where a rule is not obvious there is a hint *before* the input (phone format, referral disclosure, identity options). |
 | 3.3.7 | Redundant Entry | **Supports** | No answer is asked twice. The device-stored draft means a dropped connection does not mean retyping; the review screen reuses what was entered. |
+| 3.3.2 | Labels or Instructions | **Supports** | One question per screen, stated once as the heading, with a hint and a *why we ask* line under it. The field itself takes its accessible name from that heading (`aria-labelledby`) instead of repeating it — the visible wording and the accessible name are the same sentence, and a screen reader announces it once. |
 | 4.1.2 | Name, Role, Value | **Supports** | Native `input`, `button`, `fieldset`, `details` only. No ARIA widget is re-implemented by hand, so name/role/value come from the platform. |
 
 ---
@@ -118,7 +120,7 @@ and `cd app && npm run check` reproduces all of it in about 80 seconds on any ma
 | **2.4.11** | **Focus Not Obscured (Minimum)** *(new in 2.2)* | **Supports** | `npm run focus` scrolls to every control and asserts it is not covered by the sticky settings bar. The bar's height is measured with a `ResizeObserver` and fed into `scroll-padding`, so it passes at 200 % zoom and with bigger text — where a hard-coded offset would fail. |
 | **2.5.7** | **Dragging Movements** *(new in 2.2)* | **Supports** | No drag interaction exists; nothing needs a single-pointer alternative. |
 | **2.5.8** | **Target Size (Minimum)** *(new in 2.2)* | **Supports** | Option rows 52 px tall, buttons ≥ 44 px, checkbox hit area = the whole row. No target below 24×24 CSS px. |
-| 3.1.2 | Language of Parts | **Supports** | Amharic strings render inside `lang="am"`; no string mixes languages. Latin-script ID numbers are digits, which are language-neutral. |
+| 3.1.2 | Language of Parts | **Supports** | Amharic strings render inside `lang="am"`. The one Latin-script word inside the Amharic form — the language option **English** — carries `lang="en"`, taken from the schema (`Option.lang`) so an adopter's Tigrinya or Arabic option gets the same treatment without touching the widget. Latin-script ID numbers are digits, which are language-neutral. **Corrected 13 Nov, `23c4564`:** this row previously claimed "no string mixes languages", which was false — the option label inherited `lang="am"` and a screen reader read the word *English* with an Amharic voice. Re-measured: **0** text nodes on the Amharic page whose script differs from the page language and that carry no `lang`. |
 | 3.2.3 | Consistent Navigation | **Supports** | The settings bar has the same order and position on all three forms and all steps. |
 | 3.2.4 | Consistent Identification | **Supports** | Same icon and same wording for the same action everywhere; labels come from the schema, so they cannot drift between forms. |
 | 3.3.3 | Error Suggestion | **Supports** | Messages say what to do, in the user's language: "enter a phone number like 0912345678", not "invalid input". |
@@ -154,7 +156,7 @@ Stated as limitations, not buried. None is a WCAG 2.2 AA failure.
 | # | Limitation | Criteria touched | Status |
 |---|---|---|---|
 | 1 | **No session with disabled users yet.** The co-designer has not yet completed the task with NVDA, TalkBack, keyboard only, 200 % zoom and sound off. | All — a verification gap, not a known defect | **Scheduled before submission (§7).** Anything they find is fixed or listed here. |
-| 2 | **Voice input is an enhancement, not a path.** Dictation uses `SpeechRecognition`, absent in Firefox and Safari. When unavailable the button is not rendered and the form remains fully operable by keyboard. | 2.1.1 is met; no criterion requires dictation | Accepted. |
+| 2 | **Voice input is an enhancement, not a path.** Dictation uses `SpeechRecognition`: absent in Firefox/Safari (the button is then not rendered), present in Chrome, and **unavailable for Amharic** — Chrome has no Amharic speech model, so the language question falls back from `am-ET` to `en-US` and then to an explicit message pointing at the buttons. The form remains fully operable by keyboard either way. | 2.1.1 is met; no criterion requires dictation | Accepted. |
 | 3 | **No dictation on consent screens.** Deliberate: a transcribed consent is not consent. Enforced twice — validator rule **E22** and a renderer guard — because this is the kind of rule that gets refactored away. | No criterion requires dictation | Accepted by design. |
 | 4 | **Read-aloud voice quality is the device's.** An Android TTS voice may mispronounce Amharic. | 1.4.2 is met (a mechanism exists); voice quality is not a criterion | Accepted. Screen-reader users are unaffected. |
 | 5 | **The offline queue lives on one device.** Clearing site data loses a queued sign-up; the user is warned before that can happen and told not to close the page. | 3.3.4 — the failure is announced rather than silent | Accepted; in the README's limitations. |

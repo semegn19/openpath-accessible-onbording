@@ -96,3 +96,64 @@ export async function submitFromReview(page) {
   await page.getByRole('checkbox', { name: LABELS.agree }).first().check();
   await page.getByRole('button', { name: LABELS.finish }).click();
 }
+
+/* ---------- form-agnostic primitives ----------
+   `answer()` above walks the onboarding form, so the job and employer tests each grew their own
+   walker — and every one of them re-learned the same three traps:
+
+   1. clicking "the first unchecked radio" on the language screen changes the language instead of
+      answering the question (the language screen *is* radios);
+   2. the preference boxes are checkboxes, not radios, and are found by index;
+   3. `.check()` stalls for 30 s on an input that is already checked.
+
+   These helpers encode the answers once. They navigate; they never assert. */
+
+/** The step number from the progress text — the only stable handle across all three forms. */
+export const stepNo = async (page) => {
+  const txt = await page.locator('.op-progress').innerText();
+  return Number((txt.match(/(\d+)/) || [])[1]);
+};
+
+/** Walk forward until the progress counter reads `n`. Stops rather than overshoots. */
+export async function walkTo(page, n, { fill = true, max = 20 } = {}) {
+  for (let i = 0; i < max; i++) {
+    const now = await stepNo(page);
+    if (!now || now >= n) return now;
+    if (fill) await fillVisible(page);
+    await next(page);
+    await page.waitForTimeout(140);
+  }
+  return stepNo(page);
+}
+
+/** Answer whatever is on screen with something valid, without touching the language choice. */
+export async function fillVisible(page, { text = 'Test Person', phone = '0912345678', email = 'test@example.com', number = '3' } = {}) {
+  for (const el of await page.$$('.op-root input[type=text], .op-root input[type=tel], .op-root input[type=email], .op-root textarea')) {
+    const ty = await el.getAttribute('type');
+    await el.fill(ty === 'tel' ? phone : ty === 'email' ? email : text).catch(() => {});
+  }
+  for (const el of await page.$$('.op-root input[inputmode=numeric]')) await el.fill(number).catch(() => {});
+  for (const el of await page.$$('.op-root input[type=radio]:not(:checked)')) {
+    if (await el.isVisible().catch(() => false)) { await el.click({ force: true }).catch(() => {}); break; }
+  }
+}
+
+/**
+ * Choose the language. Ticks the language radio by name rather than clicking "the first radio":
+ * on step 1 the radios *are* the languages, so a generic click silently switches the form.
+ */
+export async function setLang(page, lang = 'am') {
+  const name = lang === 'am' ? LABELS.amharic : LABELS.english;
+  await page.getByRole('radio', { name }).first().check().catch(async () => {
+    await page.getByRole('radio', { name }).first().click({ force: true }).catch(() => {});
+  });
+  await page.waitForTimeout(150);
+}
+
+/** Tick preference boxes by index: read-aloud, bigger text, simple words. */
+export async function setPrefs(page, prefs = []) {
+  const map = { 'read-aloud': 0, 'large-text': 1, 'simple-words': 2 };
+  const boxes = page.locator('.op-root input[type=checkbox]');
+  for (const p of prefs) if (map[p] !== undefined) await boxes.nth(map[p]).check().catch(() => {});
+  await page.waitForTimeout(150);
+}

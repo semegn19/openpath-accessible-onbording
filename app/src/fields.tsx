@@ -1,7 +1,8 @@
 import type { Lang, LText, Option, Schema, Step } from './types';
-import { t } from './i18n';
+import { t, errorText } from './i18n';
 import { VoiceButton } from './speech';
 import { Icon } from './icons';
+import { c } from './copy';
 
 const EC_MONTHS = ['መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'];
 
@@ -13,6 +14,18 @@ export function questionText(step: Step, lang: Lang, simple: boolean): string {
   return t(chosen ?? src, lang);
 }
 
+/* The simple-words layer covers every piece of prose on a screen, not only the heading. Each of
+ * these is the single place its text is chosen, so the visible copy and the read-aloud copy are
+ * always the same sentence — the bug that bites is one of them being updated and not the other. */
+export const hintText = (step: Step, lang: Lang, simple: boolean): string =>
+  t((simple && step.simpleHint) || step.hint, lang);
+export const whyText = (step: Step, lang: Lang, simple: boolean): string =>
+  t((simple && step.simpleWhy) || step.why, lang);
+export const bodyText = (step: Step, lang: Lang, simple: boolean): string =>
+  t((simple && step.simpleBody) || step.body, lang);
+export const optionText = (o: Option, lang: Lang, simple: boolean): string =>
+  t((simple && o.simple) || o.label, lang);
+
 interface Props {
   headingId: string;
   step: Step;
@@ -20,7 +33,7 @@ interface Props {
   lang: Lang;
   simple: boolean;
   value: unknown;
-  errorRule?: string;
+  errorRule?: { rule: string; params?: Record<string, string | number> };
   onChange: (v: unknown) => void;
 }
 
@@ -29,10 +42,25 @@ interface Props {
 const isConsentScreen = (s: Step): boolean => s.type === 'statement' || s.type === 'submit';
 
 export function Field({ headingId, step, schema, lang, simple, value, errorRule, onChange }: Props) {
-  const label = questionText(step, lang, simple);
-  const hint = t(step.hint, lang);
-  const why = t(step.why, lang);
-  const error = errorRule ? t(schema.errors[errorRule], lang, errorRule) : '';
+  // Any step with options gets a choice list, whatever widget draws it. This used to be gated on
+  // isChoice, so a `select` handed the mic no list: the transcript was accepted, confirmed, and
+  // then written nowhere because a dropdown has no option to match it to. Voicing an answer must
+  // never be a thing the form accepts and discards.
+  // Aliases carry both languages: someone answering in Amharic on an English page (and the
+  // other way round) must still be understood, and the alternative transcripts are tried too.
+  const choiceList = (step.options ?? []).length
+    ? (step.options ?? []).map((o) => ({
+        value: o.value,
+        label: optionText(o, lang, simple),
+        // Both wordings are accepted when speaking: a person who turned simple words on may still
+        // say the longer phrase they read somewhere else.
+        aliases: [o.label?.am, o.label?.en, o.simple?.am, o.simple?.en, o.value]
+          .filter((x): x is string => Boolean(x)),
+      }))
+    : undefined;
+  const hint = hintText(step, lang, simple);
+  const why = whyText(step, lang, simple);
+  const error = errorText(schema.errors, lang, errorRule);
   const baseId = step.id;
   const hintId = `${baseId}-hint`;
   const errorId = `${baseId}-error`;
@@ -62,7 +90,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
               aria-describedby={describedBy || undefined}
               aria-invalid={error ? true : undefined}
             />
-            <span className="op-option-label">{t(o.label, lang)}</span>
+            <span className="op-option-label">{optionText(o, lang, simple)}</span>
           </label>
         );
       })}
@@ -86,6 +114,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
                screen reader) can fill a name or a phone number instead of asking someone to
                retype it — which matters most for exactly the people this form is for. */
             autoComplete={step.autocomplete ?? 'off'}
+            aria-labelledby={headingId}
             value={typeof value === 'string' ? value : ''}
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
@@ -98,6 +127,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           <textarea
             id={baseId}
             className="op-input op-textarea"
+            aria-labelledby={headingId}
             rows={4}
             value={typeof value === 'string' ? value : ''}
             onChange={(e) => setStr(e.target.value)}
@@ -110,14 +140,15 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           <select
             id={baseId}
             className="op-input"
+            aria-labelledby={headingId}
             value={typeof value === 'string' ? value : ''}
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
           >
-            <option value="">{t(schema.ui?.choose, lang, lang === 'am' ? 'ከዝርዝሩ ይምረጡ' : 'Choose one')}</option>
+            <option value="">{t(schema.ui?.choose, lang)}</option>
             {(step.options ?? []).map((o: Option) => (
-              <option key={o.value} value={o.value}>{t(o.label, lang)}</option>
+              <option key={o.value} value={o.value}>{optionText(o, lang, simple)}</option>
             ))}
           </select>
         );
@@ -128,14 +159,13 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
               id={baseId}
               className="op-input"
               type="file"
+              aria-labelledby={headingId}
               accept={step.accept}
               onChange={(e) => setStr(e.target.files?.[0]?.name ?? '')}
               aria-describedby={describedBy || undefined}
             />
             <p className="op-hint">
-              {lang === 'am'
-                ? 'በዚህ ሙከራ ውስጥ ፋይሉ አይላክም። ስሙ ብቻ ይታያል።'
-                : 'In this demo the file is not uploaded. Only its name is used.'}
+              {c('file.demoNote', lang)}
             </p>
           </div>
         );
@@ -144,24 +174,24 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
         const set = (patch: Partial<typeof v>) => onChange({ ...v, ...patch });
         return (
           <div className="op-date">
-            <label className="op-sr" htmlFor={`${baseId}-year`}>{lang === 'am' ? 'ዓመት' : 'Year'}</label>
-            <input id={`${baseId}-year`} className="op-input op-input-sm" inputMode="numeric" placeholder={lang === 'am' ? 'ዓመት' : 'Year'}
+            <label className="op-sr" htmlFor={`${baseId}-year`}>{c('date.year', lang)}</label>
+            <input id={`${baseId}-year`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.year', lang)}
               value={v.year ?? ''} onChange={(e) => set({ year: e.target.value })} aria-describedby={describedBy || undefined} />
             {!v.yearOnly && (
               <>
-                <label className="op-sr" htmlFor={`${baseId}-month`}>{lang === 'am' ? 'ወር' : 'Month'}</label>
-                <input id={`${baseId}-month`} className="op-input op-input-sm" inputMode="numeric" placeholder={lang === 'am' ? 'ወር' : 'Month'}
+                <label className="op-sr" htmlFor={`${baseId}-month`}>{c('date.month', lang)}</label>
+                <input id={`${baseId}-month`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.month', lang)}
                   value={v.month ?? ''} onChange={(e) => set({ month: e.target.value })} aria-describedby={describedBy || undefined} />
-                <label className="op-sr" htmlFor={`${baseId}-day`}>{lang === 'am' ? 'ቀን' : 'Day'}</label>
-                <input id={`${baseId}-day`} className="op-input op-input-sm" inputMode="numeric" placeholder={lang === 'am' ? 'ቀን' : 'Day'}
+                <label className="op-sr" htmlFor={`${baseId}-day`}>{c('date.day', lang)}</label>
+                <input id={`${baseId}-day`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.day', lang)}
                   value={v.day ?? ''} onChange={(e) => set({ day: e.target.value })} aria-describedby={describedBy || undefined} />
               </>
             )}
             <label className="op-check">
               <input type="checkbox" checked={!!v.yearOnly} onChange={(e) => set({ yearOnly: e.target.checked, month: undefined, day: undefined })} />
-              <span>{lang === 'am' ? 'ዓመቱን ብቻ አውቃለሁ' : 'I only know the year'}</span>
+              <span>{c('date.yearOnly', lang)}</span>
             </label>
-            <p className="op-hint">{lang === 'am' ? 'የኢትዮጵያ ዓመት — ለምሳሌ 1988' : `Ethiopian year — for example 1988 (${EC_MONTHS[0]}…)`}</p>
+            <p className="op-hint">{c('date.hint', lang)}{lang === 'am' ? '' : ` (${EC_MONTHS[0]}…)`}</p>
           </div>
         );
       }
@@ -175,7 +205,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
     return (
       <div className="op-field">
         {why && <p className="op-why">{why}</p>}
-        {step.type === 'statement' && step.body && <p className="op-body">{t(step.body, lang)}</p>}
+        {step.type === 'statement' && step.body && <p className="op-body">{bodyText(step, lang, simple)}</p>}
         {consentList()}
         {error && (
           <p id={errorId} className="op-error"><Icon name="alert" />{error}</p>
@@ -192,7 +222,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
         <fieldset className="op-fieldset" aria-labelledby={headingId}>
           {step.optional && (
             <p className="op-optional op-optional-block">
-              {t(schema.ui?.optional, lang, lang === 'am' ? 'አስፈላጊ አይደለም' : 'Optional')}
+              {t(schema.ui?.optional, lang)}
             </p>
           )}
           {hint && <p id={hintId} className="op-hint">{hint}</p>}
@@ -212,9 +242,9 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
                     aria-describedby={describedBy || undefined}
                     aria-invalid={error ? true : undefined}
                   />
-                  <span className="op-option-label">
+                  <span className="op-option-label" lang={o.lang ?? undefined}>
                     {o.icon && <Icon name={o.icon} />}
-                    {t(o.label, lang)}
+                    {optionText(o, lang, simple)}
                   </span>
                 </label>
               );
@@ -222,12 +252,17 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           </div>
         </fieldset>
       ) : (
+        /* The <h1> above IS the question — icon, wording and all. Repeating it as a field label
+         * said everything twice ("ስም" then "ስም") and made a screen reader announce the question
+         * twice as well. The input is named from the heading with aria-labelledby, so the one
+         * visible copy is also the accessible name. Only the optional marker stays visible, because
+         * that is information the heading does not carry. */
         <div className="op-field-control">
-          <label htmlFor={baseId} className="op-label">
-            {step.icon && <Icon name={step.icon} />}
-            {label}
-            {step.optional && <span className="op-optional"> ({t(schema.ui?.optional, lang, lang === 'am' ? 'አስፈላጊ አይደለም' : 'Optional')})</span>}
-          </label>
+          {step.optional && (
+            <p className="op-optional op-optional-block">
+              {t(schema.ui?.optional, lang)}
+            </p>
+          )}
           {hint && <p id={hintId} className="op-hint">{hint}</p>}
           {control()}
         </div>
@@ -238,20 +273,22 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           <Icon name="alert" />{error}
         </p>
       )}
-      {step.localOnly && <p className="op-private">{t(schema.ui?.notShared, lang, lang === 'am' ? 'ይህ መረጃ ወደ ማንም አይላክም።' : 'This is not sent to anyone.')}</p>}
+      {step.localOnly && <p className="op-private">{t(schema.ui?.notShared, lang)}</p>}
 
       {step.voice && !isConsentScreen(step) && (
         <VoiceButton
           lang={lang}
           schema={schema}
           fieldType={step.type}
-          onAccept={(text) => {
-            if (step.type === 'checkbox' || step.type === 'radio') {
-              const match = (step.options ?? []).find((o) => t(o.label, lang).includes(text.trim()));
-              if (match) step.type === 'radio' ? onChange(match.value) : toggleInArray(match.value, match.exclusive, exclusiveValue);
-            } else {
-              onChange(text.trim());
-            }
+          choices={choiceList}
+          /* On the language screen nobody has a language yet, so listen in both and take
+             whichever one the engine can actually do. It is the one screen where guessing is
+             better than asking. */
+          tryLangs={step.type === 'language' ? ['am', 'en'] : [lang]}
+          onAccept={(text) => onChange(text.trim())}
+          onPick={(value) => {
+            if (step.type === 'radio' || step.type === 'language' || step.type === 'select') onChange(value);
+            else toggleInArray(value, false, exclusiveValue);
           }}
         />
       )}

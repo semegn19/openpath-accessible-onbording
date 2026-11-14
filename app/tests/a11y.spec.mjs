@@ -32,15 +32,9 @@ console.log('  h1:', (await h1()).trim());
 console.log('  focused:', await page.evaluate(() => document.activeElement?.tagName));
 await audit('1 language');
 
-// error path: continue with nothing chosen
-await next();
-await page.waitForTimeout(150);
-const summaryVisible = await page.locator('.op-error-summary').isVisible().catch(() => false);
-const focusedAfterError = await page.evaluate(() => document.activeElement?.className || document.activeElement?.tagName);
-console.log('  empty submit → summary visible:', summaryVisible, '| focus on:', focusedAfterError);
-await audit('1b error state');
-
-await page.getByRole('radio', { name: /አማርኛ/ }).check();
+// The language question can no longer be left blank: the form is always in some language, so the
+// radio starts on the one in use. The error state is therefore exercised on a required text field
+// (see "name" below) rather than here.
 await next();
 await page.waitForTimeout(200);
 
@@ -67,6 +61,15 @@ await page.waitForTimeout(200);
 console.log('\n=== 4 name ===');
 console.log('  h1:', (await h1()).trim());
 await audit('4 name');
+
+// error path: press Next with the required field empty
+await next();
+await page.waitForTimeout(250);
+const summaryVisible = await page.locator('.op-error-summary').isVisible().catch(() => false);
+const focusedAfterError = await page.evaluate(() => document.activeElement?.className || document.activeElement?.tagName);
+console.log('  empty name → summary visible:', summaryVisible, '| focus on:', focusedAfterError);
+await audit('4b error state');
+
 await page.locator('input[type="text"]').first().fill('ሳራ በቀለ ታደሰ');
 await next();
 await page.waitForTimeout(200);
@@ -102,7 +105,7 @@ await page.waitForTimeout(200);
 console.log('\n=== 8 referral (consent, no microphone) ===');
 console.log('  h1:', (await h1()).trim());
 const micOnConsent = await page.getByRole('button', { name: /በድምጽ መስጠት|Speak your answer/ }).count();
-const readOnConsent = await page.getByRole('button', { name: /አንብብልኝ|Read the question/ }).count();
+const readOnConsent = await page.getByRole('button', { name: /ያዳምጡ|አንብብልኝ|Read the question/ }).count();
 console.log('  voice button on consent (must be 0):', micOnConsent, '| read-aloud (must be 1):', readOnConsent);
 if (micOnConsent !== 0) failures++;
 if (readOnConsent !== 1) failures++;
@@ -221,6 +224,32 @@ for (let i = 0; i < 12; i++) {
   }));
 }
 console.log('\n  tab order (12):', order.join(' → '));
+
+/* ---------- a question is asked once ----------
+   The <h1> names the screen. Until now a single-line field also rendered a <label> with the same
+   words and the same icon, so "ስምዎን ይጻፉ" appeared twice and a screen reader read it twice. axe
+   cannot see this — both copies are valid labels — so it is checked here: the heading text may not
+   reappear in the field area, and every field must still be named by the heading. */
+for (const route of ['job', 'onboard']) {
+  await page.goto(`${URL.replace(/\/$/, '')}/${route}`, { waitUntil: 'networkidle' });
+  // Both forms now open with the language question, then the accessibility preferences; step
+  // forward (answering the required options) until a single-line field is on screen.
+  for (let i = 0; i < 5 && !(await page.locator('.op-input').count()); i++) {
+    await page.locator('.op-option input').first().check({ timeout: 1000 }).catch(() => {});
+    await page.getByRole('button', { name: /ቀጣይ|Next/ }).click({ timeout: 1500 }).catch(() => {});
+    await page.waitForTimeout(250);
+  }
+  const heading = (await h1()).replace(/\s+/g, ' ').trim();
+  const fieldArea = (await page.locator('.op-field').first().innerText().catch(() => '')).replace(/\s+/g, ' ').trim();
+  const named = await page.locator('.op-input').first().evaluate((el) => {
+    const id = el.getAttribute('aria-labelledby');
+    return id ? document.getElementById(id)?.textContent?.trim() ?? '' : (el.labels?.[0]?.textContent?.trim() ?? '');
+  }).catch(() => '');
+  if (!heading || fieldArea.includes(heading)) { failures++; console.log(`✗ ${route}: the question is printed twice (${heading})`); }
+  else console.log(`✓ ${route}: the question appears once, as the heading`);
+  if (!named || named !== heading) { failures++; console.log(`✗ ${route}: the field is not named by the heading → "${named}"`); }
+  else console.log(`✓ ${route}: the field's accessible name is that heading`);
+}
 
 await browser.close();
 console.log(`\n${failures === 0 ? 'PASS' : 'FAIL'} — ${results.length} axe audits, ${failures} problem(s)`);
