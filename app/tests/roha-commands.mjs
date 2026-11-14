@@ -62,10 +62,10 @@ try {
   await page.waitForFunction(() => window.voiceTest.recognition?.lang === 'am-ET');
   await page.evaluate(() => window.say('reset size'));
   check(/[\u1200-\u137F]/.test(await reply.textContent()) && Math.abs(await fontSize() - before) < 0.01, 'language switching updates recognition and response text while commands still execute');
-  await page.getByRole('dialog').getByRole('textbox').fill('unfinished request');
+  await page.locator('.roha-aside').getByRole('textbox').fill('unfinished request');
   await page.evaluate(() => { document.documentElement.lang = 'en'; });
   await page.waitForFunction(() => window.voiceTest.recognition?.lang === 'en-US' && document.querySelector('.roha-aside').lang === 'en');
-  check(await page.getByRole('dialog').getByRole('textbox').inputValue() === 'unfinished request', 'language change while listening preserves an open dialog and typed draft');
+  check(await page.locator('.roha-aside').getByRole('textbox').inputValue() === 'unfinished request', 'language change while listening preserves the inline panel and typed draft');
   await page.evaluate(() => window.say('read page'));
   check(await page.evaluate(() => window.Roha.voice.getState()) === 'speaking', 'explicit read command pauses recognition to prevent echo');
   await page.evaluate(() => window.voiceTest.utterance.onend());
@@ -86,8 +86,8 @@ try {
   await page.evaluate(() => { window.voiceTest.denied = true; });
   await page.locator('[data-roha-control="roha-btn-mic"]').click();
   await page.waitForFunction(() => document.querySelector('[data-roha-control="roha-transcript"]').textContent.includes('denied'));
-  await page.getByRole('dialog').getByRole('textbox').fill('bigger text');
-  await page.getByRole('dialog').getByRole('textbox').press('Enter');
+  await page.locator('.roha-aside').getByRole('textbox').fill('bigger text');
+  await page.locator('.roha-aside').getByRole('textbox').press('Enter');
   check(Math.abs(await fontSize() / before - 1.5) < 0.01, 'denying microphone access leaves typed commands functional');
   await page.evaluate(() => { window.voiceTest.denied = false; window.voiceTest.startError = true; });
   await page.locator('[data-roha-control="roha-btn-mic"]').click();

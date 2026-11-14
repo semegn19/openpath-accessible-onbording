@@ -42,9 +42,10 @@
     "precheck": "npm run sync:schemas",
     "test:access": "node tests/roha-access.mjs",
     "test:settings": "node tests/roha-settings.mjs",
-    "check:roha": "npm run build && npm run test:roha && npm run test:access && npm run test:settings && npm run test:localisation && npm run test:commands && npm --prefix ../api test",
+    "check:roha": "npm run build && npm run test:roha && npm run test:access && npm run test:settings && npm run test:localisation && npm run test:commands && npm run test:guide && npm --prefix ../api test",
     "test:localisation": "node tests/roha-localisation.mjs",
-    "test:commands": "node tests/roha-commands.mjs"
+    "test:commands": "node tests/roha-commands.mjs",
+    "test:guide": "node tests/roha-form-guide.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

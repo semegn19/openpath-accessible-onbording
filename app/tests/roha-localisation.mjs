@@ -44,6 +44,8 @@ try {
   const answer = await page.evaluate(() => {
     const target = window.map.resources.find(r => r.name === 'ስም');
     window.act('propose_answer',{value:'Sara $& {literal}'},target.id);
+    if (document.querySelector('#name').value) throw new Error('Answer changed before confirmation');
+    document.querySelector('[data-roha-confirm]').click();
     return {text:window.reply(),value:document.querySelector('#name').value};
   });
   check(am(answer.text) && answer.text.includes('Sara $& {literal}') && answer.value === 'Sara $& {literal}', 'answer feedback preserves names and literal interpolation-like data');

@@ -64,7 +64,7 @@ ok(/አማርኛ/.test(spoken) && /English/.test(spoken), 'read-aloud reads both
 const heading = () => p.locator('#op-q-title').innerText();
 const intro = () => p.locator('.op-intro').innerText();
 const defaultHeading = (await heading()).trim(), defaultIntro = (await intro()).trim();
-await p.getByRole('button', { name: /ቀላል ቃላት|Simple words/ }).click();
+await p.locator('.op-settingsbar').getByRole('button', { name: /ቀላል ቃላት|Simple words/ }).click();
 await p.waitForTimeout(150);
 const simpleIntro = (await intro()).trim(), simpleHeading = (await heading()).trim();
 ok(simpleIntro !== defaultIntro && /ቀስ ብለው|Take your time/.test(simpleIntro),
@@ -77,7 +77,7 @@ await p.waitForTimeout(150);
 const simpleSpoken = (await p.evaluate(() => window.__spoken)).join(' ');
 ok(/ቀስ ብለው|Take your time/.test(simpleSpoken),
    'and read-aloud speaks the short intro too, not the long one', simpleSpoken.slice(0, 80));
-await p.getByRole('button', { name: /ቀላል ቃላት|Simple words/ }).click();   // back to default
+await p.locator('.op-settingsbar').getByRole('button', { name: /ቀላል ቃላት|Simple words/ }).click();   // back to default
 await p.waitForTimeout(150);
 ok((await intro()).trim() === defaultIntro, 'turning it off restores the full intro');
 await p.evaluate(() => { window.__spoken.length = 0; });
@@ -180,7 +180,7 @@ ok(announcedTotal && shownTotal === announcedTotal, 'progress matches the announ
     await q.reload({ waitUntil: 'load' });
   };
   await goto2();
-  await q.getByRole('button', { name: /ቀላል ቃላት|Simple words/ }).click();
+  await q.locator('.op-settingsbar').getByRole('button', { name: /ቀላል ቃላት|Simple words/ }).click();
   await q.waitForTimeout(150);
   await q.locator('.op-option input').first().check();
   await q.getByRole('button', { name: /^ቀጣይ$|^Next$/ }).first().click();

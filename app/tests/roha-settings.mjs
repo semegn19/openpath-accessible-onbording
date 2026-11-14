@@ -42,7 +42,7 @@ try {
   await page.goto(base+'/onboard',{waitUntil:'networkidle'});
   await page.evaluate(()=>window.Roha.mount({root:document.querySelector('main'),language:'en'}));
   await page.locator('[data-roha-control="roha-launcher-pill"]').click();
-  const input=page.getByRole('dialog').getByRole('textbox');
+  const input=page.locator('.roha-aside').getByRole('textbox');
   await page.locator('[data-ai-options]').click();await page.locator('[data-ai-consent]').waitFor({state:'visible'});
   check(!await page.locator('[data-ai-consent]').isChecked(),'AI consent is unchecked initially');
   await input.fill('Please make the letters gigantic for me');await input.press('Enter');
@@ -68,8 +68,8 @@ try {
     if(!target)throw new Error('No focusable field discovered');
     return window.Roha.executeIntent({schemaVersion:'2.0',utteranceId:'focus-test',mapId:map.mapId,mapVersion:map.mapVersion,intent:'focus',targetId:target.id,payload:{}});
   });
-  await page.waitForFunction(()=>!document.querySelector('.roha-aside dialog').open);
-  check(focusResult.success && await page.evaluate(()=>!!document.activeElement?.closest('main')),'focus action closes modal and leaves focus in the host form');
+  check(await page.locator('.roha-aside').isVisible() && await page.locator('dialog').count() === 0, 'assistant remains inline during host interactions');
+  check(focusResult.success && await page.evaluate(()=>!!document.activeElement?.closest('main')),'focus action leaves focus in the host form without hiding assistance');
 
   await page.goto(base+'/blank-host.html',{waitUntil:'networkidle'});
   check(await page.locator('.roha-aside').count()===1 && await page.evaluate(()=>!!document.querySelector('roha-agent').getSDK()),'declarative plugin mounts on the named host root');

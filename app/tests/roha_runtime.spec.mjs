@@ -53,12 +53,15 @@ async function runTests() {
     url: 'http://localhost/registration',
   });
   
+  // JSDOM has no layout; browser tests cover real visibility and reflow.
+  domA.window.HTMLElement.prototype.getClientRects = function () { return [{ width: 100, height: 48 }]; };
+
   // Inject bundle into host A
   domA.window.eval(rohaScriptContent);
   const rohaA = domA.window.Roha;
   assert(rohaA !== undefined, 'Roha SDK instantiates and attaches to window');
 
-  const mapA = rohaA.mount();
+  let mapA = rohaA.mount();
   assert(mapA.schemaVersion === '2.0', 'AT-D01: Map A has schemaVersion 2.0');
   assert(mapA.origin === 'runtime-discovery', 'AT-D01: Map A origin is runtime-discovery');
   assert(mapA.resources.length >= 4, 'AT-D01: Discovered main, form, and 3 fields in Host A');
@@ -186,6 +189,7 @@ async function runTests() {
   assert(!domA.window.document.documentElement.getAttribute('data-roha-scale'), 'AT-V05: "reset size" routed and executed');
 
   // Form input answer
+  mapA = rohaA.getMap();
   const nameInput = domA.window.document.getElementById('preferred-name');
   rohaA.executeIntent({
     schemaVersion: '2.0',
@@ -196,7 +200,9 @@ async function runTests() {
     targetId: nameField.id,
     payload: { value: 'Sara Tadesse' },
   });
-  assert(nameInput.value === 'Sara Tadesse', 'AT-V04: Propose answer updates input value');
+  assert(nameInput.value === '', 'AT-V04: Proposal leaves input unchanged before approval');
+  domA.window.document.querySelector('[data-roha-confirm]').click();
+  assert(nameInput.value === 'Sara Tadesse', 'AT-V04: Confirmed answer updates input value');
 
   // Deliberate correction (AT-V04)
   rohaA.executeIntent({
@@ -208,6 +214,7 @@ async function runTests() {
     targetId: nameField.id,
     payload: { value: 'Sara Bekele Tadesse' },
   });
+  domA.window.document.querySelector('[data-roha-confirm]').click();
   assert(nameInput.value === 'Sara Bekele Tadesse', 'AT-V04: Corrected answer updates input value correctly');
 
   // =========================================================================
