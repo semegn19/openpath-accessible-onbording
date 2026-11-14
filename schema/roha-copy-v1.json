@@ -1,0 +1,356 @@
+{
+  "id": "roha-copy-v1",
+  "kind": "runtime-copy",
+  "version": "1.0.0",
+  "contentStatus": "am-draft-unreviewed",
+  "strings": {
+    "roha.title": {
+      "en": "Roha assistant",
+      "am": "የሮሃ ረዳት"
+    },
+    "roha.open": {
+      "en": "Open Roha assistant",
+      "am": "የሮሃ ረዳትን ክፈት"
+    },
+    "roha.close": {
+      "en": "Close assistant",
+      "am": "ረዳቱን ዝጋ"
+    },
+    "roha.ready": {
+      "en": "Ready",
+      "am": "ዝግጁ"
+    },
+    "roha.intro": {
+      "en": "Type a request, use a button, or enable voice.",
+      "am": "ጥያቄ ይጻፉ፣ አዝራር ይጠቀሙ ወይም ድምጽን ያብሩ።"
+    },
+    "roha.request": {
+      "en": "What would you like help with?",
+      "am": "በምን ልርዳዎት?"
+    },
+    "roha.send": {
+      "en": "Send request",
+      "am": "ጥያቄ ላክ"
+    },
+    "roha.voice": {
+      "en": "Enable voice",
+      "am": "ድምጽ አብራ"
+    },
+    "roha.stop": {
+      "en": "Stop",
+      "am": "አቁም"
+    },
+    "roha.stuck": {
+      "en": "I’m stuck",
+      "am": "እርዳኝ"
+    },
+    "roha.review": {
+      "en": "Check answers",
+      "am": "መልሶችን መልከት"
+    },
+    "roha.bigger": {
+      "en": "Bigger text",
+      "am": "ትልቅ ጽሑፍ"
+    },
+    "roha.simple": {
+      "en": "Simple words",
+      "am": "ቀላል ቃላት"
+    },
+    "roha.contrast": {
+      "en": "High contrast",
+      "am": "ከፍተኛ ንፅፅር"
+    },
+    "roha.read": {
+      "en": "Read page",
+      "am": "ገጹን አንብብ"
+    },
+    "roha.reset": {
+      "en": "Reset settings",
+      "am": "ቅንብሮችን መልስ"
+    },
+    "roha.processing": {
+      "en": "Working on your request…",
+      "am": "ጥያቄዎን በማየት ላይ…"
+    },
+    "roha.stopped": {
+      "en": "Stopped. You can continue when you are ready.",
+      "am": "ቆሟል። ዝግጁ ሲሆኑ መቀጠል ይችላሉ።"
+    },
+    "roha.notUnderstood": {
+      "en": "I could not do that. Try “bigger text”, “read page”, or use the buttons.",
+      "am": "ይህን ማድረግ አልቻልኩም። “ትልቅ ጽሑፍ” ይበሉ ወይም አዝራሮቹን ይጠቀሙ።"
+    },
+    "roha.aiConsent": {
+      "en": "Allow my typed requests to be sent to the configured AI provider. Do not include passwords, ID numbers or private support details.",
+      "am": "የጻፍኳቸው ጥያቄዎች ወደ ተመረጠው የኤአይ አቅራቢ እንዲላኩ እፈቅዳለሁ። የይለፍ ቃላትን፣ የመታወቂያ ቁጥሮችን ወይም የግል ድጋፍ ዝርዝሮችን አያካትቱ።"
+    },
+    "roha.voiceNotice": {
+      "en": "Your browser may send audio to its speech service. You can type instead.",
+      "am": "አሳሽዎ ድምጽን ወደ ድምጽ አገልግሎቱ ሊልክ ይችላል። በምትኩ መጻፍ ይችላሉ።"
+    },
+    "roha.aiOptions": {
+      "en": "AI options",
+      "am": "የኤአይ አማራጮች"
+    },
+    "roha.providerChanged": {
+      "en": "AI settings changed. Open AI options and review them before continuing.",
+      "am": "የAI ቅንብሮች ተቀይረዋል። ከመቀጠልዎ በፊት የAI አማራጮችን ከፍተው ይመልከቱ።"
+    },
+    "roha.reply": {
+      "en": "Roha: {text}",
+      "am": "ሮሃ፦ {text}"
+    },
+    "roha.actionUnavailable": {
+      "en": "I could not make that change. Try another control.",
+      "am": "ይህን መቀየር አልቻልኩም። ሌላ አዝራር ይሞክሩ።"
+    },
+    "roha.textScaled": {
+      "en": "Text size adjusted to {percent}%",
+      "am": "የጽሑፍ መጠን ወደ {percent}% ተቀይሯል።"
+    },
+    "roha.simpleOn": {
+      "en": "Simple words mode enabled",
+      "am": "ቀላል ቃላት በመጠቀም ላይ ነን።"
+    },
+    "roha.simpleOff": {
+      "en": "Original words restored",
+      "am": "የመጀመሪያዎቹ ቃላት ተመልሰዋል።"
+    },
+    "roha.contrastOn": {
+      "en": "High contrast enabled",
+      "am": "የቀለም ልዩነት ጨምሯል።"
+    },
+    "roha.contrastOff": {
+      "en": "High contrast disabled",
+      "am": "የቀለም ልዩነት ወደ መጀመሪያው ተመልሷል።"
+    },
+    "roha.motionOn": {
+      "en": "Reduced motion enabled",
+      "am": "በገጹ ላይ ያለው እንቅስቃሴ ቀንሷል።"
+    },
+    "roha.motionOff": {
+      "en": "Reduced motion disabled",
+      "am": "የገጹ እንቅስቃሴ ወደ መጀመሪያው ተመልሷል።"
+    },
+    "roha.sectionHelp": {
+      "en": "This section helps you with: {name}",
+      "am": "ይህ ክፍል ስለ {name} ይረዳዎታል።"
+    },
+    "roha.movedBack": {
+      "en": "Moved back",
+      "am": "ወደ ቀደመው ጥያቄ ተመልሰናል።"
+    },
+    "roha.filtered": {
+      "en": "Filtered by {query}",
+      "am": "በ«{query}» መሠረት የተመረጡት ይታያሉ።"
+    },
+    "roha.nameUpdated": {
+      "en": "Updated name to {value}",
+      "am": "ስሙ ወደ {value} ተቀይሯል።"
+    },
+    "roha.answerUpdated": {
+      "en": "Updated {name} with {value}",
+      "am": "ለ«{name}» የሰጡት መልስ ወደ «{value}» ተቀይሯል።"
+    },
+    "roha.paused": {
+      "en": "Paused",
+      "am": "ለጊዜው ቆመናል።"
+    },
+    "roha.undone": {
+      "en": "Undone last action",
+      "am": "የመጨረሻው ለውጥ ተመልሷል።"
+    },
+    "roha.resetDone": {
+      "en": "Preferences reset to default",
+      "am": "ቅንብሮቹ ወደ መጀመሪያው ተመልሰዋል።"
+    },
+    "roha.voiceWelcome": {
+      "en": "Roha voice enabled. How can I help you on this page?",
+      "am": "የሮሃ ድምጽ በርቷል። በዚህ ገጽ በምን ልርዳዎት?"
+    },
+    "roha.voiceUnsupported": {
+      "en": "Voice recognition is not supported in this browser. You can type or use the keyboard.",
+      "am": "ይህ አሳሽ ድምጽን ወደ ጽሑፍ አይቀይርም። መጻፍ ወይም አዝራሮችን መጠቀም ይችላሉ።"
+    },
+    "roha.microphoneEnabled": {
+      "en": "Microphone enabled. You can speak now.",
+      "am": "ማይክሮፎኑ በርቷል። አሁን መናገር ይችላሉ።"
+    },
+    "roha.microphoneDenied": {
+      "en": "Microphone permission was denied. You can use text and keyboard controls.",
+      "am": "ማይክሮፎኑን ለመጠቀም ፈቃድ አልተሰጠም። መጻፍ ወይም አዝራሮችን መጠቀም ይችላሉ።"
+    },
+    "roha.microphoneUnavailable": {
+      "en": "Could not access microphone. Text and keyboard controls are ready.",
+      "am": "ማይክሮፎኑን ማግኘት አልተቻለም። መጻፍ ወይም አዝራሮችን መጠቀም ይችላሉ።"
+    },
+    "roha.microphonePermission": {
+      "en": "Allow microphone access before speaking.",
+      "am": "ከመናገርዎ በፊት ማይክሮፎኑን ለመጠቀም ፈቃድ ይስጡ።"
+    },
+    "roha.microphoneReady": {
+      "en": "Microphone ready",
+      "am": "ማይክሮፎኑ ዝግጁ ነው።"
+    },
+    "roha.voiceInputError": {
+      "en": "Voice input did not work. You can still use text or keyboard.",
+      "am": "የድምጽ ግቤቱ አልሠራም። መጻፍ ወይም አዝራሮችን መጠቀም ይችላሉ።"
+    },
+    "roha.listening": {
+      "en": "Listening…",
+      "am": "በማዳመጥ ላይ…"
+    },
+    "roha.speaking": {
+      "en": "Speaking…",
+      "am": "በመናገር ላይ…"
+    },
+    "roha.voiceUnpermitted": {
+      "en": "Microphone off",
+      "am": "ማይክሮፎኑ ጠፍቷል።"
+    },
+    "roha.voiceError": {
+      "en": "Voice unavailable",
+      "am": "ድምጽ አይገኝም።"
+    },
+    "roha.inputField": {
+      "en": "Input field",
+      "am": "የመልስ ቦታ"
+    },
+    "roha.currentSelection": {
+      "en": "Current selection: {value}",
+      "am": "አሁን የተመረጠው፦ {value}"
+    },
+    "roha.proposedAnswer": {
+      "en": "I heard \"{value}\". Would you like to keep this, or change it?",
+      "am": "«{value}» ሲሉ ሰማሁ። ይህን መልስ ማቆየት ወይስ መቀየር ይፈልጋሉ?"
+    },
+    "roha.resumeComplete": {
+      "en": "All questions are filled and ready for your review.",
+      "am": "ሁሉም ጥያቄዎች ተሞልተዋል። መልሶችዎን መመልከት ይችላሉ።"
+    },
+    "roha.resumeStep": {
+      "en": "{name}we are on step {step} of {total}: {question}.",
+      "am": "{name}ከ{total} ደረጃዎች በ{step}ኛው ላይ ነን፦ {question}።"
+    },
+    "roha.currentPage": {
+      "en": "Current page",
+      "am": "ያሉበት ገጽ"
+    },
+    "roha.currentQuestion": {
+      "en": "current question",
+      "am": "የአሁኑ ጥያቄ"
+    },
+    "roha.orientationComplete": {
+      "en": "You are on {title}. All {total} questions are completed and ready for final review.",
+      "am": "በ«{title}» ገጽ ላይ ነዎት። ሁሉም {total} ጥያቄዎች ተሞልተዋል። መልሶችዎን ይመልከቱ።"
+    },
+    "roha.orientationProgress": {
+      "en": "You are on {title}. We are on question {step} of {total}: \"{question}\". You have answered {answered} of {total} questions.",
+      "am": "በ«{title}» ገጽ ላይ ነዎት። ከ{total} ጥያቄዎች በ{step}ኛው ላይ ነን፦ «{question}»። ከ{total} ጥያቄዎች {answered} መልሰዋል።"
+    },
+    "roha.mainContent": {
+      "en": "Main Content",
+      "am": "ዋናው ይዘት"
+    },
+    "roha.aiDisabled": {
+      "en": "AI is disabled. You can use the local controls.",
+      "am": "AI ጠፍቷል። በመሣሪያዎ ላይ ያሉትን አዝራሮች መጠቀም ይችላሉ።"
+    },
+    "roha.aiCustom": {
+      "en": "Organisation AI service",
+      "am": "የድርጅቱ የAI አገልግሎት"
+    },
+    "roha.aiSelected": {
+      "en": "AI service: {provider}. Model: {model}.",
+      "am": "የAI አገልግሎት፦ {provider}። ሞዴል፦ {model}።"
+    },
+    "roha.barrierUnderstand": {
+      "en": "I will explain this simply. This question asks for: \"{question}\". We can read it aloud or use simpler words.",
+      "am": "በቀላል ቃላት ላስረዳዎ። ይህ ጥያቄ \"{question}\" ይጠይቃል። ገጹን ጮክ ብለን ማንበብ ወይም ቃላቱን ማቅለል እንችላለን።"
+    },
+    "roha.barrierRead": {
+      "en": "You don't need to read the screen. I can read each question aloud to you, or enlarge the letters.",
+      "am": "ስክሪኑን ማንበብ አያስፈልግዎትም። እያንዳንዱን ጥያቄ ጮክ ብዬ አነብልዎታለሁ ወይም ጽሑፉን አተልቃለሁ።"
+    },
+    "roha.barrierDocument": {
+      "en": "Standard national ID is not required. You can choose a Refugee ID, Kebele letter, or our no-document partner referral route.",
+      "am": "የብሔራዊ መታወቂያ የግድ አያስፈልግም። የስደተኛ መታወቂያ፣ የድጋፍ ደብዳቤ፣ ወይም ያለመታወቂያ በአጋር የመመራት አማራጭ መምረጥ ይችላሉ።"
+    },
+    "roha.barrierType": {
+      "en": "You don't have to type. You can tap the microphone and speak your answer, or ask someone to help you.",
+      "am": "መተየብ አያስፈልግዎትም። ማይክሮፎኑን ተጭነው መልስዎን መናገር ይችላሉ፣ ወይም ደጋፊ ሰው እንዲያግዝዎ መጠየቅ ይችላሉ።"
+    },
+    "roha.barrierHelper": {
+      "en": "Someone helping you is fully supported. We will record learner consent, and you will review all answers before anything is submitted.",
+      "am": "ረዳት ሰው እንዲያግዝዎ ሙሉ በሙሉ ይፈቀዳል። የተማሪው ፈቃድ ይመዘገባል፣ እና ምንም ነገር ከመላኩ በፊት እርስዎ መልሶችዎን ይመለከታሉ።"
+    },
+    "roha.barrierOffline": {
+      "en": "Your answers are safely preserved on this device. You will not lose your work, and the form will submit automatically once connected.",
+      "am": "መልሶችዎ በዚህ መሣሪያ ላይ በሰላም ተቀምጠዋል። የሠሩት ስራ አይጠፋም፤ ግንኙነት ሲመለስ በራሱ ይላካል።"
+    },
+    "roha.barrierPrivacy": {
+      "en": "You have full control over your privacy. Support needs are optional, and you can select \"Prefer not to say\".",
+      "am": "የግል መረጃዎ ሙሉ በሙሉ በእጅዎ ነው። የድጋፍ ፍላጎቶች አማራጭ ናቸው፣ እና \"መግለጽ አልፈልግም\" የሚለውን መምረጥ ይችላሉ።"
+    },
+    "roha.barrierGeneral": {
+      "en": "Roha is here to help. Would you like me to explain the question simply, read it aloud, or suggest a permitted next step?",
+      "am": "ሮሃ ለማገዝ ዝግጁ ናት። ጥያቄውን በቀላል ቃላት እንዳስረዳዎት፣ ጮክ ብዬ እንዳነብልዎ፣ ወይም ወደ ቀጣይ ደረጃ እንድንሄድ ይፈልጋሉ?"
+    },
+    "roha.reviewEmpty": {
+      "en": "No answers have been recorded yet.",
+      "am": "እስካሁን ምንም የተመለሰ ጥያቄ የለም።"
+    },
+    "roha.reviewIntro": {
+      "en": "Here are all your recorded answers:",
+      "am": "የተመዘገቡት መልሶችዎ የሚከተሉት ናቸው፡"
+    },
+    "roha.reviewFooter": {
+      "en": "You can say \"change my [field]\" or \"submit\" when you are ready.",
+      "am": "ማንኛውንም መልስ ለመቀየር መጠየቅ ወይም ማረጋገጥ ይችላሉ።"
+    },
+    "roha.reviewItem": {
+      "en": "{number}. {name}: {value}",
+      "am": "{number}። {name}፦ {value}"
+    },
+    "roha.resumeLink": {
+      "en": "OpenPath / Roha: Use this secure link to continue your application: {url}. Valid for {hours} hours. Never share this link.",
+      "am": "OpenPath / ሮሃ፦ ማመልከቻዎን ለመቀጠል ይህን አገናኝ ይጠቀሙ፦ {url}። ለ{hours} ሰዓታት ይሠራል። አገናኙን ለሌላ ሰው አያጋሩ።"
+    },
+    "roha.resumeInvalid": {
+      "en": "Resume link is invalid or has already been used.",
+      "am": "የመቀጠያ አገናኙ አይሠራም ወይም አስቀድሞ ጥቅም ላይ ውሏል።"
+    },
+    "roha.resumeRevoked": {
+      "en": "This resume link was revoked.",
+      "am": "ይህ የመቀጠያ አገናኝ ተሰርዟል።"
+    },
+    "roha.resumeExpired": {
+      "en": "This resume link has expired. Please start a fresh application.",
+      "am": "የዚህ መቀጠያ አገናኝ ጊዜ አልፏል። አዲስ ማመልከቻ ይጀምሩ።"
+    },
+    "roha.smsFailed": {
+      "en": "The text message could not be sent. Please try again.",
+      "am": "አጭር መልእክቱ አልተላከም። እንደገና ይሞክሩ።"
+    },
+    "roha.supportRequested": {
+      "en": "Learner requested direct assistance with this step",
+      "am": "ተማሪው በዚህ ደረጃ የሰው እርዳታ ጠይቋል።"
+    },
+    "roha.supportFailed": {
+      "en": "Could not contact the support service. Please try again.",
+      "am": "የእርዳታ አገልግሎቱን ማግኘት አልተቻለም። እንደገና ይሞክሩ።"
+    },
+    "roha.partnerConsent": {
+      "en": "I confirm that this partner helped me fill this form with my permission, and I have reviewed every answer before sharing.",
+      "am": "ይህ አጋር በፈቃዴ ይህንን ቅጽ እንድሞላ እንደረዳኝ እና ከማጋራቴ በፊት እያንዳንዱን መልስ እንደገመገምኩ አረጋግጣለሁ።"
+    },
+    "roha.form": {
+      "en": "Form",
+      "am": "ቅጽ"
+    },
+    "roha.button": {
+      "en": "Button",
+      "am": "አዝራር"
+    }
+  }
+}

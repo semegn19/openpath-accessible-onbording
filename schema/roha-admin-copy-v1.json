@@ -1,0 +1,120 @@
+{
+  "id": "roha-admin-copy-v1",
+  "kind": "runtime-copy",
+  "version": "1.0.0",
+  "contentStatus": "am-draft-unreviewed",
+  "strings": {
+    "admin.title": {
+      "en": "Roha AI settings",
+      "am": "የሮሃ ኤአይ ቅንብሮች"
+    },
+    "admin.intro": {
+      "en": "Choose the AI service for this installation. Learners can keep using the form without AI.",
+      "am": "ለዚህ ጭነት የኤአይ አገልግሎት ይምረጡ። ተማሪዎች ያለ ኤአይ ቅጹን መጠቀም ይችላሉ።"
+    },
+    "admin.token": {
+      "en": "Administrator access token",
+      "am": "የአስተዳዳሪ መግቢያ ቶከን"
+    },
+    "admin.login": {
+      "en": "Sign in",
+      "am": "ግባ"
+    },
+    "admin.logout": {
+      "en": "Sign out",
+      "am": "ውጣ"
+    },
+    "admin.provider": {
+      "en": "AI provider",
+      "am": "የኤአይ አቅራቢ"
+    },
+    "admin.disabled": {
+      "en": "Disabled — local controls only",
+      "am": "ጠፍቷል — የአካባቢ መቆጣጠሪያዎች ብቻ"
+    },
+    "admin.model": {
+      "en": "Model name",
+      "am": "የሞዴል ስም"
+    },
+    "admin.modelHint": {
+      "en": "Enter a model available in your provider account.",
+      "am": "በአቅራቢዎ መለያ ያለ ሞዴል ያስገቡ።"
+    },
+    "admin.key": {
+      "en": "Provider API key",
+      "am": "የአቅራቢ ኤፒአይ ቁልፍ"
+    },
+    "admin.keyHint": {
+      "en": "Leave blank to keep the saved key for this provider. Keys are stored encrypted on the server.",
+      "am": "የተቀመጠውን ቁልፍ ለማቆየት ባዶ ይተዉት። ቁልፎች በሰርቨሩ ላይ ተመስጥረው ይቀመጣሉ።"
+    },
+    "admin.keySaved": {
+      "en": "A key is saved. Its value is never returned here.",
+      "am": "ቁልፍ ተቀምጧል። ይዘቱ እዚህ አይታይም።"
+    },
+    "admin.noKey": {
+      "en": "No key is saved.",
+      "am": "ቁልፍ አልተቀመጠም።"
+    },
+    "admin.endpoint": {
+      "en": "Approved endpoint URL",
+      "am": "የተፈቀደ የመገናኛ አድራሻ"
+    },
+    "admin.endpointHint": {
+      "en": "For Ollama or custom REST only. Your server operator must approve this exact URL.",
+      "am": "ለኦላማ ወይም ለብጁ REST ብቻ። የሰርቨር አስተዳዳሪዎ ይህን አድራሻ መፍቀድ አለበት።"
+    },
+    "admin.limit": {
+      "en": "Maximum AI requests per day",
+      "am": "በቀን የሚፈቀድ ከፍተኛ የኤአይ ጥያቄ ብዛት"
+    },
+    "admin.test": {
+      "en": "Test connection",
+      "am": "ግንኙነቱን ሞክር"
+    },
+    "admin.testHint": {
+      "en": "Testing sends a small example request to the selected provider and may incur an API charge. It does not send learner information.",
+      "am": "ሙከራው ትንሽ የምሳሌ ጥያቄ ይልካል፤ የኤፒአይ ክፍያ ሊኖር ይችላል። የተማሪ መረጃ አይልክም።"
+    },
+    "admin.save": {
+      "en": "Save settings",
+      "am": "ቅንብሮችን አስቀምጥ"
+    },
+    "admin.saved": {
+      "en": "Settings saved. Learners will be asked again before using the changed provider.",
+      "am": "ቅንብሮች ተቀምጠዋል። ተማሪዎች የተቀየረውን አቅራቢ ከመጠቀማቸው በፊት እንደገና ይጠየቃሉ።"
+    },
+    "admin.testing": {
+      "en": "Testing connection…",
+      "am": "ግንኙነቱን በመሞከር ላይ…"
+    },
+    "admin.tested": {
+      "en": "Connection works and returned a valid Roha action. Settings have not been saved.",
+      "am": "ግንኙነቱ ይሠራል። ቅንብሮቹ ገና አልተቀመጡም።"
+    },
+    "admin.error": {
+      "en": "Could not complete this action. Check the server configuration and try again.",
+      "am": "ይህን ማጠናቀቅ አልተቻለም። የሰርቨሩን ቅንብር ያረጋግጡና እንደገና ይሞክሩ።"
+    },
+    "admin.signInAgain": {
+      "en": "Sign in again to continue. Your provider settings are unchanged.",
+      "am": "ለመቀጠል እንደገና ይግቡ። የአቅራቢ ቅንብሮችዎ አልተቀየሩም።"
+    },
+    "admin.changed": {
+      "en": "Settings changed in another session. Reload the page before saving.",
+      "am": "ቅንብሮች በሌላ ክፍለ ጊዜ ተቀይረዋል። ከማስቀመጥዎ በፊት ገጹን እንደገና ይክፈቱ።"
+    },
+    "admin.saving": {
+      "en": "Saving settings…",
+      "am": "ቅንብሮችን በማስቀመጥ ላይ…"
+    },
+    "admin.embed": {
+      "en": "Installation snippet",
+      "am": "የመጫኛ ኮድ"
+    },
+    "admin.embedHint": {
+      "en": "This assistant operates supported controls already on your page. Keep your form accessible. Allow the script, stylesheet and API origins in your site policy.",
+      "am": "ይህ ረዳት በገጽዎ ላይ ያሉ የሚደገፉ መቆጣጠሪያዎችን ይጠቀማል። ቅጽዎ ተደራሽ መሆኑን ያረጋግጡ።"
+    }
+  }
+}
