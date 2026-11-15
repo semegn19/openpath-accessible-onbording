@@ -21,8 +21,8 @@ import { sendSms, formatResumeMessage, normalizePhone } from './sms.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// Auto-load .env from app/src/.env or api/.env if SMS_KEY is missing
-if (!process.env.SMS_KEY) {
+// Auto-load .env from app/src/.env or api/.env if SMS_KEY or ADDIS_AI_API_KEY is missing
+if (!process.env.SMS_KEY || !process.env.ADDIS_AI_API_KEY) {
   const envPath = existsSync(join(here, '..', 'app', 'src', '.env'))
     ? join(here, '..', 'app', 'src', '.env')
     : existsSync(join(here, '.env'))
@@ -33,7 +33,7 @@ if (!process.env.SMS_KEY) {
       const lines = readFileSync(envPath, 'utf8').split('\n');
       for (const line of lines) {
         const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)?\s*$/);
-        if (m && !process.env[m[1]]) {
+        if (m && process.env[m[1]] === undefined) {
           process.env[m[1]] = m[2].trim();
         }
       }
@@ -51,10 +51,12 @@ const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MIN ?? 30);
 const TRUST_PROXY = process.env.TRUST_PROXY !== '0';   // behind nginx, remoteAddress is nginx
 const MAX_BODY = Number(process.env.MAX_BODY_BYTES ?? 32 * 1024);
 /** Speech-to-text is OPT-IN. Unset = the endpoint says so and the UI falls back to buttons.
- *  Either an OpenAI-compatible endpoint or a self-hosted whisper.cpp server works. */
+ *  Either Addis AI, an OpenAI-compatible endpoint, or a self-hosted whisper.cpp server works. */
 const ASR_URL = process.env.ASR_URL ?? '';
 const ASR_KEY = process.env.ASR_KEY ?? '';
 const ASR_MODEL = process.env.ASR_MODEL ?? 'whisper-1';
+const ADDIS_AI_API_KEY = process.env.ADDIS_AI_API_KEY ?? '';
+const HAS_ASR = Boolean(ASR_URL || ADDIS_AI_API_KEY);
 const MAX_AUDIO = Number(process.env.MAX_AUDIO_BYTES ?? 2 * 1024 * 1024);
 const VERSION = '1.3.0';
 
@@ -378,7 +380,11 @@ const server = createServer(async (req, res) => {
       uptimeSec: Math.round(process.uptime()),
       // "none" means the browser's own speech recognition is the only option, and it has no
       // Amharic model. An operator should never have to read source to learn that.
-      transcription: ASR_URL ? 'configured' : 'none',
+      transcription: HAS_ASR ? 'configured' : 'none',
+      transcriptionLanguages: [
+        ...(ADDIS_AI_API_KEY ? ['am', 'om', 'ti'] : []),
+        ...(ASR_URL ? ['am', 'om', 'ti', 'en'] : []),
+      ],
       encryption: KEY ? 'aes-256-gcm' : 'none',
     });
   }
@@ -479,11 +485,11 @@ const server = createServer(async (req, res) => {
 
   /* ---- POST /api/transcribe — audio in, text out, through an engine the operator chose ---- */
   if (path === '/api/transcribe' && req.method === 'POST') {
-    if (!ASR_URL) {
+    if (!HAS_ASR) {
       // Deliberately explicit: "not configured" is a different problem from "no speech heard",
       // and an adopter debugging their deployment needs to tell them apart.
       return error(res, 503, 'asr-not-configured',
-        'Speech-to-text is not configured on this server. Set ASR_URL to enable it, or the form will use the buttons.');
+        'Speech-to-text is not configured on this server. Set ADDIS_AI_API_KEY or ASR_URL to enable it, or the form will use the buttons.');
     }
     const type = String(req.headers['content-type'] ?? '');
     if (!/^audio\//.test(type)) {
@@ -493,27 +499,69 @@ const server = createServer(async (req, res) => {
     if (read.tooLarge) return error(res, 413, 'audio-too-large', `Audio over ${MAX_AUDIO} bytes. Keep it under 30 seconds.`);
     if (!read.body?.length) return error(res, 400, 'empty-audio', 'No audio in the body.');
 
+    const reqLang = (url.searchParams.get('lang') || req.headers['x-language'] || 'am').toLowerCase().trim();
+
     try {
-      // OpenAI-compatible multipart, which whisper.cpp's /inference and most servers also accept.
-      const form = new FormData();
-      form.append('file', new Blob([read.body], { type }), 'speech.webm');
-      form.append('model', ASR_MODEL);
-      const r = await fetch(ASR_URL, {
-        method: 'POST',
-        headers: ASR_KEY ? { Authorization: `Bearer ${ASR_KEY}` } : {},
-        body: form,
-        signal: AbortSignal.timeout(20000),
-      });
-      if (!r.ok) {
-        console.log(`transcribe upstream ${r.status}`);
-        return error(res, 502, 'asr-failed', 'The speech engine did not accept the audio.');
+      // If language is English, Addis AI does not support English transcription.
+      if (reqLang === 'en') {
+        if (!ASR_URL) {
+          return error(res, 422, 'language-not-supported', 'Addis AI speech-to-text does not support English transcription.');
+        }
       }
-      const data = await r.json().catch(() => ({}));
-      const text = String(data.text ?? data.transcription ?? '').trim();
-      if (!text) return error(res, 422, 'no-speech', 'No speech was recognised in that recording.');
-      // The audio is NOT stored, ever: not on disk, not in memory beyond this request.
-      console.log(`transcribed ${read.body.length}B → ${text.length} chars`);
-      return send(res, 200, { text, engine: data.engine ?? 'remote' });
+
+      // If language is an Ethiopian language (am, om, ti) and Addis AI is configured, transcribe via Addis AI
+      if (['am', 'om', 'ti'].includes(reqLang) && ADDIS_AI_API_KEY) {
+        const form = new FormData();
+        const mimeType = type || 'audio/webm';
+        form.append('audio', new Blob([read.body], { type: mimeType }), 'speech.webm');
+        form.append('request_data', JSON.stringify({ language_code: reqLang }));
+
+        const r = await fetch('https://api.addisassistant.com/api/v2/stt', {
+          method: 'POST',
+          headers: {
+            'x-api-key': ADDIS_AI_API_KEY,
+          },
+          body: form,
+          signal: AbortSignal.timeout(20000),
+        });
+
+        if (!r.ok) {
+          const errText = await r.text().catch(() => '');
+          console.log(`Addis AI STT upstream ${r.status}: ${errText}`);
+          return error(res, 502, 'asr-failed', 'The speech engine did not accept the audio.');
+        }
+
+        const data = await r.json().catch(() => ({}));
+        const text = String(data?.data?.transcription ?? '').trim();
+        if (!text) return error(res, 422, 'no-speech', 'No speech was recognised in that recording.');
+
+        console.log(`transcribed (Addis AI [${reqLang}]) ${read.body.length}B → ${text.length} chars`);
+        return send(res, 200, { text, engine: 'addis-ai', lang: reqLang });
+      }
+
+      // Generic Whisper / OpenAI-compatible multipart endpoint fallback (or when ASR_URL is explicitly set)
+      if (ASR_URL) {
+        const form = new FormData();
+        form.append('file', new Blob([read.body], { type }), 'speech.webm');
+        form.append('model', ASR_MODEL);
+        const r = await fetch(ASR_URL, {
+          method: 'POST',
+          headers: ASR_KEY ? { Authorization: `Bearer ${ASR_KEY}` } : {},
+          body: form,
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!r.ok) {
+          console.log(`transcribe upstream ${r.status}`);
+          return error(res, 502, 'asr-failed', 'The speech engine did not accept the audio.');
+        }
+        const data = await r.json().catch(() => ({}));
+        const text = String(data.text ?? data.transcription ?? '').trim();
+        if (!text) return error(res, 422, 'no-speech', 'No speech was recognised in that recording.');
+        console.log(`transcribed ${read.body.length}B → ${text.length} chars`);
+        return send(res, 200, { text, engine: data.engine ?? 'remote' });
+      }
+
+      return error(res, 503, 'asr-not-configured', 'No speech engine available for this language.');
     } catch (e) {
       console.log(`transcribe error: ${e.message}`);
       return error(res, 504, 'asr-timeout', 'The speech engine did not answer in time.');
