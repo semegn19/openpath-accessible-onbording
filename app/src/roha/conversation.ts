@@ -5,7 +5,7 @@
  * Strictly guarantees no invented personal information (V06) and no inactivity timer (O03).
  */
 
-import { DiscoveredResource } from './types';
+import { DiscoveredResource, Locale } from './types';
 import { rc } from './copy';
 
 export interface FormQuestion {
@@ -29,9 +29,9 @@ export interface ConversationTurn {
 
 export class ConversationManager {
   private questions: FormQuestion[] = [];
-  private locale: 'en' | 'am' | 'ti' | 'om' = 'en';
+  private locale: Locale = 'en';
 
-  public setLocale(locale: 'en' | 'am' | 'ti' | 'om'): void { this.locale = locale; }
+  public setLocale(locale: Locale): void { this.locale = locale; }
   private currentIndex: number = 0;
   private history: ConversationTurn[] = [];
   private preferredName: string = '';
@@ -279,7 +279,7 @@ export class ConversationManager {
    */
   public handleImStuck(
     situationText: string,
-    locale: 'en' | 'am' | 'ti' | 'om' = this.locale
+    locale: Locale = this.locale
   ): { barrier: string; explanation: string; suggestedAction: string } {
     const text = situationText.toLowerCase();
     const currentQ = this.getCurrentQuestion();
@@ -373,7 +373,7 @@ export class ConversationManager {
   /**
    * "Check My Answer": Formatted read-back of all recorded answers
    */
-  public getFormattedReviewSummary(locale: 'en' | 'am' | 'ti' | 'om' = this.locale): string {
+  public getFormattedReviewSummary(locale: Locale = this.locale): string {
     const answered = this.questions.filter((q) => q.confirmed && q.currentValue);
     if (answered.length === 0) {
       return rc('roha.reviewEmpty', locale);

@@ -1,4 +1,4 @@
-export type Lang = 'am' | 'en' | 'om' | 'ti';
+export type Lang = 'am' | 'en' | 'om' | 'ti' | 'so';
 export type LText = Partial<Record<Lang, string>> & { en: string };
 
 export type FieldType =

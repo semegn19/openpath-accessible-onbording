@@ -53,6 +53,54 @@ const bundleScript = typeof document !== 'undefined' ? document.currentScript as
 const stylesheetURL = bundleScript?.src ? new URL('roha.css', bundleScript.src).href : '/roha.css';
 let instanceCount = 0;
 
+export function spokenToEmail(raw: string): string {
+  let s = raw.trim();
+
+  // 1. Strip leading conversational phrases
+  s = s.replace(/^(?:my\s+email\s+is|email\s+is|my\s+email|email|it\s+is|it'?s)\s+/iu, '');
+  s = s.replace(/^(?:ኢሜይሌ\s*ነው|ኢሜይሌ|ኢሜይል|የኔ\s*ኢሜይል)\s*/iu, '');
+  s = s.replace(/^(?:imeeliin\s*koo|imeelii)\s*/iu, '');
+  s = s.replace(/^(?:ኢሜይለይ\s*እዩ|ኢሜይለይ|ኢሜይል)\s*/iu, '');
+  s = s.replace(/^(?:iimeelkaygu\s*waa|iimaylkaygu|iimayl)\s*/iu, '');
+
+  // 2. Strip trailing conversational endings
+  s = s.replace(/\s+(?:ነው|እዩ|waa|dha|jedhama)$/iu, '');
+
+  // 3. Convert spoken '@':
+  // " at ", " [at] ", " (at) ", " @ ", " አት ", " ኣት "
+  s = s.replace(/\s+(?:\[at\]|\(at\)|at|አት|ኣት)\s+/giu, '@');
+  s = s.replace(/(?:^|\s)at\s+/giu, '@');
+  s = s.replace(/\s+at(?=[a-zA-Z0-9])/giu, '@');
+
+  // 4. Convert spoken dots:
+  // " dot ", " period ", " point ", " ዶት ", " ነጥብ ", " ነጥቢ ", " qabxii ", " bar "
+  s = s.replace(/\s*(?:\[dot\]|\(dot\)|dot|period|point|ዶት|ነጥብ|ነጥቢ|qabxii|bar)\s*/giu, '.');
+
+  // 5. Convert common phonetic transliterations for domains
+  s = s.replace(/ጂሜይል|ጅሜይል/giu, 'gmail');
+  s = s.replace(/ያሁ/giu, 'yahoo');
+  s = s.replace(/ሆትሜይል/giu, 'hotmail');
+  s = s.replace(/አውትሉክ|ኣውትሉክ/giu, 'outlook');
+  s = s.replace(/ኮም/giu, 'com');
+
+  // 6. Convert spoken symbols
+  s = s.replace(/\s*(?:underscore|አንደርስኮር|ታች\s*መስመር)\s*/giu, '_');
+  s = s.replace(/\s*(?:hyphen|dash|ሰረዝ)\s*/giu, '-');
+
+  // 7. Strip all whitespace inside the email
+  s = s.replace(/\s+/g, '');
+
+  // 8. Auto-complete standard domains if missing TLD (e.g. "dog@gmail" -> "dog@gmail.com")
+  if (/@([a-zA-Z0-9-]+)$/.test(s)) {
+    const domain = s.split('@')[1].toLowerCase();
+    if (['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'proton', 'mail'].includes(domain)) {
+      s += '.com';
+    }
+  }
+
+  return s.toLowerCase();
+}
+
 export class RohaSDK {
   private readonly instanceId = ++instanceCount;
   private requestVersion = 0;
@@ -189,7 +237,7 @@ export class RohaSDK {
 
     this.rootElement = root;
     const initialDocLang = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
-    const initialLocale: Locale = (initialDocLang === 'am' || initialDocLang === 'ti' || initialDocLang === 'om') ? initialDocLang : 'en';
+    const initialLocale: Locale = (initialDocLang === 'am' || initialDocLang === 'ti' || initialDocLang === 'om' || initialDocLang === 'so') ? initialDocLang : 'en';
     this.locale = options.language || initialLocale;
     this.voice.setLocale(this.locale);
     this.conversation.setLocale(this.locale);
@@ -248,7 +296,7 @@ export class RohaSDK {
     if (!options.language) {
       this.languageObserver = new MutationObserver(() => {
         const docLang = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
-        const detected: Locale = (docLang === 'am' || docLang === 'ti' || docLang === 'om') ? docLang : 'en';
+        const detected: Locale = (docLang === 'am' || docLang === 'ti' || docLang === 'om' || docLang === 'so') ? docLang : 'en';
         this.setLanguage(detected);
       });
       this.languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
@@ -690,10 +738,11 @@ export class RohaSDK {
     }
   }
 
-  private t(dict: { am: string; om: string; ti: string; en: string }): string {
+  private t(dict: { am: string; om: string; ti: string; en: string; so?: string }): string {
     const l = (this.locale || 'en').toLowerCase().slice(0, 2);
     if (l === 'om') return dict.om;
     if (l === 'ti') return dict.ti;
+    if (l === 'so') return dict.so || dict.en;
     if (l === 'am') return dict.am;
     return dict.en;
   }
@@ -1010,7 +1059,7 @@ export class RohaSDK {
   private selectOptionAndAdvance(targetLabel: HTMLElement, input: HTMLInputElement, fallbackText = ''): boolean {
     const isLangStep = input.name === 'language' ||
       document.querySelector('main[data-step-type="language"]') !== null ||
-      input.value === 'am' || input.value === 'en' || input.value === 'om' || input.value === 'ti';
+      input.value === 'am' || input.value === 'en' || input.value === 'om' || input.value === 'ti' || input.value === 'so';
 
     if (isLangStep) {
       const targetLang = input.value || 'am';
@@ -1124,16 +1173,26 @@ export class RohaSDK {
   }
 
   private fillTextInput(textInput: HTMLInputElement | HTMLTextAreaElement, val: string): boolean {
-    const isPhone = textInput.type === 'tel' ||
+    const isEmail = textInput.type === 'email' ||
+      textInput.name === 'email' ||
+      textInput.name === 'job-email' ||
+      textInput.id === 'email' ||
+      textInput.id === 'job-email' ||
+      textInput.getAttribute('inputmode') === 'email' ||
+      /email|ኢሜይል|iimeelii|iimayl/i.test(document.querySelector('#op-main h1, main h1, h1, #op-main legend, label[for="' + textInput.id + '"]')?.textContent || '');
+
+    const isPhone = !isEmail && (textInput.type === 'tel' ||
       textInput.name === 'phone' ||
       textInput.id === 'phone' ||
       textInput.getAttribute('inputmode') === 'tel' ||
-      /ስልክ|phone|bilbila/i.test(document.querySelector('#op-main h1, main h1, h1')?.textContent || '');
+      /ስልክ|phone|bilbila/i.test(document.querySelector('#op-main h1, main h1, h1')?.textContent || ''));
 
     let finalVal = val;
     let isPhoneIncomplete = false;
 
-    if (isPhone) {
+    if (isEmail) {
+      finalVal = spokenToEmail(val);
+    } else if (isPhone) {
       // 1. Convert spoken words to digits
       let digits = spokenToDigits(val, (this.locale as any) || 'am').replace(/[^\d+]/g, '');
 
@@ -1176,7 +1235,26 @@ export class RohaSDK {
     } catch {}
 
     let msg: string;
-    if (isPhone && isPhoneIncomplete) {
+    if (isEmail) {
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalVal);
+      if (!isValid) {
+        msg = this.t({
+          am: `የተሞላው ኢሜይል «${finalVal}» አልተሟላም። እባክዎ እንደ «name@gmail.com» ያለ ሙሉ ኢሜይል ይንገሩኝ።`,
+          om: `Imeeliin "${finalVal}" sirrii hin fakkaatu. Mee imeelii guutuu akka "name@gmail.com" natti himaa.`,
+          ti: `ዝተመሊአ ኢሜይል «${finalVal}» ቅኑዕ ኣይመስልን። በጃኹም ከም «name@gmail.com» ዝበለ ምሉእ ኢሜይል ንገሩኒ።`,
+          so: `Iimaylka "${finalVal}" uma eka mid sax ah. Fadlan ii sheeg iimayl buuxa sida "name@gmail.com".`,
+          en: `Entered email "${finalVal}" appears incomplete. Please provide a full address like "name@gmail.com".`,
+        });
+      } else {
+        msg = this.t({
+          am: `ኢሜይል «${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`,
+          om: `Imeeliin "${finalVal}" guutameera. Sirrii yoo ta'e "itti fufi" jedhaa ykn sirreessaa.`,
+          ti: `ኢሜይል «${finalVal}» ተመሊኡ ኣሎ። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ ወይ ኣዐርይዎ።`,
+          so: `Iimaylka "${finalVal}" waa la galiyay. Haddaad ku qanacsan tahay dheh "Next" ama sax.`,
+          en: `Email "${finalVal}" entered. If correct, say "Next" to continue.`,
+        });
+      }
+    } else if (isPhone && isPhoneIncomplete) {
       const isPartialValid = (finalVal.startsWith('09') || finalVal.startsWith('07') || finalVal.startsWith('9') || finalVal.startsWith('7') || finalVal.startsWith('+251')) && finalVal.length < 10;
       const remaining = 10 - (finalVal.startsWith('0') ? finalVal.length : finalVal.length + 1);
       if (isPartialValid && remaining > 0) {
@@ -1184,6 +1262,7 @@ export class RohaSDK {
           am: `«${finalVal}» አልተሟላም። ${remaining} አሃዝ ይቀራል (ጠቅላላ 10 አሃዝ መሆን አለበት)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`,
           om: `"${finalVal}" hin guutamne. Dijitiin ${remaining} hafeera (walumaagalatti dijitii 10). Mee dijitoota hafan natti himaa.`,
           ti: `«${finalVal}» ኣይተማልአን። ${remaining} ኣሃዛት ተሪፎም ኣለዉ (ብጠቕላላ 10 ኣሃዛት)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ።`,
+          so: `"${finalVal}" ma dhameystirna. Waxaa ka dhiman ${remaining} nambar. Fadlan ii sheeg nambarrada dhiman.`,
           en: `"${finalVal}" is incomplete. ${remaining} digits remaining (10 digits total). Please tell me the rest of the digits.`,
         });
       } else {
@@ -1191,6 +1270,7 @@ export class RohaSDK {
           am: `«${finalVal}» ትክክለኛ የኢትዮጵያ ስልክ ቁጥር አይደለም። ስልክ ቁጥር በ09 ወይም 07 መጀመር እና 10 አሃዝ መሆን አለበት (ምሳሌ፦ 0912345678)። እባክዎ ያስተካክሉ።`,
           om: `"${finalVal}" lakkoofsa bilbilaa Itoophiyaa sirrii miti. Lakkoofsi bilbilaa 09 ykn 07n jalqabuu fi dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678). Mee sirreessaa.`,
           ti: `«${finalVal}» ቅኑዕ ናይ ስልኪ ቍጽሪ ኣይኮነን። ናይ ስልኪ ቍጽሪ ብ09 ወይ 07 ክጅምርን 10 ኣሃዛት ክህልዎን ኣለዎ (ንኣብነት፦ 0912345678)። በጃኹም ኣዐርዩ።`,
+          so: `"${finalVal}" ma aha nambar Itoobiya sax ah. Nambarku waa inuu ka bilowdaa 09 ama 07 oo leeyahay 10 nambar.`,
           en: `"${finalVal}" is not a valid Ethiopian phone number. Ethiopian phone numbers must start with 09 or 07 and have 10 digits (e.g. 0912345678). Please correct it.`,
         });
       }
@@ -1199,6 +1279,7 @@ export class RohaSDK {
         am: `ስልክ ቁጥር «${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`,
         om: `Lakkoofsi bilbilaa "${finalVal}" guutameera. Sirrii yoo ta'e "itti fufi" jedhaa ykn sirreessaa.`,
         ti: `ናይ ስልኪ ቍጽሪ «${finalVal}» ተመሊኡ ኣሎ። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ ወይ ኣዐርይዎ።`,
+        so: `Nambarka taleefanka "${finalVal}" waa la galiyay. Haddaad ku qanacsan tahay dheh "Next" ama sax.`,
         en: `Phone number "${finalVal}" is complete. If correct, say "Next" to continue.`,
       });
     } else {
@@ -1206,6 +1287,7 @@ export class RohaSDK {
         am: `«${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`,
         om: `"${finalVal}" galmeeffameera. Sirrii yoo ta'e "itti fufi" jedhaa ykn sirreessaa.`,
         ti: `«${finalVal}» ተመሊኡ ኣሎ። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ ወይ ኣዐርይዎ።`,
+        so: `Waxaa la galiyay "${finalVal}". Haddaad ku qanacsan tahay dheh "Next" ama sax.`,
         en: `Entered "${finalVal}". If correct, say "Next" to continue.`,
       });
     }
@@ -1519,6 +1601,19 @@ export class RohaSDK {
           this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
         }
       }
+      if (/(?:ኢሜይሌ\s*(?:ስንት|ምን)|ኢሜይል|ኢሜይሌ\s*ምን\s*ነው|ኢሜይሌን\s*ንገረኝ|ናይ\s*ኢሜይል|imeelii\s*koo|iimaylkayga|what\s*is\s*my\s*email)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ኢሜይል') || i.question.toLowerCase().includes('email') || i.question.toLowerCase().includes('imeel') || i.question.toLowerCase().includes('iimayl'));
+        if (item) {
+          const msg = this.t({
+            am: `የተመዘገበው ኢሜይል «${item.answer}» ነው።`,
+            om: `Imeeliin galmaa'e "${item.answer}" dha.`,
+            ti: `ዝተመዝገበ ኢሜይል «${item.answer}» እዩ።`,
+            so: `Iimaylka la diiwaangeliyay waa "${item.answer}".`,
+            en: `Your registered email is "${item.answer}".`,
+          });
+          this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
+        }
+      }
       if (/(?:ስልኬ\s*(?:ስንት|ምን)|ስልክ\s*ቁጥሬ|ስልኬ\s*ስንት\s*ነው|ስልኬን\s*ንገረኝ|ናይ\s*ስልኪ\s*ቍጽረይ|ስልከይ\s*ክንደይ|ስልከይ\s*ንገረኒ|lakkoofsi\s*bilbila\s*koo|bilbila\s*koo|what\s*is\s*my\s*phone)/iu.test(lower)) {
         const item = reviewItems.find(i => i.question.includes('ስልክ') || i.question.includes('ስልኪ') || i.question.toLowerCase().includes('phone') || i.question.toLowerCase().includes('bilbila'));
         if (item) {
@@ -1527,6 +1622,19 @@ export class RohaSDK {
             om: `Lakkoofsi bilbilaa galmaa'e "${item.answer}" dha.`,
             ti: `ዝተመዝገበ ናይ ስልኪ ቍጽርኹም «${item.answer}» እዩ።`,
             en: `Your registered phone number is "${item.answer}".`,
+          });
+          this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
+        }
+      }
+      if (/(?:ኢሜይሌ\s*(?:ስንት|ምን)|ኢሜይል|ኢሜይሌ\s*ምን\s*ነው|ኢሜይሌን\s*ንገረኝ|ናይ\s*ኢሜይል|imeelii\s*koo|iimaylkayga|what\s*is\s*my\s*email)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ኢሜይል') || i.question.toLowerCase().includes('email') || i.question.toLowerCase().includes('imeel') || i.question.toLowerCase().includes('iimayl'));
+        if (item) {
+          const msg = this.t({
+            am: `የተመዘገበው ኢሜይል «${item.answer}» ነው።`,
+            om: `Imeeliin galmaa'e "${item.answer}" dha.`,
+            ti: `ዝተመዝገበ ኢሜይል «${item.answer}» እዩ።`,
+            so: `Iimaylka la diiwaangeliyay waa "${item.answer}".`,
+            en: `Your registered email is "${item.answer}".`,
           });
           this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
         }
@@ -1562,6 +1670,7 @@ export class RohaSDK {
         let targetItem = reviewItems.find(i => {
           if (/(?:ስም|ስመይ|maqaa|name)/iu.test(lower) && (i.question.includes('ስም') || i.question.includes('ስመይ') || i.question.toLowerCase().includes('name') || i.question.toLowerCase().includes('maqaa'))) return true;
           if (/(?:ስልክ|ስልኪ|bilbila|phone)/iu.test(lower) && (i.question.includes('ስልክ') || i.question.includes('ስልኪ') || i.question.toLowerCase().includes('phone') || i.question.toLowerCase().includes('bilbila'))) return true;
+          if (/(?:ኢሜይል|imeel|iimayl|email)/iu.test(lower) && (i.question.includes('ኢሜይል') || i.question.toLowerCase().includes('email') || i.question.toLowerCase().includes('imeel') || i.question.toLowerCase().includes('iimayl'))) return true;
           if (/(?:ቋንቋ|afaan|language|lang)/iu.test(lower) && (i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language') || i.question.toLowerCase().includes('afaan'))) return true;
           if (/(?:መታወቂያ|ሰነድ|ማንነት|waraqaa|sanada|id|document)/iu.test(lower) && (i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id') || i.question.toLowerCase().includes('waraqaa') || i.question.toLowerCase().includes('sanada'))) return true;
           if (/(?:አጋር|ስምምነት|እገዛ|ሓጋዚ|መሻርኽቲ|tumsa|gargaarsa|partner|referral)/iu.test(lower) && (i.question.includes('አጋር') || i.question.includes('ስምምነት') || i.question.toLowerCase().includes('partner') || i.question.toLowerCase().includes('tumsa'))) return true;
@@ -1621,19 +1730,20 @@ export class RohaSDK {
     }
 
     // 1. Next step / Proceed
-    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|ቀጻሊ|ቀጽል|ንቕድሚት|itti\s*fufi|itti\s*fufa|gara\s*fuulduraatti|fuulduratti|kan\s*itti\s*aanu|next|continue|forward|proceed)/iu.test(lower) ||
-        /(?:ቀጣይ\s*ደረጃ|ቀጻሊ\s*ደረጃ|sadarkaa\s*itti\s*aanu|next\s*step|ቀጣዩ|ቀጣይ|ቀጻሊ)/iu.test(lower)) {
+    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|ቀጻሊ|ቀጽል|ንቕድሚት|itti\s*fufi|itti\s*fufa|gara\s*fuulduraatti|fuulduratti|kan\s*itti\s*aanu|hore|soco|hore\s*u\s*soco|next|continue|forward|proceed)/iu.test(lower) ||
+        /(?:ቀጣይ\s*ደረጃ|ቀጻሊ\s*ደረጃ|sadarkaa\s*itti\s*aanu|tallaabada\s*xigta|next\s*step|ቀጣዩ|ቀጣይ|ቀጻሊ)/iu.test(lower)) {
       this.advanceToNextStep();
       return true;
     }
 
     // 1b. Stop / silence / pause
-    if (/^(?:አቁም|ዝም|ዝም\s*በይ|ዝም\s*በል|ቆይ|ደው|ስቕ|cal'?isi|dhaabi|stop|pause|quiet|be\s*quiet|silence)\b/iu.test(lower)) {
+    if (/^(?:አቁም|ዝም|ዝም\s*በይ|ዝም\s*በል|ቆይ|ደው|ስቕ|cal'?isi|dhaabi|jooji|aamus|stop|pause|quiet|be\s*quiet|silence)\b/iu.test(lower)) {
       this.readExecutor.stop();
       const msg = this.t({
         am: 'ዝም ብያለሁ።',
         om: 'Cal\'iseera.',
         ti: 'ስቕ ኢለ ኣለኹ።',
+        so: 'Waa la joojiyay.',
         en: 'Stopping.',
       });
       this.announce(msg);
@@ -1641,14 +1751,15 @@ export class RohaSDK {
     }
 
     // 2. Previous step / Back
-    if (/^(?:ተመለስ|ወደ\s*ኋላ|ቀዳሚ|ንድሕሪት|ዝሓለፈ|gara\s*duubatti|duubatti|deebi'?i|deebi'?aa|back|previous|go\s*back)\b/iu.test(lower) ||
-        /(?:ያለፈው\s*ደረጃ|ዝሓለፈ\s*ደረጃ|sadarkaa\s*duraanii|previous\s*step)/iu.test(lower)) {
+    if (/^(?:ተመለስ|ወደ\s*ኋላ|ቀዳሚ|ንድሕሪት|ዝሓለፈ|gara\s*duubatti|duubatti|deebi'?i|deebi'?aa|dib|dib\s*u\s*noqo|back|previous|go\s*back)\b/iu.test(lower) ||
+        /(?:ያለፈው\s*ደረጃ|ዝሓለፈ\s*ደረጃ|sadarkaa\s*duraanii|tallaabadii\s*hore|previous\s*step)/iu.test(lower)) {
       const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back, button[aria-label*="Back"], button[aria-label*="ተመለስ"]');
       if (backBtn) {
         const msg = this.t({
           am: 'ወደ ቀደመው ደረጃ ተመልሰናል።',
           om: 'Gara sadarkaa duraatti deebineerra.',
           ti: 'ናብ ዝሓለፈ ደረጃ ተመሊስና ኣለና።',
+          so: 'Dib ayaan ugu noqonnay tallaabadii hore.',
           en: 'Going back to the previous step.',
         });
         this.announce(msg);
@@ -1659,11 +1770,12 @@ export class RohaSDK {
     }
 
     // 3. Read aloud
-    if (/^(?:አንብብ|አንብቢ|አንብቢልኝ|ስማ|ኣንብብ|ኣንብበለይ|ስማዕ|dubbisi|naaf\s*dubbisi|dhaggeeffadhu|sagalee|read|speak|listen)\b/iu.test(lower)) {
+    if (/^(?:አንብብ|አንብቢ|አንብቢልኝ|ስማ|ኣንብብ|ኣንብበለይ|ስማዕ|dubbisi|naaf\s*dubbisi|dhaggeeffadhu|sagalee|akhri|iila\s*akhri|dhageyso|read|speak|listen)\b/iu.test(lower)) {
       const msg = this.t({
         am: 'ጥያቄውን ላንብብልዎት።',
         om: 'Gaafficha isiniif nan dubbisa.',
         ti: 'ሕቶኡ ከንብበልኩም እየ።',
+        so: 'Su\'aasha kor ayaan kuugu akhrinayaa.',
         en: 'Reading the question aloud.',
       });
       this.announce(msg);
@@ -1672,7 +1784,7 @@ export class RohaSDK {
     }
 
     // 3b. Simple/child-friendly explanation
-    if (/(?:ቀላል|ቀጥተኛ|ቀላሉን|አብራራ|ቀላል\s*ቃል|ቀሊል|ብቀሊሉ|ግለጸለይ|ኣረድኣኒ|salphaa|salphaatti|naaf\s*ibsi|ibsi|like\s*a\s*kid|simply|simple|explain\s*simply|easy\s*words)/iu.test(lower)) {
+    if (/(?:ቀላል|ቀጥተኛ|ቀላሉን|አብራራ|ቀላል\s*ቃል|ቀሊል|ብቀሊሉ|ግለጸለይ|ኣረድኣኒ|salphaa|salphaatti|naaf\s*ibsi|ibsi|fudud|erayo\s*fudud|like\s*a\s*kid|simply|simple|explain\s*simply|easy\s*words)/iu.test(lower)) {
       this.simpleMode.apply(true, this.rootElement || document.body, this.locale as any);
       const hostSimpleBtn = document.querySelector<HTMLButtonElement>('.op-toggles button[aria-pressed]');
       if (hostSimpleBtn && hostSimpleBtn.getAttribute('aria-pressed') !== 'true') {
@@ -1687,13 +1799,14 @@ export class RohaSDK {
     }
 
     // 4. Text scale enlarge
-    if (/(?:ትልቅ\s*ጽሑፍ|ጽሑፉን\s*አተልቅ|ጽሑፍ\s*አተልቅ|ዓቢ\s*ጽሑፍ|ጽሑፍ\s*ኣዕብዮ|barreeffama\s*guddosi|guddisi|barreeffama\s*guddaa|make\s*text\s*bigger|bigger\s*text|zoom)/iu.test(lower)) {
+    if (/(?:ትልቅ\s*ጽሑፍ|ጽሑፉን\s*አተልቅ|ጽሑፍ\s*አተልቅ|ዓቢ\s*ጽሑፍ|ጽሑፍ\s*ኣዕብዮ|barreeffama\s*guddosi|guddisi|barreeffama\s*guddaa|qoraal\s*weyn|weyneey|make\s*text\s*bigger|bigger\s*text|zoom)/iu.test(lower)) {
       const nextScale = this.textScale.getPercent() >= 150 ? 100 : 150;
       this.textScale.apply(nextScale as 100 | 150);
       const msg = this.t({
         am: 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።',
         om: 'Hangi barreeffamaa guddateera.',
         ti: 'መጠን ጽሑፍ ዓብዩ ኣሎ።',
+        so: 'Cabbirka qoraalka waa la weyneeyay.',
         en: 'Text size has been increased.',
       });
       this.announce(msg);
@@ -1702,13 +1815,14 @@ export class RohaSDK {
     }
 
     // 5. High contrast
-    if (/(?:ከፍተኛ\s*ንፅፅር|ንፅፅር|ላዕለዋይ\s*ንጽጽር|ንጽጽር|garaagarummaa\s*guddaa|haala\s*dukkanaa|high\s*contrast|dark\s*mode)/iu.test(lower)) {
+    if (/(?:ከፍተኛ\s*ንፅፅር|ንፅፅር|ላዕለዋይ\s*ንጽጽር|ንጽጽር|garaagarummaa\s*guddaa|haala\s*dukkanaa|kala\s*duwanaansho|high\s*contrast|dark\s*mode)/iu.test(lower)) {
       const nextTheme = this.contrast.getTheme() === 'high-contrast' ? 'default' : 'high-contrast';
       this.contrast.applyContrast(nextTheme);
       const msg = this.t({
         am: 'የቀለም ንፅፅር ተቀይሯል።',
         om: 'Haalli halluu jijjiirameera.',
         ti: 'ንጽጽር ሕብሪ ተቐዪሩ ኣሎ።',
+        so: 'Habka kala duwanaanshaha waa la beddelay.',
         en: 'Contrast mode toggled.',
       });
       this.announce(msg);
@@ -1742,17 +1856,17 @@ export class RohaSDK {
       }) || optionLabels[0];
       const inp = checkedLabel?.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
       if (checkedLabel && inp) {
-        return this.selectOptionAndAdvance(checkedLabel, inp, this.t({ am: 'ይህ አማራጭ', om: 'Filannoo kana', ti: 'እዚ ኣማራጺ', en: 'This option' }));
+        return this.selectOptionAndAdvance(checkedLabel, inp, this.t({ am: 'ይህ አማራጭ', om: 'Filannoo kana', ti: 'እዚ ኣማራጺ', so: 'Doorashadan', en: 'This option' }));
       }
     }
 
     // 6b. Ordinal & Letter selection: first, second, A, B, 1, 2, etc.
-    const isFirst = /(?:የመጀመሪያ|አንደኛ|ቀዳማይ|ሓደ|jalqabaa|tokkoffaa|first|1st|^1$|^a$|^ሀ$|^አ$)/iu.test(cleanUtt) || /(?:option\s*(?:1|a)|አማራጭ\s*(?:1|አ|ሀ))/iu.test(lower);
-    const isSecond = /(?:ሁለተኛ|ካልኣይ|ክልተ|lammaffaa|second|2nd|^2$|^b$|^ለ$)/iu.test(cleanUtt) || /(?:option\s*(?:2|b)|አማራጭ\s*(?:2|ለ))/iu.test(lower);
-    const isThird = /(?:ሶስተኛ|ሦስተኛ|ሳልሳይ|ሰለስተ|sadaffaa|third|3rd|^3$|^c$|^ሐ$)/iu.test(cleanUtt) || /(?:option\s*(?:3|c)|አማራጭ\s*(?:3|ሐ))/iu.test(lower);
-    const isFourth = /(?:አራተኛ|ራብዓይ|ኣርባዕተ|afurffaa|fourth|4th|^4$|^d$|^መ$)/iu.test(cleanUtt) || /(?:option\s*(?:4|d)|አማራጭ\s*(?:4|መ))/iu.test(lower);
-    const isFifth = /(?:አምስተኛ|ሓሙሻይ|ሓሙሽተ|shanaffaa|fifth|5th|^5$|^e$|^ሠ$|^ረ$)/iu.test(cleanUtt) || /(?:option\s*(?:5|e)|አማራጭ\s*(?:5|ሠ|ረ))/iu.test(lower);
-    const isLast = /(?:የመጨረሻ|ናይ\s*መወዳእታ|dhuma|last)\b/iu.test(cleanUtt);
+    const isFirst = /(?:የመጀመሪያ|አንደኛ|ቀዳማይ|ሓደ|jalqabaa|tokkoffaa|kowaad|koowaad|midka\s*hore|first|1st|^1$|^a$|^ሀ$|^አ$)/iu.test(cleanUtt) || /(?:option\s*(?:1|a)|አማራጭ\s*(?:1|አ|ሀ))/iu.test(lower);
+    const isSecond = /(?:ሁለተኛ|ካልኣይ|ክልተ|lammaffaa|labaad|second|2nd|^2$|^b$|^ለ$)/iu.test(cleanUtt) || /(?:option\s*(?:2|b)|አማራጭ\s*(?:2|ለ))/iu.test(lower);
+    const isThird = /(?:ሶስተኛ|ሦስተኛ|ሳልሳይ|ሰለስተ|sadaffaa|saddexaad|third|3rd|^3$|^c$|^ሐ$)/iu.test(cleanUtt) || /(?:option\s*(?:3|c)|አማራጭ\s*(?:3|ሐ))/iu.test(lower);
+    const isFourth = /(?:አራተኛ|ራብዓይ|ኣርባዕተ|afurffaa|afraad|fourth|4th|^4$|^d$|^መ$)/iu.test(cleanUtt) || /(?:option\s*(?:4|d)|አማራጭ\s*(?:4|መ))/iu.test(lower);
+    const isFifth = /(?:አምስተኛ|ሓሙሻይ|ሓሙሽተ|shanaffaa|shanaad|fifth|5th|^5$|^e$|^ሠ$|^ረ$)/iu.test(cleanUtt) || /(?:option\s*(?:5|e)|አማራጭ\s*(?:5|ሠ|ረ))/iu.test(lower);
+    const isLast = /(?:የመጨረሻ|ናይ\s*መወዳእታ|dhuma|ugu\s*dambey(?:a|nta)?|last)\b/iu.test(cleanUtt);
 
     if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isFourth || isFifth || isLast)) {
       const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : isFourth ? 3 : isFifth ? 4 : optionLabels.length - 1;
@@ -1804,10 +1918,12 @@ export class RohaSDK {
       const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || val === 'en';
       const isOromoOption = /oromoo|oromo|oromiffa|ኦሮምኛ|ኦሮሞ/i.test(labelText) || val === 'om';
       const isTigrinyaOption = /ትግርኛ|ትግራይ|tigrinya|tigrigna/i.test(labelText) || val === 'ti';
+      const isSomaliOption = /soomaali|somali|af-soomaali|ሶማሊ/i.test(labelText) || val === 'so';
       const mentionsAmharic = /አማርኛ|amharic/i.test(lower);
       const mentionsEnglish = /english|እንግሊዝኛ/i.test(lower);
       const mentionsOromo = /oromoo|oromo|oromiffa|ኦሮምኛ|ኦሮሞ/i.test(lower);
       const mentionsTigrinya = /ትግርኛ|ትግራይ|tigrinya|tigrigna/i.test(lower);
+      const mentionsSomali = /soomaali|somali|af-soomaali|ሶማሊ/i.test(lower);
 
       // Extract significant words and strip Amharic prefixes (e.g. የፋይዳ -> ፋይዳ, የቀበሌ -> ቀበሌ)
       const stopWords = ['option', 'አማራጭ', 'label', 'ሰነድ', 'የሰነድ', 'መታወቂያ', 'የመታወቂያ', 'document', 'id', 'waraqaa', 'sanada'];
@@ -1819,7 +1935,7 @@ export class RohaSDK {
 
       if (directMatch || valMatch || isAgree || isRefer || isFayda || isKebele || isRefugee || isOther ||
           wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish) ||
-          (isOromoOption && mentionsOromo) || (isTigrinyaOption && mentionsTigrinya)) {
+          (isOromoOption && mentionsOromo) || (isTigrinyaOption && mentionsTigrinya) || (isSomaliOption && mentionsSomali)) {
         return this.selectOptionAndAdvance(label, input);
       }
     }

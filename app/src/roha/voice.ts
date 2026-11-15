@@ -28,6 +28,7 @@ export class VoiceManager {
     const next = l === 'am' ? 'am-ET'
       : l === 'ti' ? 'ti-ET'
       : l === 'om' ? 'om-ET'
+      : l === 'so' ? 'so-ET'
       : 'en-US';
     if (next === this.locale) return;
     this.locale = next;

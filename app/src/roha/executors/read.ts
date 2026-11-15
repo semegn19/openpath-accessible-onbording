@@ -93,8 +93,8 @@ export class ReadExecutor {
     const langCode = locale.toLowerCase().slice(0, 2);
     const isEthiopicScript = /[\u1200-\u137F]/u.test(text);
     const effectiveLang = (langCode === 'ti' || (isEthiopicScript && langCode !== 'am')) ? 'ti'
-      : (langCode === 'om' ? 'om' : (langCode === 'am' || isEthiopicScript) ? 'am' : langCode);
-    const useApiTts = isEthiopicScript || langCode === 'am' || langCode === 'ti' || langCode === 'om';
+      : (langCode === 'om' ? 'om' : langCode === 'so' ? 'so' : (langCode === 'am' || isEthiopicScript) ? 'am' : langCode);
+    const useApiTts = isEthiopicScript || langCode === 'am' || langCode === 'ti' || langCode === 'om' || langCode === 'so';
 
     if (useApiTts && typeof window !== 'undefined') {
       try {

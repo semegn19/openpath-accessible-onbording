@@ -86,7 +86,7 @@ export function ReviewScreen({ steps, values, lang, simple, schema, onEdit }: {
   );
 }
 
-const LANG_CHIPS: { id: Lang; label: string }[] = [{ id: 'am', label: 'አማርኛ' }, { id: 'om', label: 'Afaan Oromoo' }, { id: 'ti', label: 'ትግርኛ' }, { id: 'en', label: 'English' }];
+const LANG_CHIPS: { id: Lang; label: string }[] = [{ id: 'am', label: 'አማርኛ' }, { id: 'om', label: 'Afaan Oromoo' }, { id: 'ti', label: 'ትግርኛ' }, { id: 'so', label: 'Soomaali' }, { id: 'en', label: 'English' }];
 
 export function SettingsBar({ lang, setLang, simple, setSimple, big, setBig, autoRead, setAutoRead }: {
   lang: Lang; setLang: (l: Lang) => void;

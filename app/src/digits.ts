@@ -12,6 +12,8 @@
  *     Never guess at a phone number.
  */
 
+import type { Lang } from './types';
+
 const AM: Record<string, number> = {
   'ዜሮ': 0, 'ዘሮ': 0, 'ዚሮ': 0,
   'አንድ': 1, 'አንዳንድ': 1, 'ሓደ': 1,
@@ -66,6 +68,23 @@ const OM: Record<string, number> = {
   dhibba: 100, kuma: 1000,
 };
 
+const SO: Record<string, number> = {
+  eber: 0, eberka: 0, zero: 0,
+  kow: 1, koow: 1,
+  laba: 2,
+  saddex: 3, seddex: 3,
+  afar: 4,
+  shan: 5,
+  lix: 6,
+  toddobo: 7, todobo: 7,
+  siddeed: 8, sideed: 8,
+  sagaal: 9,
+  toban: 10,
+  labaatan: 20, soddon: 30, afartan: 40, konton: 50, lixdan: 60,
+  toddobaatan: 70, siddeetan: 80, sagaashan: 90,
+  boqol: 100, kun: 1000,
+};
+
 const tokenise = (text: string): string[] =>
   text
     .toLowerCase()
@@ -75,11 +94,11 @@ const tokenise = (text: string): string[] =>
     .split(' ')
     .filter(Boolean);
 
-export function spokenToDigits(text: string, lang: 'am' | 'en' | 'om' | 'ti'): string {
+export function spokenToDigits(text: string, lang: Lang): string {
   const raw = text.trim();
   if (!raw) return raw;
 
-  const words = (lang === 'am' || lang === 'ti') ? AM : lang === 'om' ? OM : EN;
+  const words = (lang === 'am' || lang === 'ti') ? AM : lang === 'om' ? OM : lang === 'so' ? SO : EN;
   const tokens = tokenise(raw);
   if (!tokens.length) return raw;
 

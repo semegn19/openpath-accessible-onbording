@@ -3,7 +3,7 @@
  * Strictly matches schemas/site-map.schema.json, schemas/intent.schema.json, schemas/capabilities.schema.json
  */
 
-export type Locale = 'en' | 'am' | 'ti' | 'om';
+export type Locale = 'en' | 'am' | 'ti' | 'om' | 'so';
 
 export type ResourceKind =
   | 'region'
