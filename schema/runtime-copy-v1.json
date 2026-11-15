@@ -10,6 +10,12 @@
       "om": "Galmeen xumurameera",
       "ti": "ምዝገባ ተወዲኡ እዩ"
     },
+    "status.pendingPartner": {
+      "am": "ምዝገባው ደርሷል — በአጋር ማረጋገጫ በመጠባበቅ ላይ",
+      "en": "Sign-up received — Pending partner verification",
+      "om": "Galmeen qaqqabeera — Mirkaneessa tumsaa eegaa jira",
+      "ti": "ምዝገባ በጺሑ ኣሎ — ብመሻርኽቲ ምርግጋጽ ይጽበ ኣሎ"
+    },
     "status.sending": {
       "am": "በመላክ ላይ…",
       "en": "Sending…",
@@ -39,6 +45,12 @@
       "en": "Keep this number.",
       "om": "Lakkoofsa kana qabadhaa.",
       "ti": "ነዚ ቍጽሪ ሓዝዎ።"
+    },
+    "receipt.pendingPartnerHelp": {
+      "am": "የአጋር ድርጅት ረዳት ምዝገባዎን ለማረጋገጥ በስልክ ቁጥርዎ ይደውልልዎታል።",
+      "en": "An assistant from a partner organisation will call your phone to verify your registration.",
+      "om": "Gargaaraan dhaabbata tumsaa galmee keessan mirkaneessuuf bilbila keessanirratti isiniif bilbila.",
+      "ti": "ሓጋዚ መሻርኽቲ ትካል ምዝገባኹም ንምርግጋጽ ኣብ ስልክኹም ክድውለልኩም እዩ።"
     },
     "status.wait": {
       "am": "እባክዎ ይጠብቁ።",
@@ -309,6 +321,12 @@
       "en": "Sign-up complete. Your reference is {ref}. Keep this number.",
       "om": "Galmeen xumurameera. Lakkoofsi wabii keessanii {ref} dha. Lakkoofsa kana qabadhaa.",
       "ti": "ምዝገባ ተወዲኡ እዩ። ናይ መወከሲ ቍጽርኹም {ref} እዩ። ነዚ ቍጽሪ ሓዝዎ።"
+    },
+    "announce.pendingPartner": {
+      "am": "ምዝገባው ደርሷል — በአጋር ማረጋገጫ በመጠባበቅ ላይ። የማጣቀሻ ቁጥርዎ {ref}። ረዳት ይደውልልዎታል።",
+      "en": "Sign-up received — Pending partner verification. Your reference is {ref}. A helper will call you.",
+      "om": "Galmeen qaqqabeera — Mirkaneessa tumsaa eegaa jira. Lakkoofsi wabii {ref} dha. Gargaaraan isiniif bilbila.",
+      "ti": "ምዝገባ በጺሑ ኣሎ — ብመሻርኽቲ ምርግጋጽ ይጽበ ኣሎ። ናይ መወከሲ ቍጽርኹም {ref} እዩ። ሓጋዚ ክድውለልኩም እዩ።"
     },
     "voice.noVoice": {
       "am": "ይህ መሣሪያ በአማርኛ ማንበብ አይችልም። ጽሑፉ ከዚህ በታች አለ።",

@@ -449,6 +449,22 @@
             "ti": "ካልእ ሰነድ"
           },
           "icon": "doc"
+        },
+        {
+          "value": "refer",
+          "label": {
+            "am": "ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)",
+            "en": "I do not have a document (Refer me to a partner)",
+            "om": "Sanada hin qabu (Dhaabbata tumsaatti na dabarsaa)",
+            "ti": "ሰነድ የብለይን (ናብ መሻርኽቲ ትካል ስደዱኒ)"
+          },
+          "icon": "handshake",
+          "simple": {
+            "am": "የአጋር እገዛ",
+            "en": "Partner help",
+            "om": "Gargaarsa tumsaa",
+            "ti": "ሓገዝ መሻርኽቲ"
+          }
         }
       ],
       "simpleHint": {
@@ -459,79 +475,25 @@
       }
     },
     {
-      "id": "id-value",
-      "type": "text",
-      "label": {
-        "am": "የፋይዳ ቁጥር",
-        "en": "Fayda ID number",
-        "om": "Lakkoofsa Faayidaa",
-        "ti": "ናይ ፋይዳ ቍጽሪ"
-      },
-      "simple": {
-        "am": "ቁጥር",
-        "en": "Number",
-        "om": "Lakkoofsa",
-        "ti": "ቍጽሪ"
-      },
-      "hint": {
-        "am": "ቁጥሩን ካላወቁ ይህን ይዝለሉ።",
-        "en": "If you do not know the number, skip this.",
-        "om": "Lakkoofsicha yoo hin beekne, bira darbaa.",
-        "ti": "ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ሕለፍዎ።"
-      },
-      "why": {
-        "am": "ይህ ቁጥር ከፋይዳ መታወቂያዎ ጋር እንዲገጥም ነው።",
-        "en": "We use this number to match your Fayda document.",
-        "om": "Lakkoofsa kanaan sanada Faayidaa keessan walitti madaalsifna.",
-        "ti": "እዚ ቍጽሪ ምስ ናይ ፋይዳ ሰነድኩም ንኸነዛምዶ እዩ።"
-      },
-      "icon": "card",
-      "inputmode": "numeric",
-      "required": false,
-      "optional": true,
-      "voice": true,
-      "readAloud": true,
-      "pii": "sensitive",
-      "localOnly": false,
-      "showIf": {
-        "step": "id-route",
-        "in": [
-          "fayda"
-        ]
-      },
-      "validation": [
-        {
-          "rule": "maxLength",
-          "value": 32
-        }
-      ],
-      "simpleHint": {
-        "am": "ቁጥሩን ካላወቁት መዝለል ይችላሉ።",
-        "en": "If you do not know the number, you can skip it.",
-        "om": "Lakkoofsicha yoo hin beekne bira darbuu dandeessu.",
-        "ti": "ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ክትሓልፍዎ ትኽእሉ ኢኹም።"
-      }
-    },
-    {
       "id": "id-document-image",
       "type": "file",
       "label": {
-        "am": "የመታወቂያዎን ፎቶ ያንሱ ወይም ይስቀሉ",
-        "en": "Take or upload a photo of your ID",
-        "om": "Suuraa waraqaa eenyummaa keessanii kaasaa ykn fe'aa",
-        "ti": "ናይ መታወቒኹም ስእሊ ኣልዕሉ ወይ ስደዱ"
+        "am": "የመታወቂያ ወይም የሰነድዎን ፎቶ ያንሱ ወይም ይስቀሉ",
+        "en": "Take or upload a photo of your ID or document",
+        "om": "Suuraa waraqaa eenyummaa ykn sanada keessanii kaasaa ykn fe'aa",
+        "ti": "ናይ መታወቒ ወይ ናይ ሰነድኩም ስእሊ ኣልዕሉ ወይ ስደዱ"
       },
       "simple": {
-        "am": "የመታወቂያ ፎቶ",
-        "en": "ID photo",
-        "om": "Suuraa waraqaa",
-        "ti": "ናይ መታወቒ ስእሊ"
+        "am": "የመታወቂያ ወይም የሰነድ ፎቶ",
+        "en": "ID or document photo",
+        "om": "Suuraa waraqaa ykn sanadaa",
+        "ti": "ናይ መታወቒ ወይ ሰነድ ስእሊ"
       },
       "hint": {
-        "am": "ፎቶው በስልክዎ ላይ በራስ-ሰር ተጨምቆ ይቀመጣል። ካልፈለጉ መዝለል ይችላሉ።",
-        "en": "The photo is compressed automatically on your device. You can skip this if you wish.",
-        "om": "Suuraan bilbila keessanirratti ofumaan salphata. Yoo hin barbaanne bira darbuu dandeessu.",
-        "ti": "እቲ ስእሊ ኣብ ስልክኹም ብባዕሉ ይቕነስ። እንተዘይደሊኹም ክትሓልፍዎ ትኽእሉ ኢኹም።"
+        "am": "ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። አሁን ካልቻሉ ሰነዱን በአካል ይዘው መቅረብ ይችላሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ።",
+        "en": "Take or upload a clear photo. If you cannot right now, you can bring the physical document in person. If you do not have any document, go back and choose 'Refer me to a partner'.",
+        "om": "Suuraa ifa ta'e kaasaa ykn fe'aa. Amma yoo hin dandeenye sanadicha qaamaan fiduu dandeessu. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa.",
+        "ti": "ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሕጂ እንተዘይክኢልኩም ነቲ ሰነድ ብኣካል ሒዝኩም ክትመጹ ትኽእሉ ኢኹም። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ።"
       },
       "why": {
         "am": "ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል።",
@@ -550,16 +512,81 @@
       "showIf": {
         "step": "id-route",
         "in": [
-          "refugee",
+          "fayda",
           "kebele",
+          "refugee",
           "other"
         ]
       },
       "simpleHint": {
-        "am": "ፎቶ ካላችሁ ስቀሉ፣ ወይም ዝለሉት።",
-        "en": "Upload a photo if you have one, or skip it.",
-        "om": "Suuraa yoo qabaattan fe'aa, ykn bira darbaa.",
-        "ti": "ስእሊ እንተለኩም ስደዱ፣ ወይ ሕለፍዎ።"
+        "am": "ፎቶ ካላችሁ ስቀሉ፣ ወይም በአካል ይዘው ይምጡ።",
+        "en": "Upload a photo, or bring it in person.",
+        "om": "Suuraa fe'aa, ykn qaamaan fidaa.",
+        "ti": "ስእሊ ስደዱ፣ ወይ ብኣካል ሒዝኩም ምጹ።"
+      }
+    },
+    {
+      "id": "referral",
+      "type": "statement",
+      "showIf": {
+        "step": "id-route",
+        "in": [
+          "refer"
+        ]
+      },
+      "label": {
+        "am": "ከአጋር ድርጅት ጋር መገናኘት",
+        "en": "Connecting with a partner organisation",
+        "om": "Dhaabbata tumsaa wajjin walqunnamsiisuu",
+        "ti": "ምስ መሻርኽቲ ትካል ምርኻብ"
+      },
+      "simple": {
+        "am": "የአጋር እርዳታ",
+        "en": "Partner help",
+        "om": "Gargaarsa tumsaa",
+        "ti": "ሓገዝ መሻርኽቲ"
+      },
+      "icon": "handshake",
+      "required": true,
+      "voice": false,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "body": {
+        "am": "ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ።",
+        "en": "An assistant from a partner organisation will call your phone to finish sign-up. We only share your name and phone number. Say \"no\" on the call if you change your mind.",
+        "om": "Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu.",
+        "ti": "ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም።"
+      },
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "agree-share",
+          "label": {
+            "am": "ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።",
+            "en": "I agree to share my name and phone number with a partner organisation.",
+            "om": "Maqaan koo fi bilbilli koo dhaabbata tumsaatti akka kennamu walii nan gala.",
+            "ti": "ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
+          },
+          "required": true,
+          "simple": {
+            "am": "አዎ፣ ስሜና ስልኬ ይሰጥ",
+            "en": "Yes, share my name and phone number",
+            "om": "Maqaa fi bilbilli koo haa kennamu",
+            "ti": "እወ፣ ስመይን ስልከይን ይወሃብ"
+          }
+        }
+      ],
+      "sharing": {
+        "recipient": "partner",
+        "fields": [
+          "name",
+          "phone"
+        ]
       }
     },
     {
