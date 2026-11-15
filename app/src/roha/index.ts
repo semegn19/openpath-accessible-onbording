@@ -747,12 +747,6 @@ export class RohaSDK {
   }
 
   private advanceToNextStep(): void {
-    const existingError = this.getVisibleFormError();
-    if (existingError) {
-      this.speakAndFocusError(existingError);
-      return;
-    }
-
     const currentStepHeading = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
     const nextBtn = document.querySelector<HTMLButtonElement>(
       '#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"], button[type="submit"]'
@@ -802,17 +796,9 @@ export class RohaSDK {
 
     if (input.type === 'checkbox') {
       if (!input.checked) {
-        input.click();
+        targetLabel.click();
         if (!input.checked) {
-          try {
-            const proto = window.HTMLInputElement.prototype;
-            const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
-            if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
-            if (setChecked) setChecked.call(input, true);
-            else input.checked = true;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-          } catch {}
+          input.click();
         }
       }
     } else {
@@ -993,9 +979,8 @@ export class RohaSDK {
     const isAm = this.locale === 'am' || /[\u1200-\u137F]/.test(raw);
 
     // 0. Consent & Agreement for statement/consent screens (e.g. referral agreement to share name/phone)
-    const isConsentPhrase = /^(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን\s*ሰጥቻለሁ|አዎ\s*(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ)?|እሺ\s*(?:ተስማምቻለሁ|እስማማለሁ)?|ይሰጥ|አዎ\s*ይሰጥ|i\s*agree|agree|i\s*consent|consent|yes\s*(?:i\s*agree)?|walii\s*nan\s*gala|walii\s*galeera|ተሰማሚዐ\s*ኣለኹ)\b/iu.test(lower) ||
-      /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነቴን|ይሰጥ|i\s*agree|i\s*consent|walii\s*nan\s*gala|ተሰማሚዐ)/iu.test(lower) ||
-      (/(?:አዎ|እሺ|yes|ok|okay)\b/iu.test(lower) && Boolean(document.querySelector('#op-main label.op-check input[type="checkbox"], #op-main .op-options input[type="checkbox"]')));
+    const isConsentPhrase = /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን|ይሰጥ|አዎ\s*(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ይሰጥ)?|እሺ\s*(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ይሰጥ)?|i\s*agree|agree|i\s*consent|consent|yes\s*(?:i\s*agree)?|walii\s*nan\s*gala|walii\s*galeera|ተሰማሚዐ)/iu.test(lower) ||
+      (/(?:^|\s|[፣፤፥።፡,.\?!])(?:አዎ|እሺ|yes|ok|okay|eyyee|እወ)(?:$|\s|[፣፤፥።፡,.\?!])/iu.test(lower) && Boolean(document.querySelector('#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]')));
 
     if (isConsentPhrase) {
       const consentLabel = document.querySelector<HTMLElement>('#op-main label.op-check, #op-main .op-options label');
@@ -1007,7 +992,7 @@ export class RohaSDK {
     }
 
     // 0b. Refusal / Decline on consent screens
-    if (/(?:አልስማማም|አልፈልግም|አይሆንም|አልፈቅድም|disagree|decline|don'?t\s*agree)\b/iu.test(lower)) {
+    if (/(?:አልስማማም|አልፈልግም|አይሆንም|አልፈቅድም|disagree|decline|don'?t\s*agree)/iu.test(lower)) {
       const consentCheckbox = document.querySelector<HTMLInputElement>('#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]');
       if (consentCheckbox) {
         const msg = isAm
@@ -1022,13 +1007,8 @@ export class RohaSDK {
     }
 
     // 1. Next step / Proceed
-    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)\b/iu.test(lower) ||
+    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)/iu.test(lower) ||
         /(?:ቀጣይ\s*ደረጃ|next\s*step|ቀጣዩ|ቀጣይ)/iu.test(lower)) {
-      const existingError = this.getVisibleFormError();
-      if (existingError) {
-        this.speakAndFocusError(existingError);
-        return true;
-      }
       this.advanceToNextStep();
       return true;
     }
