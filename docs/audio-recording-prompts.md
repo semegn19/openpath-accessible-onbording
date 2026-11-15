@@ -19,7 +19,7 @@ phone.am.mp3 : "ስልክ ቁጥርዎን ይጻፉ የምዝገባ መልእክ
 
 id-route.am.mp3 : "ማንነትዎን እንዴት እናውቃለን? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ የሚመርጡትን ሰነድ ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)"
 
-id-document-image.am.mp3 : "የመታወቂያ ወይም የሰነድዎን ፎቶ ያንሱ ወይም ይስቀሉ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። አሁን ካልቻሉ ሰነዱን በአካል ይዘው መቅረብ ይችላሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ። ባይሞሉም ይቻላል"
+id-document-image.am.mp3 : "የመታወቂያ ወይም የሰነድዎን ፎቶ ያንሱ ወይም ይስቀሉ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ። ባይሞሉም ይቻላል"
 
 referral.am.mp3 : "ከአጋር ድርጅት ጋር መገናኘት ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ። ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።"
 
@@ -37,7 +37,7 @@ phone.am.simple.mp3 : "ስልክ የምዝገባ መልእክት በዚህ ስ�
 
 id-route.am.simple.mp3 : "መታወቂያ አለዎት? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ አንዱን ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ የአጋር እገዛ"
 
-id-document-image.am.simple.mp3 : "የመታወቂያ ወይም የሰነድ ፎቶ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ፎቶ ካላችሁ ስቀሉ፣ ወይም በአካል ይዘው ይምጡ። ባይሞሉም ይቻላል"
+id-document-image.am.simple.mp3 : "የመታወቂያ ወይም የሰነድ ፎቶ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ግልጽ ፎቶ ስቀሉ። ባይሞሉም ይቻላል"
 
 referral.am.simple.mp3 : "የአጋር እርዳታ ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ። አዎ፣ ስሜና ስልኬ ይሰጥ"
 
@@ -55,7 +55,7 @@ phone.om.mp3 : "Lakkoofsa bilbilaa keessan barreessaa Ergaa galmee keessanii bil
 
 id-route.om.mp3 : "Eenyummaa keessan akkamitti mirkaneessina? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf sanada filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa Sanada hin qabu (Dhaabbata tumsaatti na dabarsaa)"
 
-id-document-image.om.mp3 : "Suuraa waraqaa eenyummaa ykn sanada keessanii kaasaa ykn fe'aa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa ifa ta'e kaasaa ykn fe'aa. Amma yoo hin dandeenye sanadicha qaamaan fiduu dandeessu. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa. Dirqama miti"
+id-document-image.om.mp3 : "Suuraa waraqaa eenyummaa ykn sanada keessanii kaasaa ykn fe'aa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa ifa ta'e kaasaa ykn fe'aa. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa. Dirqama miti"
 
 referral.om.mp3 : "Dhaabbata tumsaa wajjin walqunnamsiisuu Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaan koo fi bilbilli koo dhaabbata tumsaatti akka kennamu walii nan gala."
 
@@ -73,7 +73,7 @@ phone.om.simple.mp3 : "Bilbila Ergaa galmee keessanii bilbila kanatti ergina. Fa
 
 id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf tokko filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa Gargaarsa tumsaa"
 
-id-document-image.om.simple.mp3 : "Suuraa waraqaa ykn sanadaa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa fe'aa, ykn qaamaan fidaa. Dirqama miti"
+id-document-image.om.simple.mp3 : "Suuraa waraqaa ykn sanadaa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa ifa ta'e fe'aa. Dirqama miti"
 
 referral.om.simple.mp3 : "Gargaarsa tumsaa Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaa fi bilbilli koo haa kennamu"
 
@@ -91,7 +91,7 @@ phone.ti.mp3 : "ናይ ስልኪ ቍጽርኹም ጽሓፉ ናይ ምዝገባ �
 
 id-route.ti.mp3 : "መንነትኩም ብኸመይ ነረጋግጽ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሰነድ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ ሰነድ የብለይን (ናብ መሻርኽቲ ትካል ስደዱኒ)"
 
-id-document-image.ti.mp3 : "ናይ መታወቒ ወይ ናይ ሰነድኩም ስእሊ ኣልዕሉ ወይ ስደዱ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሕጂ እንተዘይክኢልኩም ነቲ ሰነድ ብኣካል ሒዝኩም ክትመጹ ትኽእሉ ኢኹም። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ። ግዴታ ኣይኮነን"
+id-document-image.ti.mp3 : "ናይ መታወቒ ወይ ናይ ሰነድኩም ስእሊ ኣልዕሉ ወይ ስደዱ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ። ግዴታ ኣይኮነን"
 
 referral.ti.mp3 : "ምስ መሻርኽቲ ትካል ምርኻብ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
 
@@ -109,7 +109,7 @@ phone.ti.simple.mp3 : "ናይ ርክብ ስልኪ ናይ ምዝገባ መልእ�
 
 id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሓደ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ ሓገዝ መሻርኽቲ"
 
-id-document-image.ti.simple.mp3 : "ናይ መታወቒ ወይ ሰነድ ስእሊ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ስእሊ ስደዱ፣ ወይ ብኣካል ሒዝኩም ምጹ። ግዴታ ኣይኮነን"
+id-document-image.ti.simple.mp3 : "ናይ መታወቒ ወይ ሰነድ ስእሊ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ንጹር ስእሊ ስደዱ። ግዴታ ኣይኮነን"
 
 referral.ti.simple.mp3 : "ሓገዝ መሻርኽቲ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። እወ፣ ስመይን ስልከይን ይወሃብ"
 

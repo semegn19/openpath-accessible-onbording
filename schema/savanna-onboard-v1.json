@@ -490,10 +490,10 @@
         "ti": "ናይ መታወቒ ወይ ሰነድ ስእሊ"
       },
       "hint": {
-        "am": "ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። አሁን ካልቻሉ ሰነዱን በአካል ይዘው መቅረብ ይችላሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ።",
-        "en": "Take or upload a clear photo. If you cannot right now, you can bring the physical document in person. If you do not have any document, go back and choose 'Refer me to a partner'.",
-        "om": "Suuraa ifa ta'e kaasaa ykn fe'aa. Amma yoo hin dandeenye sanadicha qaamaan fiduu dandeessu. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa.",
-        "ti": "ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሕጂ እንተዘይክኢልኩም ነቲ ሰነድ ብኣካል ሒዝኩም ክትመጹ ትኽእሉ ኢኹም። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ።"
+        "am": "ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ።",
+        "en": "Take or upload a clear photo. If you do not have any document, go back and choose 'Refer me to a partner'.",
+        "om": "Suuraa ifa ta'e kaasaa ykn fe'aa. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa.",
+        "ti": "ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ።"
       },
       "why": {
         "am": "ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል።",
@@ -519,10 +519,10 @@
         ]
       },
       "simpleHint": {
-        "am": "ፎቶ ካላችሁ ስቀሉ፣ ወይም በአካል ይዘው ይምጡ።",
-        "en": "Upload a photo, or bring it in person.",
-        "om": "Suuraa fe'aa, ykn qaamaan fidaa.",
-        "ti": "ስእሊ ስደዱ፣ ወይ ብኣካል ሒዝኩም ምጹ።"
+        "am": "ግልጽ ፎቶ ስቀሉ።",
+        "en": "Upload a clear photo.",
+        "om": "Suuraa ifa ta'e fe'aa.",
+        "ti": "ንጹር ስእሊ ስደዱ።"
       }
     },
     {
