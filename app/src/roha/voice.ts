@@ -5,6 +5,7 @@ export interface VoiceManagerCallbacks {
   onStateChange: (state: VoiceState, message?: string) => void;
   onTranscript: (transcript: string, isFinal: boolean) => void;
   onError: (error: string) => void;
+  onInterrupted?: () => void;
 }
 
 /** User-initiated microphone access, command recognition and speech echo prevention. */
@@ -32,6 +33,7 @@ export class VoiceManager {
   }
 
   public getState(): VoiceState { return this.state; }
+  public getEchoMuted(): boolean { return this.isEchoMuted; }
 
   public requestPermission(): Promise<boolean> {
     if (this.permissionRequest) return this.permissionRequest;
@@ -155,6 +157,7 @@ export class VoiceManager {
     recognition.interimResults = true;
     recognition.lang = this.locale;
     const active = () => this.recognition === recognition && this.permissionGranted && !this.isEchoMuted;
+
     recognition.onresult = (event: any) => {
       if (!active()) return;
       let finalText = '', interimText = '';
@@ -166,7 +169,9 @@ export class VoiceManager {
         this.state = 'processing';
         this.callbacks.onStateChange('processing', rc('roha.processing', this.locale));
         this.callbacks.onTranscript(finalText, true);
-      } else if (interimText) this.callbacks.onTranscript(interimText, false);
+      } else if (interimText) {
+        this.callbacks.onTranscript(interimText, false);
+      }
     };
     recognition.onerror = (event: any) => {
       if (!active() || event.error === 'aborted' || event.error === 'no-speech') return;
@@ -183,10 +188,11 @@ export class VoiceManager {
       }
     };
     recognition.onend = () => {
-      if (!active()) return;
       this.running = false;
-      if (this.autoRestart) this.scheduleRestart();
-      else {
+      if (this.recognition !== recognition) return;
+      if (this.autoRestart && !this.isEchoMuted && this.permissionGranted) {
+        this.scheduleRestart();
+      } else if (!this.isEchoMuted) {
         this.state = 'ready';
         this.callbacks.onStateChange('ready');
       }

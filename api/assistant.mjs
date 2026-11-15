@@ -184,60 +184,96 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
     const utt = (ctx.utterance || '').toLowerCase();
     const isAm = ctx.locale === 'am' || /[\u1200-\u137F]/.test(ctx.utterance);
     const q = ctx.screenContext?.activeQuestion || '';
+    const desc = ctx.screenContext?.description || '';
     const opts = (ctx.screenContext?.options || []).filter(Boolean);
-    const optsStr = opts.join(', ');
+    const optsStr = opts.join(isAm ? '፣ ' : ', ');
 
-    if (/ምን|ጠይ|ፊት|ስክሪን|እርዳ|አብራራ|what|screen|question|help|explain/iu.test(utt)) {
-      const msg = isAm
-        ? (q ? `በአሁኑ ሰዓት በስክሪኑ ላይ የቀረበው ጥያቄ "${q}" ነው። ${optsStr ? 'አማራጮቹ፡ ' + optsStr + ' ናቸው።' : ''} የትኛውን መምረጥ ይፈልጋሉ?` : 'በስክሪኑ ላይ የቀረበውን ጥያቄ ለመመለስ አግዝዎታለሁ። ምን እንዲደረግልዎ ይፈልጋሉ?')
-        : (q ? `Currently on screen, the question is "${q}". ${optsStr ? 'The options are: ' + optsStr + '.' : ''} Which one would you like to choose?` : 'I am here to help you complete this step. What would you like to do?');
-      return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
-    }
-
+    // Greeting
     if (/ሰላም|እንደምን|ጤና|hi|hello|hey/iu.test(utt)) {
       const msg = isAm
-        ? 'ሰላም! እኔ ሮሃ ነኝ። የምዝገባ ቅጹን በቀላሉ እንዲሞሉ ልረዳዎት ዝግጁ ነኝ።'
-        : 'Hello! I am Roha. I am ready to help you complete your onboarding smoothly.';
+        ? 'ሰላም! እኔ ሮሃ ነኝ። ቅጹን በቀላሉ እንዲሞሉ ልረዳዎት ዝግጁ ነኝ።'
+        : 'Hello! I am Roha, your onboarding assistant. I am here to help you complete this form easily.';
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
+    // What is on screen / explain current step
+    if (/ምን|ጠይ|ፊት|ስክሪን|እርዳ|አብራራ|what|screen|question|help|explain|ምን\s*ማለት|ምን\s*ዓይነት/iu.test(utt)) {
+      const msg = isAm
+        ? (q ? `አሁን ያለው ጥያቄ፡ "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '። አማራጮቹ፡ ' + optsStr + '።' : '።'} ከዚህ ውስጥ አንዱን ይምረጡ።` : 'ቅጹን ለማስሟላት ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?')
+        : (q ? `The current question is: "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '. Options are: ' + optsStr + '.' : '.'} Please choose one.` : 'I am here to help you complete this step. What would you like to do?');
+      return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
+    }
+
+    // Simple / child-friendly explanation
+    if (/ቀላል|ቀጥተኛ|ቀላሉ|simply|simple|easy|kid|child/iu.test(utt)) {
+      const msg = isAm
+        ? (q ? `ቀላሉን ቃል እንጠቀም። ጥያቄው፡ "${q}"${optsStr ? '። ምረጡ፡ ' + optsStr : ''}።` : 'ቀላሉን ቃል እንጠቀም። ምን ማድረግ ይፈልጋሉ?')
+        : (q ? `Let me explain simply. The question is: "${q}"${optsStr ? '. Your choices: ' + optsStr : ''}.` : 'Let me explain simply. What would you like to know?');
+      return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
+    }
+
+    // Read / speak
     if (/አንብብ|ስማ|ድምጽ|read|listen|speak/iu.test(utt)) {
       const msg = isAm ? 'ጥያቄውን ላንብብልዎት።' : 'Let me read the question for you.';
       return { intent: 'read', targetId: 'page.main', payload: {}, message: msg };
     }
 
+    // Next / forward
     if (/ቀጣይ|ወደፊት|ቀጥል|next|forward|continue/iu.test(utt)) {
       const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
       return { intent: 'navigate', targetId: 'page.main', payload: { direction: 'forward' }, message: msg };
     }
 
+    // Back / previous
     if (/ተመለስ|ወደኋላ|back|previous/iu.test(utt)) {
       const msg = isAm ? 'ወደ ቀደመው ደረጃ ተመልሰናል።' : 'Going back to the previous step.';
       return { intent: 'navigate', targetId: 'page.main', payload: { direction: 'back' }, message: msg };
     }
 
+    // Text size
     if (/ትልቅ|ጽሑፍ|አተልቅ|big|larger|zoom/iu.test(utt)) {
       const msg = isAm ? 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።' : 'Text size has been increased.';
       return { intent: 'text_scale', targetId: 'page.main', payload: { percent: 150 }, message: msg };
     }
 
+    // What comes next
+    if (/ቀጣዩ\s*ምን|ቀጣይ\s*ምን|what.*next|what.*after|what.*come/iu.test(utt)) {
+      const msg = isAm
+        ? (q ? `አሁን ያለው ጥያቄ \"${q}\" ነው። ሲጨርሱ ወደ ቀጣዩ ደረጃ ይሸጋገራሉ።` : 'ቀጣዩን ደረጃ ለማወቅ ወደፊት ብሎ ማለፍ ያስፈልጋል።')
+        : (q ? `You are on "${q}". Once you answer, you will move to the next step.` : 'Complete this step to see what comes next.');
+      return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
+    }
+
+    // Generic fallback with context
     const defaultMsg = isAm
-      ? (q ? `ጥያቄው "${q}" ነው። አማራጮችዎን መምረጥ ወይም ጥያቄ መጠየቅ ይችላሉ።` : 'እርስዎን ለመርዳት ዝግጁ ነኝ።')
-      : (q ? `The question is "${q}". You can select an option or ask me any question.` : 'I am here to help you.');
+      ? (q ? `ጥያቄው "${q}" ነው።${optsStr ? ' አማራጮቹ፡ ' + optsStr + '።' : ''} ምን ማድረግ ይፈልጋሉ?` : 'እርስዎን ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?')
+      : (q ? `The question is "${q}".${optsStr ? ' Options: ' + optsStr + '.' : ''} How can I help you?` : 'I am here to help you. What would you like to do?');
     return { intent: 'chat', targetId: 'page.main', payload: {}, message: defaultMsg };
   }
 
   async function interpret(config, ctx) {
     if (config.provider === 'disabled') throw failure(503, 'ai-disabled');
-    const prompt = 'You are Roha (ሮሃ), an empathetic, intelligent bilingual (Amharic and English) AI onboarding assistant for OpenPath. '
-      + (ctx.screenContext?.activeQuestion ? `\nCURRENT SCREEN IN FRONT OF THE USER:\n- Active Question: "${ctx.screenContext.activeQuestion}"\n- Description/Instructions: "${ctx.screenContext.description || ''}"\n- Options/Choices: ${JSON.stringify(ctx.screenContext.options || [])}\nWhen the user asks what is being asked, what to do, or asks about what is in front of them, explain this active question and the choices warmly and clearly in their language!\n` : '')
-      + 'OpenPath makes onboarding accessible to everyone. User locale: ' + (ctx.locale || 'am') + '. '
-      + 'Return ONLY JSON with intent, targetId, payload, and message. '
-      + 'In "message", provide a warm, helpful, natural conversational reply in the language used by the user (Amharic or English). '
-      + 'If the user greets, asks a question, or chats, use intent "chat" with targetId "page.main" and payload {}. '
-      + 'Targets and allowed intents: ' + JSON.stringify(ctx.resources)
-      + '. Payloads: text_scale {"percent":150}, contrast {"theme":"high-contrast"}, simple_mode/reduced_motion {"enabled":true}, navigate {"direction":"back"}; others {}. '
-      + 'Never submit, fill answers, invent targets or execute code.';
+    const isAm = ctx.locale === 'am' || /[\u1200-\u137F]/.test(ctx.utterance);
+    const sc = ctx.screenContext;
+    const screenBlock = sc?.activeQuestion
+      ? `\n\n=== CURRENT SCREEN (what the user sees right now) ===\nQuestion: "${sc.activeQuestion}"\nDescription: "${sc.description || ''}"\nOptions: ${JSON.stringify(sc.options || [])}\n=== END SCREEN ===\n\nIf the user asks what is on the screen, what to choose, what this means, or asks any question about this form step, answer it warmly and clearly using the screen info above.\n`
+      : '';
+    const prompt = 'You are Roha (ሮሃ), a warm, smart, bilingual (Amharic/English) AI voice assistant for OpenPath onboarding. '
+      + 'You speak naturally like a helpful friend — not robotic. You respond in the same language the user speaks. '
+      + 'You can answer ANY question the user asks: about the form, about what a word means, about what comes next, about accessibility, or general questions. '
+      + 'If the user asks about something outside the form, give a short helpful answer, then gently guide them back.'
+      + screenBlock
+      + 'User locale: ' + (ctx.locale || 'am') + '. '
+      + 'RESPONSE FORMAT: Return ONLY valid JSON with these fields: intent, targetId, payload, message. '
+      + 'In "message": write a warm, natural, conversational reply in ' + (isAm ? 'Amharic' : 'English') + '. Keep it concise (1-3 sentences). '
+      + 'For greetings, questions, clarifications, explanations — use intent "chat", targetId "page.main", payload {}. '
+      + 'For navigation: intent "navigate", payload {"direction":"forward"} or {"direction":"back"}. '
+      + 'For text size: intent "text_scale", payload {"percent":150}. '
+      + 'For contrast: intent "contrast", payload {"theme":"high-contrast"}. '
+      + 'For simple mode: intent "simple_mode", payload {"enabled":true}. '
+      + 'Available targets: ' + JSON.stringify(ctx.resources) + '. '
+      + 'NEVER submit forms, fill answers, invent targets, or execute code. '
+      + 'ALWAYS include a "message" field with a helpful spoken reply.';
     const headers = { 'Content-Type': 'application/json' };
     let url, body;
     if (config.provider === 'openai') {

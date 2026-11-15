@@ -90,6 +90,8 @@ export class RohaSDK {
   private assistantPanel: HTMLElement | null = null;
   private liveRegion: HTMLElement | null = null;
   private isMounted: boolean = false;
+  private lastStepKey: string = '';
+  private stepReadTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.registry = new TargetRegistry('roha-map-initial', 1);
@@ -105,7 +107,6 @@ export class RohaSDK {
     this.conversation = new ConversationManager();
     this.guide = new FormGuide(this.registry, this.formAction, () => this.rootElement, () => this.currentMap,
       () => this.locale, message => {
-        if (['listening', 'processing', 'speaking'].includes(this.voice.getState())) this.readExecutor.speak(message, this.locale);
         this.announce(message);
       }, message => {
         const preview = this.assistantPanel?.querySelector<HTMLElement>('[data-roha-pending]');
@@ -142,6 +143,10 @@ export class RohaSDK {
         },
         onError: (err: string) => {
           this.announce(err);
+        },
+        onInterrupted: () => {
+          // User started speaking while Roha is talking — stop her immediately
+          this.readExecutor.stop();
         },
       },
       this.locale
@@ -226,6 +231,14 @@ export class RohaSDK {
     // 3. Render Roha Assistant Panel
     this.renderAssistantUI();
 
+    // Stop speaking if the user clicks an option or button while Roha is talking
+    this.rootElement?.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement | null;
+      if (this.readExecutor.getSpeakingState() && target && target.closest('button, input, label, a, .op-choice')) {
+        this.readExecutor.stop();
+      }
+    });
+
     this.isMounted = true;
     this.updateVoiceStatusUI(this.voice.getState());
     if (!options.language) {
@@ -307,6 +320,8 @@ export class RohaSDK {
     this.router.updateMap(this.currentMap);
     this.conversation.refreshFieldLabels(this.currentMap.resources);
     this.guide.refresh();
+    // Auto-read the new step if the heading changed (smooth step-to-step flow)
+    this.autoReadStep(700);
     return this.currentMap;
   }
 
@@ -447,10 +462,7 @@ export class RohaSDK {
           }
           if (!suppressAnnounce) this.announce(rc('roha.movedBack', this.locale));
         } else if (proposal.payload?.direction === 'forward') {
-          const nextBtn = document.querySelector<HTMLButtonElement>('#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"]');
-          if (nextBtn) {
-            nextBtn.click();
-          }
+          this.advanceToNextStep();
           if (!suppressAnnounce) this.announce(this.locale === 'am' ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.');
         } else {
           const focused = this.formAction.focusTarget(proposal.targetId);
@@ -551,6 +563,14 @@ export class RohaSDK {
           if (llmIntent.intent && (llmIntent.intent as string) !== 'chat') {
             this.executeIntent(llmIntent, Boolean(aiMessage));
           }
+          // After Roha replies, restart listening so the user can speak next (smooth loop)
+          if (this.voice.getState() !== 'unpermitted') {
+            setTimeout(() => {
+              if (!this.readExecutor.getSpeakingState()) {
+                this.voice.startListening(true, false);
+              }
+            }, 400);
+          }
           return;
         }
       } catch {
@@ -583,6 +603,93 @@ export class RohaSDK {
     }
   }
 
+  /** Build a brief 1–2 sentence summary of the current step for auto-reading. */
+  private buildStepSummary(mode: 'normal' | 'simple' = 'normal'): string {
+    const h1 = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
+    const desc = document.querySelector('.op-step-desc, .op-desc, #op-main p:not([hidden]):not([aria-hidden="true"])')?.textContent?.trim() || '';
+    const choiceEls = Array.from(document.querySelectorAll<HTMLElement>(
+      '#op-main .op-options label, #op-main label.op-option, #op-main label.op-check, #op-main .op-choice'
+    )).filter(el => el.offsetParent !== null && !el.closest('[data-roha-ignore],[data-roha-assistant]'));
+    const choices = Array.from(new Set(
+      choiceEls.map(el => el.textContent?.trim() || '').filter(t => t && !t.includes('🔊'))
+    )).slice(0, 5);
+
+    const isAm = this.locale === 'am';
+    const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+      '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input'
+    );
+
+    if (mode === 'simple') {
+      const question = h1 || desc;
+      if (!question) return '';
+      if (choices.length > 0) {
+        return isAm
+          ? `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። አማራጮቹ፡ ${choices.join('፣ ')} ናቸው። ከእነዚህ አንዱን ይምረጡ።`
+          : `Listen carefully. The question is: "${question}". Choices are: ${choices.join(', ')}. Please choose one.`;
+      }
+      if (textInput) {
+        return isAm
+          ? `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። መልስዎን በድምጽ ይንገሩኝ።`
+          : `Listen carefully. The question is: "${question}". You can tell me your answer by speaking.`;
+      }
+      return isAm
+        ? `ጥያቄው፡ "${question}" ነው። ቀላሉን እንከተል።`
+        : `The question is: "${question}". Let me know if you need help.`;
+    }
+
+    const parts: string[] = [];
+    if (h1) parts.push(h1);
+    if (desc && desc !== h1 && desc.length < 180) parts.push(desc);
+    if (choices.length > 0) {
+      parts.push(isAm ? `አማራጮቹ፡ ${choices.join('፣ ')}።` : `Options: ${choices.join(', ')}.`);
+    } else if (textInput) {
+      parts.push(isAm ? 'መልስዎን በድምጽ መናገር ወይም መጻፍ ይችላሉ።' : 'You can speak or type your answer.');
+    }
+    return parts.join(isAm ? '። ' : '. ');
+  }
+
+  /** Auto-read the current step briefly when the heading changes (new step). */
+  private autoReadStep(delay = 600): void {
+    const voiceState = this.voice.getState();
+    // Only auto-read when voice is active
+    if (!['listening', 'processing', 'ready', 'speaking'].includes(voiceState)) return;
+    const key = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
+    if (!key || key === this.lastStepKey) return;
+    this.lastStepKey = key;
+    if (this.stepReadTimer) { clearTimeout(this.stepReadTimer); this.stepReadTimer = null; }
+    this.stepReadTimer = setTimeout(() => {
+      this.stepReadTimer = null;
+      const summary = this.buildStepSummary('normal');
+      if (summary) {
+        this.readExecutor.unlock();
+        this.readExecutor.speak(summary, this.locale);
+        this.announce(summary);
+      }
+    }, delay);
+  }
+
+  private advanceToNextStep(): void {
+    const nextBtn = document.querySelector<HTMLButtonElement>(
+      '#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"], button[type="submit"]'
+    );
+    const form = document.querySelector<HTMLFormElement>('#op-main form, form');
+
+    if (nextBtn) {
+      try { nextBtn.focus(); } catch {}
+      try { nextBtn.click(); } catch {}
+    } else if (form) {
+      try {
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      } catch {}
+    }
+
+    setTimeout(() => {
+      this.rescan();
+      this.autoReadStep(500);
+    }, 500);
+  }
+
   private tryDirectVoiceAction(utterance: string): boolean {
     const raw = utterance.trim();
     if (!raw) return false;
@@ -591,15 +698,20 @@ export class RohaSDK {
 
     // 1. Next step / Proceed
     if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)\b/iu.test(lower) ||
-        /(?:ቀጣይ\s*ደረጃ|next\s*step)/iu.test(lower)) {
-      const nextBtn = document.querySelector<HTMLButtonElement>('#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"]');
-      if (nextBtn) {
-        const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
-        this.announce(msg);
-        this.readExecutor.speak(msg, this.locale);
-        setTimeout(() => nextBtn.click(), 300);
-        return true;
-      }
+        /(?:ቀጣይ\s*ደረጃ|next\s*step|ቀጣዩ|ቀጣይ)/iu.test(lower)) {
+      const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
+      this.announce(msg);
+      this.readExecutor.speak(msg, this.locale);
+      setTimeout(() => this.advanceToNextStep(), 300);
+      return true;
+    }
+
+    // 1b. Stop / silence / pause
+    if (/^(?:አቁም|ዝም|ዝም\s*በይ|ዝም\s*በል|ቆይ|stop|pause|quiet|be\s*quiet|silence)\b/iu.test(lower)) {
+      this.readExecutor.stop();
+      const msg = isAm ? 'ዝም ብያለሁ።' : 'Stopping.';
+      this.announce(msg);
+      return true;
     }
 
     // 2. Previous step / Back
@@ -620,6 +732,21 @@ export class RohaSDK {
       const msg = isAm ? 'ጥያቄውን ላንብብልዎት።' : 'Reading the question aloud.';
       this.announce(msg);
       this.readExecutor.readTarget('page.main', this.locale);
+      return true;
+    }
+
+    // 3b. Simple/child-friendly explanation
+    if (/(?:ቀላል|ቀጥተኛ|ቀላሉን|አብራራ|ቀላል\s*ቃል|like\s*a\s*kid|simply|simple|explain\s*simply|easy\s*words|ቀላል\s*አብራራ)/iu.test(lower)) {
+      this.simpleMode.apply(true, this.rootElement || document.body, this.locale === 'am' ? 'am' : 'en');
+      const hostSimpleBtn = document.querySelector<HTMLButtonElement>('.op-toggles button[aria-pressed]');
+      if (hostSimpleBtn && hostSimpleBtn.getAttribute('aria-pressed') !== 'true') {
+        try { hostSimpleBtn.click(); } catch {}
+      }
+      const summary = this.buildStepSummary('simple');
+      if (summary) {
+        this.announce(summary);
+        this.readExecutor.speak(summary, this.locale);
+      }
       return true;
     }
 
@@ -650,6 +777,47 @@ export class RohaSDK {
 
     const cleanUtt = lower.replace(/^(?:እባክሽን|እባክህ|please|select|choose|ምረጥ|ምረጪ|አድርግ|አድርጊ|የሚለውን)\s*/iu, '').trim();
 
+    // 6a. Ordinal selection: first, second, third, last
+    const isFirst = /(?:የመጀመሪያ|አንደኛ|first|1st)\b/iu.test(cleanUtt);
+    const isSecond = /(?:ሁለተኛ|second|2nd)\b/iu.test(cleanUtt);
+    const isThird = /(?:ሶስተኛ|ሦስተኛ|third|3rd)\b/iu.test(cleanUtt);
+    const isLast = /(?:የመጨረሻ|last)\b/iu.test(cleanUtt);
+
+    if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isLast)) {
+      const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : optionLabels.length - 1;
+      const targetLabel = optionLabels[idx];
+      if (targetLabel) {
+        const input = targetLabel.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
+        if (input) {
+          const isLangStep = input.name === 'language' ||
+            document.querySelector('main[data-step-type="language"]') !== null;
+          if (isLangStep) {
+            const topLangBtn = document.querySelector<HTMLButtonElement>(`.op-lang button[lang="${input.value}"]`);
+            if (topLangBtn) { try { topLangBtn.click(); } catch {} }
+          }
+          try {
+            const proto = window.HTMLInputElement.prototype;
+            const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
+            if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
+            if (setChecked) {
+              setChecked.call(input, false);
+              setChecked.call(input, true);
+            } else input.checked = true;
+          } catch {}
+          try { targetLabel.click(); } catch {}
+          try { input.click(); } catch {}
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          const chosenText = targetLabel.textContent?.trim() || '';
+          const msg = isAm ? `«${chosenText}» ተመርጧል። ወደ ቀጣዩ ደረጃ እየሄድን ነው።` : `"${chosenText}" selected. Moving forward.`;
+          this.announce(msg);
+          this.readExecutor.speak(msg, this.locale);
+          setTimeout(() => this.advanceToNextStep(), 800);
+          return true;
+        }
+      }
+    }
+
     for (const label of optionLabels) {
       const labelText = label.textContent?.trim().toLowerCase() || '';
       const input = label.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
@@ -664,12 +832,45 @@ export class RohaSDK {
       const directMatch = cleanUtt.length >= 3 && (labelText.includes(cleanUtt) || cleanUtt.includes(labelText));
 
       if (directMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
-        input.click();
+        const isLangStep = input.name === 'language' ||
+          document.querySelector('main[data-step-type="language"]') !== null ||
+          isAmharicOption || isEnglishOption;
+
+        if (isLangStep) {
+          const targetLang = (isAmharicOption && mentionsAmharic) ? 'am' : (isEnglishOption && mentionsEnglish) ? 'en' : (input.value || 'am');
+          const topLangBtn = document.querySelector<HTMLButtonElement>(`.op-lang button[lang="${targetLang}"]`);
+          if (topLangBtn) { try { topLangBtn.click(); } catch {} }
+        }
+
+        try {
+          const proto = window.HTMLInputElement.prototype;
+          const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
+          if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
+          if (setChecked) {
+            setChecked.call(input, false);
+            setChecked.call(input, true);
+          } else input.checked = true;
+        } catch {}
+
+        try { label.click(); } catch {}
+        try { input.click(); } catch {}
+        input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
         const chosenText = label.textContent?.trim() || cleanUtt;
-        const msg = isAm ? `«${chosenText}» ተመርጧል።` : `"${chosenText}" selected.`;
-        this.announce(msg);
-        this.readExecutor.speak(msg, this.locale);
+
+        const nextMessage = isLangStep
+          ? (isAm ? `«${chosenText}» ተመርጧል። ወደ ቀጣዩ ደረጃ እየሄድን ነው።` : `"${chosenText}" selected. Moving to the next step.`)
+          : (isAm ? `«${chosenText}» ተመርጧል።` : `"${chosenText}" selected.`);
+
+        this.announce(nextMessage);
+        this.readExecutor.speak(nextMessage, this.locale);
+
+        // Automatically advance to next question when a choice (language or radio option) is selected
+        if (isLangStep || input.type === 'radio') {
+          setTimeout(() => {
+            this.advanceToNextStep();
+          }, 800);
+        }
         return true;
       }
     }
@@ -702,7 +903,10 @@ export class RohaSDK {
     this.readExecutor.stop();
     try {
       const permitted = await this.voice.requestPermission();
-      if (permitted && this.isMounted && panel === this.assistantPanel) this.voice.startListening(true);
+      if (permitted && this.isMounted && panel === this.assistantPanel) {
+        this.voice.startListening(true);
+        this.autoReadStep(400);
+      }
     } finally {
       if (button) button.disabled = false;
     }

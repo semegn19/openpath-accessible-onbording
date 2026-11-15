@@ -26,7 +26,10 @@ export function visibleSteps(schema: Schema, values: Values): Step[] {
 }
 
 export function useForm(schema: Schema) {
-  const [values, setValues] = useState<Values>({});
+  const [values, setValues] = useState<Values>(() => {
+    const langStep = schema.steps.find((st) => st.type === 'language');
+    return langStep ? { [langStep.id]: schema.defaultLang } : {};
+  });
   const [errors, setErrors] = useState<Errors>({});
   const [index, setIndex] = useState(0);
   const [submitted, setSubmitted] = useState<Values | null>(null);
@@ -82,14 +85,21 @@ export function useForm(schema: Schema) {
 
   const validateAt = useCallback(
     (s: Step): Errors => {
-      const failing = firstFailure(s, values[s.id]);
+      let val = values[s.id];
+      if (s.type === 'language' && (val === undefined || val === null || val === '')) {
+        val = settings.lang || schema.defaultLang;
+      }
+      const failing = firstFailure(s, val);
       return failing ? { [s.id]: failing } : {};
     },
-    [values],
+    [values, settings.lang, schema.defaultLang],
   );
 
   const next = useCallback((): boolean => {
     if (!step) return false;
+    if (step.type === 'language' && (values[step.id] === undefined || values[step.id] === null || values[step.id] === '')) {
+      setValue(step.id, settings.lang || schema.defaultLang);
+    }
     const found = validateAt(step);
     if (Object.keys(found).length) {
       setErrors(found);
@@ -98,7 +108,7 @@ export function useForm(schema: Schema) {
     setErrors({});
     setIndex((i) => Math.min(i + 1, steps.length - 1));
     return true;
-  }, [step, steps.length, validateAt]);
+  }, [step, steps.length, validateAt, values, settings.lang, schema.defaultLang, setValue]);
 
   const back = useCallback(() => {
     setErrors({});

@@ -15,6 +15,8 @@ export class ReadExecutor {
   private currentAudio: HTMLAudioElement | null = null;
   private audioCtx: AudioContext | null = null;
   private currentSource: AudioBufferSourceNode | null = null;
+  private currentPlayId: number = 0;
+  private currentAbortController: AbortController | null = null;
 
   constructor(registry: TargetRegistry) {
     this.registry = registry;
@@ -83,7 +85,7 @@ export class ReadExecutor {
 
   public speak(text: string, locale: string = 'en'): boolean {
     this.stop();
-    this.statusCallback?.({ speaking: false, text });
+    const playId = ++this.currentPlayId;
 
     if (!text || !text.trim()) return false;
 
@@ -97,27 +99,35 @@ export class ReadExecutor {
         this.isSpeaking = true;
         this.statusCallback?.({ speaking: true, text });
 
-        // Web Audio API decodes and plays without transient activation expiry
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioCtx) {
           if (!this.audioCtx) this.audioCtx = new AudioCtx();
           if (this.audioCtx.state === 'suspended') void this.audioCtx.resume();
 
-          fetch(ttsUrl)
+          const controller = new AbortController();
+          this.currentAbortController = controller;
+
+          fetch(ttsUrl, { signal: controller.signal })
             .then(res => {
               if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
               return res.arrayBuffer();
             })
-            .then(buf => this.audioCtx!.decodeAudioData(buf))
+            .then(buf => {
+              if (this.currentPlayId !== playId) return null;
+              return this.audioCtx!.decodeAudioData(buf);
+            })
             .then(decoded => {
+              if (!decoded || this.currentPlayId !== playId) return;
               this.stopAudio();
               const source = this.audioCtx!.createBufferSource();
               source.buffer = decoded;
               source.connect(this.audioCtx!.destination);
               source.onended = () => {
-                this.isSpeaking = false;
-                this.currentSource = null;
-                this.statusCallback?.({ speaking: false });
+                if (this.currentPlayId === playId) {
+                  this.isSpeaking = false;
+                  this.currentSource = null;
+                  this.statusCallback?.({ speaking: false });
+                }
               };
               this.currentSource = source;
               if (this.audioCtx!.state === 'suspended') {
@@ -125,18 +135,22 @@ export class ReadExecutor {
               }
               source.start(0);
             })
-            .catch(() => {
-              // Fallback to HTML5 Audio element
+            .catch(err => {
+              if (err.name === 'AbortError' || this.currentPlayId !== playId) return;
               const audio = new Audio(ttsUrl);
               this.currentAudio = audio;
               audio.onended = () => {
-                this.isSpeaking = false;
-                this.currentAudio = null;
-                this.statusCallback?.({ speaking: false });
+                if (this.currentPlayId === playId) {
+                  this.isSpeaking = false;
+                  this.currentAudio = null;
+                  this.statusCallback?.({ speaking: false });
+                }
               };
               audio.play().catch(() => {
-                this.isSpeaking = false;
-                this.statusCallback?.({ speaking: false, text });
+                if (this.currentPlayId === playId) {
+                  this.isSpeaking = false;
+                  this.statusCallback?.({ speaking: false, text });
+                }
               });
             });
           return true;
@@ -144,6 +158,7 @@ export class ReadExecutor {
       } catch (e) {
         console.error('[Roha TTS Exception]', e);
       }
+      return true;
     }
 
     if (typeof window === 'undefined' || !window.speechSynthesis) {
@@ -153,30 +168,32 @@ export class ReadExecutor {
 
     try {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = locale.startsWith('am') ? 'am-ET' : 'en-US';
+      utterance.lang = 'en-US';
       utterance.rate = 0.95;
 
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = locale.startsWith('am')
-        ? voices.find(v => v.lang.toLowerCase().startsWith('am'))
-        : voices.find(v => v.lang.toLowerCase().startsWith('en'));
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-      }
+      const preferredVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+      if (preferredVoice) utterance.voice = preferredVoice;
 
       utterance.onstart = () => {
-        this.isSpeaking = true;
-        this.statusCallback?.({ speaking: true, text });
+        if (this.currentPlayId === playId) {
+          this.isSpeaking = true;
+          this.statusCallback?.({ speaking: true, text });
+        }
       };
 
       utterance.onend = () => {
-        this.isSpeaking = false;
-        this.statusCallback?.({ speaking: false });
+        if (this.currentPlayId === playId) {
+          this.isSpeaking = false;
+          this.statusCallback?.({ speaking: false });
+        }
       };
 
       utterance.onerror = () => {
-        this.isSpeaking = false;
-        this.statusCallback?.({ speaking: false });
+        if (this.currentPlayId === playId) {
+          this.isSpeaking = false;
+          this.statusCallback?.({ speaking: false });
+        }
       };
 
       window.speechSynthesis.speak(utterance);
@@ -206,9 +223,18 @@ export class ReadExecutor {
   }
 
   public stop(): void {
+    this.currentPlayId++;
+    if (this.currentAbortController) {
+      try {
+        this.currentAbortController.abort();
+      } catch {}
+      this.currentAbortController = null;
+    }
     this.stopAudio();
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
     }
     this.isSpeaking = false;
     this.statusCallback?.({ speaking: false });
