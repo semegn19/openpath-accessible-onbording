@@ -188,23 +188,28 @@
 }
 
 /* Large and medium-large screen layout: ALWAYS place Roha on the side */
-@media (min-width: 56rem) {
+@media (min-width: 48rem), (min-width: 768px) {
   body.roha-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem);
-    align-items: start;
-    gap: 1.5rem;
-    padding-right: 1.5rem;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem) !important;
+    align-items: start !important;
+    gap: 1.5rem !important;
+    padding-right: 1.5rem !important;
   }
   body.roha-layout > #root {
-    min-width: 0;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
   }
+  body.roha-layout > .roha-aside,
   .roha-aside {
-    position: sticky;
-    top: 1rem;
-    margin: 1.5rem 0;
-    max-height: calc(100vh - 2rem);
-    overflow-y: auto;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: sticky !important;
+    top: 1rem !important;
+    margin: 1.5rem 0 !important;
+    max-height: calc(100vh - 2rem) !important;
+    overflow-y: auto !important;
   }
 }
 

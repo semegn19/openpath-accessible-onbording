@@ -348,8 +348,6 @@ export class RohaSDK {
     const activeControl = this.assistantPanel?.contains(document.activeElement)
       ? document.activeElement?.getAttribute('data-roha-control') : null;
     const draft = this.assistantPanel?.querySelector<HTMLInputElement>('[data-roha-control="roha-command"]')?.value || '';
-    this.assistantPanel?.remove();
-    this.assistantPanel = null;
     this.renderAssistantUI();
     const panel = this.assistantPanel as HTMLElement | null;
     const command = panel?.querySelector<HTMLInputElement>('[data-roha-control="roha-command"]');
@@ -2077,13 +2075,15 @@ export class RohaSDK {
   }
 
   private renderAssistantUI(): void {
-    if (this.assistantPanel) return;
-
-    const panel = document.createElement('aside');
-    panel.id = 'roha-assistant-panel';
-    panel.className = 'roha-aside';
-    panel.setAttribute('data-roha-ignore', 'true');
-    panel.setAttribute('data-roha-assistant', 'true');
+    let panel = this.assistantPanel;
+    const isNew = !panel;
+    if (!panel) {
+      panel = document.createElement('aside');
+      panel.id = 'roha-assistant-panel';
+      panel.className = 'roha-aside';
+      panel.setAttribute('data-roha-ignore', 'true');
+      panel.setAttribute('data-roha-assistant', 'true');
+    }
     
     panel.lang = this.locale;
     panel.setAttribute('aria-label', rc('roha.title', this.locale));
@@ -2149,7 +2149,9 @@ export class RohaSDK {
       }
     }
     panel.id = `roha-assistant-panel-${this.instanceId}`;
-    document.body.appendChild(panel);
+    if (isNew) {
+      document.body.appendChild(panel);
+    }
     document.body.classList.add('roha-layout');
     this.assistantPanel = panel;
     this.liveRegion = panel.querySelector('[data-roha-control="roha-live-region"]');

@@ -52,4 +52,13 @@ await page.click('.op-lang button:has-text("Soomaali")');
 await page.waitForTimeout(500);
 await checkState('Soomaali');
 
+// Test at 1024px viewport (laptop/tablet)
+console.log('\n--- Testing at 1024px viewport ---');
+await page.setViewportSize({ width: 1024, height: 768 });
+await page.waitForTimeout(500);
+await checkState('1024px Soomaali');
+await page.click('.op-lang button:has-text("English")');
+await page.waitForTimeout(500);
+await checkState('1024px English');
+
 await browser.close();
