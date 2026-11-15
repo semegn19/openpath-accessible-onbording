@@ -504,7 +504,6 @@
       "icon": "camera",
       "accept": "image/*",
       "required": false,
-      "optional": true,
       "voice": false,
       "readAloud": true,
       "pii": "sensitive",
