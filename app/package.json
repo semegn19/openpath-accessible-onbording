@@ -37,6 +37,7 @@
     "literacy": "node tests/simple.mjs",
     "literacy:strict": "node tests/simple.mjs --strict",
     "errors": "node tests/errors.mjs",
+    "ai": "node tests/ai-adapter.mjs",
     "transcribe": "node tests/transcribe.mjs",
     "parity": "node tests/parity.mjs",
     "copy": "node tests/copy-source.mjs",
