@@ -604,11 +604,37 @@ export class RohaSDK {
           const aiMessage = (llmIntent as any).message || (llmIntent.payload as any)?.message;
           const isForwardNav = llmIntent.intent === 'navigate' && (llmIntent.payload as any)?.direction === 'forward';
           const activeErr = this.getVisibleFormError();
-          const mentionsForward = /(?:ወደ ቀጣይ|ቀጣይ ደረጃ|ቀጥል|sadarkaa itti aanu|ቀጻሊ|moving to the next|going to next)/iu.test(aiMessage || '');
+          const mentionsForward = /(?:ወደ ቀጣይ|ቀጣይ ደረጃ|ቀጥል|sadarkaa itti aanu|ቀጻሊ|moving to the next|going to next|እያሄድን|እየሄድን|ce'aa|ንኸይድ)/iu.test(aiMessage || '');
 
           if ((isForwardNav || mentionsForward) && activeErr) {
             this.speakAndFocusError(activeErr);
             return;
+          }
+
+          // Guard: If on phone step and phone is incomplete or invalid, do NOT allow LLM forward navigation or forward message!
+          const phoneInput = document.querySelector<HTMLInputElement>(
+            '#op-main input[type="tel"], #op-main input[name="phone"], #op-main input#phone, input[type="tel"]'
+          );
+          if (phoneInput && (isForwardNav || mentionsForward)) {
+            const rawPhone = phoneInput.value.trim().replace(/[\s\-()]/g, '');
+            const isCompletePhone = /^(?:0[79]\d{8}|\+251[79]\d{8}|251[79]\d{8})$/.test(rawPhone);
+            if (!isCompletePhone) {
+              const errTxt = rawPhone.length === 0
+                ? this.t({
+                    am: 'እባክዎ መጀመሪያ ስልክ ቁጥርዎን ያስገቡ። ምሳሌ፦ 0912345678',
+                    om: 'Mee jalqaba lakkoofsa bilbila keessanii galchaa. Fakkeenyaaf: 0912345678',
+                    ti: 'በጃኹም መጀመርታ ናይ ስልኪ ቍጽርኹም ኣእትዉ። ንኣብነት፦ 0912345678',
+                    en: 'Please enter your phone number first. Example: 0912345678',
+                  })
+                : this.t({
+                    am: 'ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678',
+                    om: 'Lakkoofsi bilbilaa sirrii miti. Fakkeenyaaf: 0912345678',
+                    ti: 'ናይ ስልኪ ቍጽሪ ትኽክል ኣይኮነን። ንኣብነት፦ 0912345678',
+                    en: 'Phone number is invalid. Example: 0912345678',
+                  });
+              this.speakAndFocusError(errTxt);
+              return;
+            }
           }
 
           if (aiMessage) {
@@ -860,14 +886,7 @@ export class RohaSDK {
   }
 
   private advanceToNextStep(): void {
-    // 1. If an error is already visible on the screen, announce it and do not advance
-    const existingError = this.getVisibleFormError();
-    if (existingError) {
-      this.speakAndFocusError(existingError);
-      return;
-    }
-
-    // 2. If on the phone step, verify the phone number is valid and complete before submitting
+    // 1. If on the phone step, verify the phone number is valid and complete before submitting
     const phoneInput = document.querySelector<HTMLInputElement>(
       '#op-main input[type="tel"], #op-main input[name="phone"], #op-main input#phone, input[type="tel"]'
     );
@@ -875,6 +894,7 @@ export class RohaSDK {
       const rawVal = phoneInput.value.trim().replace(/[\s\-()]/g, '');
       const isCompletePhone = /^(?:0[79]\d{8}|\+251[79]\d{8}|251[79]\d{8})$/.test(rawVal);
       if (!isCompletePhone) {
+        const remaining = 10 - (rawVal.startsWith('0') ? rawVal.length : rawVal.length + 1);
         const msg = rawVal.length === 0
           ? this.t({
               am: 'እባክዎ መጀመሪያ ስልክ ቁጥርዎን ያስገቡ። ምሳሌ፦ 0912345678',
@@ -882,12 +902,19 @@ export class RohaSDK {
               ti: 'በጃኹም መጀመርታ ናይ ስልኪ ቍጽርኹም ኣእትዉ። ንኣብነት፦ 0912345678',
               en: 'Please enter your phone number first. Example: 0912345678',
             })
-          : this.t({
-              am: `ስልክ ቁጥሩ አልተሟላም ወይም ትክክል አይደለም። 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ ወይም ያስተካክሉ።`,
-              om: `Lakkoofsi bilbilaa guutuu miti ykn sirrii miti. Dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678). Mee dijitoota hafan natti himaa ykn sirreessaa.`,
-              ti: `ናይ ስልኪ ቍጽሪ ምሉእ ኣይኮነን ወይ ትኽክል ኣይኮነን። 10 ኣሃዛት ክህልዎ ኣለዎ (ንኣብነት፦ 0912345678)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ ወይ ኣዐርዩ።`,
-              en: `The phone number is incomplete or invalid. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`,
-            });
+          : (rawVal.length < 10 && (rawVal.startsWith('09') || rawVal.startsWith('07') || rawVal.startsWith('9') || rawVal.startsWith('7')))
+            ? this.t({
+                am: `«${rawVal}» አልተሟላም። ${remaining} አሃዝ ይቀራል (ጠቅላላ 10 አሃዝ መሆን አለበት)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`,
+                om: `"${rawVal}" hin guutamne. Dijitiin ${remaining} hafeera (walumaagalatti dijitii 10). Mee dijitoota hafan natti himaa.`,
+                ti: `«${rawVal}» ኣይተማልአን። ${remaining} ኣሃዛት ተሪፎም ኣለዉ (ብጠቕላላ 10 ኣሃዛት)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ።`,
+                en: `"${rawVal}" is incomplete. ${remaining} digits remaining (10 digits total). Please tell me the rest of the digits.`,
+              })
+            : this.t({
+                am: `«${rawVal}» ትክክለኛ የኢትዮጵያ ስልክ ቁጥር አይደለም። ስልክ ቁጥር በ09 ወይም 07 መጀመር እና 10 አሃዝ መሆን አለበት (ምሳሌ፦ 0912345678)።`,
+                om: `"${rawVal}" lakkoofsa bilbilaa Itoophiyaa sirrii miti. Lakkoofsi bilbilaa 09 ykn 07n jalqabuu fi dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678).`,
+                ti: `«${rawVal}» ቅኑዕ ናይ ስልኪ ቍጽሪ ኣይኮነን። ናይ ስልኪ ቍጽሪ ብ09 ወይ 07 ክጅምርን 10 ኣሃዛት ክህልዎን ኣለዎ (ንኣብነት፦ 0912345678)።`,
+                en: `"${rawVal}" is not a valid Ethiopian phone number. Ethiopian phone numbers must start with 09 or 07 and have 10 digits (e.g. 0912345678).`,
+              });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         try { phoneInput.focus(); } catch {}
@@ -895,11 +922,33 @@ export class RohaSDK {
       }
     }
 
-    // 3. If on a statement / consent step with an unchecked required checkbox, alert user
+    // 2. If on a statement / consent step with an unchecked required checkbox, alert user
     const isConsentScreen = document.querySelector('main[data-step-type="statement"], main[data-step-type="submit"], #op-main[data-step-type="statement"], #op-main[data-step-type="submit"]') !== null;
     const requiredCheckboxes = isConsentScreen ? Array.from(document.querySelectorAll<HTMLInputElement>(
       '#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]'
     )).filter(cb => !cb.checked) : [];
+    if (requiredCheckboxes.length > 0) {
+      const msg = this.t({
+        am: 'እባክዎ ከመቀጠልዎ በፊት ስምምነትዎን ያረጋግጡ ወይም «ተስማምቻለሁ» ይበሉ።',
+        om: 'Mee utuu hin ceyin dura waliigaltee keessan mirkaneessaa ykn "walii nan gala" jedhaa.',
+        ti: 'በጃኹም ቅድሚ ምቕጻልኩም ስምምዕነትኩም ኣረጋግጹ ወይ «ተሰማሚዐ» በሉ።',
+        en: 'Please confirm your consent or say "I agree" before proceeding.',
+      });
+      this.announce(msg);
+      this.readExecutor.speak(msg, this.locale);
+      try { requiredCheckboxes[0].focus(); } catch {}
+      return;
+    }
+
+    // 3. If an input on the current step has aria-invalid="true" and hasn't been corrected, announce it
+    const invalidCurrentInput = document.querySelector<HTMLElement>('#op-main [aria-invalid="true"]');
+    if (invalidCurrentInput && !phoneInput && requiredCheckboxes.length === 0) {
+      const existingError = this.getVisibleFormError();
+      if (existingError) {
+        this.speakAndFocusError(existingError);
+        return;
+      }
+    }
     if (requiredCheckboxes.length > 0) {
       const msg = this.t({
         am: 'እባክዎ ከመቀጠልዎ በፊት ስምምነትዎን ያረጋግጡ ወይም «ተስማምቻለሁ» ይበሉ።',
@@ -967,6 +1016,14 @@ export class RohaSDK {
       try {
         input.click();
       } catch {}
+      if (!input.checked) {
+        try { targetLabel.click(); } catch {}
+      }
+      if (!input.checked) {
+        input.checked = true;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
 
     const labelSpan = targetLabel.querySelector('.op-option-label') || targetLabel;
@@ -1076,7 +1133,9 @@ export class RohaSDK {
       // 2. If user already had partial digits in the input and is speaking continuation
       const currentDigits = textInput.value.replace(/[^\d+]/g, '');
       if (currentDigits && digits && !digits.startsWith('0') && !digits.startsWith('+251')) {
-        digits = currentDigits + digits;
+        if (!digits.startsWith(currentDigits) && currentDigits.length + digits.length <= 10) {
+          digits = currentDigits + digits;
+        }
       }
 
       // 3. Normalize Ethiopian 9-digit format (912345678 -> 0912345678)
@@ -1111,12 +1170,23 @@ export class RohaSDK {
 
     let msg: string;
     if (isPhone && isPhoneIncomplete) {
-      msg = this.t({
-        am: `«${finalVal}» የተሟላ ስልክ ቁጥር አይደለም። ስልክ ቁጥር 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`,
-        om: `"${finalVal}" lakkoofsa bilbilaa guutuu miti. Lakkoofsi bilbilaa dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678). Mee dijitoota hafan natti himaa.`,
-        ti: `«${finalVal}» ምሉእ ናይ ስልኪ ቍጽሪ ኣይኮነን። ናይ ስልኪ ቍጽሪ 10 ኣሃዛት ክህልዎ ኣለዎ (ንኣብነት፦ 0912345678)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ።`,
-        en: `"${finalVal}" is incomplete. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`,
-      });
+      const isPartialValid = (finalVal.startsWith('09') || finalVal.startsWith('07') || finalVal.startsWith('9') || finalVal.startsWith('7') || finalVal.startsWith('+251')) && finalVal.length < 10;
+      const remaining = 10 - (finalVal.startsWith('0') ? finalVal.length : finalVal.length + 1);
+      if (isPartialValid && remaining > 0) {
+        msg = this.t({
+          am: `«${finalVal}» አልተሟላም። ${remaining} አሃዝ ይቀራል (ጠቅላላ 10 አሃዝ መሆን አለበት)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`,
+          om: `"${finalVal}" hin guutamne. Dijitiin ${remaining} hafeera (walumaagalatti dijitii 10). Mee dijitoota hafan natti himaa.`,
+          ti: `«${finalVal}» ኣይተማልአን። ${remaining} ኣሃዛት ተሪፎም ኣለዉ (ብጠቕላላ 10 ኣሃዛት)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ።`,
+          en: `"${finalVal}" is incomplete. ${remaining} digits remaining (10 digits total). Please tell me the rest of the digits.`,
+        });
+      } else {
+        msg = this.t({
+          am: `«${finalVal}» ትክክለኛ የኢትዮጵያ ስልክ ቁጥር አይደለም። ስልክ ቁጥር በ09 ወይም 07 መጀመር እና 10 አሃዝ መሆን አለበት (ምሳሌ፦ 0912345678)። እባክዎ ያስተካክሉ።`,
+          om: `"${finalVal}" lakkoofsa bilbilaa Itoophiyaa sirrii miti. Lakkoofsi bilbilaa 09 ykn 07n jalqabuu fi dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678). Mee sirreessaa.`,
+          ti: `«${finalVal}» ቅኑዕ ናይ ስልኪ ቍጽሪ ኣይኮነን። ናይ ስልኪ ቍጽሪ ብ09 ወይ 07 ክጅምርን 10 ኣሃዛት ክህልዎን ኣለዎ (ንኣብነት፦ 0912345678)። በጃኹም ኣዐርዩ።`,
+          en: `"${finalVal}" is not a valid Ethiopian phone number. Ethiopian phone numbers must start with 09 or 07 and have 10 digits (e.g. 0912345678). Please correct it.`,
+        });
+      }
     } else if (isPhone) {
       msg = this.t({
         am: `ስልክ ቁጥር «${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`,
@@ -1607,8 +1677,8 @@ export class RohaSDK {
         <div class="roha-header">
           <h2 class="roha-title">${text('roha.title')}</h2>
         </div>
-        <p>${text('roha.inlineIntro')}</p>
-        <div class="roha-grid">
+        <p class="roha-subtitle">${text('roha.inlineIntro')}</p>
+        <div class="roha-grid roha-top-actions">
           <button id="roha-launcher-pill" class="roha-pill" type="button">${text('roha.open')}</button>
           <button id="roha-btn-stop" type="button">${text('roha.stop')}</button>
         </div>
@@ -1623,31 +1693,14 @@ export class RohaSDK {
             <button type="button" data-roha-cancel>${text('roha.correct')}</button>
           </div>
         </div>
-        <div class="roha-grid">
-          <button type="button" data-roha-guide>${text('roha.guide')}</button>
-          <button type="button" data-roha-forward>${text('roha.forward')}</button>
-          <button type="button" data-roha-back>${text('roha.backward')}</button>
-          <button id="roha-btn-check-answer" type="button">${text('roha.review')}</button>
-        </div>
         <form class="roha-command-form">
           <label for="roha-command">${text('roha.request')}</label>
-          <input id="roha-command" name="request" type="text" maxlength="1000" autocomplete="off" />
-          <button class="roha-btn-primary-blue" type="submit">${text('roha.send')}</button>
+          <div class="roha-input-row">
+            <input id="roha-command" name="request" type="text" maxlength="1000" autocomplete="off" placeholder="${text('roha.request')}" />
+            <button class="roha-btn-primary-blue" type="submit">${text('roha.send')}</button>
+          </div>
         </form>
-        <p class="roha-hint">${text('roha.guideHint')}</p>
-        <button type="button" data-ai-options>${text('roha.aiOptions')}</button>
-        <p data-ai-description></p>
-        <label data-ai-consent-label hidden><input type="checkbox" data-ai-consent> ${text('roha.aiConsent')}</label>
-        <p class="roha-voice-notice">${text('roha.voiceNotice')}</p>
-        <div class="roha-grid">
-          <button id="roha-btn-mic" type="button">${text('roha.voice')}</button>
-          <button id="roha-btn-stuck" type="button">${text('roha.stuck')}</button>
-          <button id="roha-btn-bigger" type="button">${text('roha.bigger')}</button>
-          <button id="roha-btn-simple" type="button">${text('roha.simple')}</button>
-          <button id="roha-btn-contrast" type="button">${text('roha.contrast')}</button>
-          <button id="roha-btn-read" type="button">${text('roha.read')}</button>
-        </div>
-        <button id="roha-btn-reset" type="button">${text('roha.reset')}</button>
+        <label data-ai-consent-label class="roha-consent-label" hidden><input type="checkbox" data-ai-consent> ${text('roha.aiConsent')}</label>
       </div>`;
     // IDs must be unique when more than one component is installed.
     for (const element of Array.from(panel.querySelectorAll('[id]'))) {
@@ -1675,11 +1728,11 @@ export class RohaSDK {
         this.announce(text('roha.stopped')); pill.focus();
       }
     });
-    panel.querySelector('[data-roha-guide]')!.addEventListener('click', () => { this.rescan(); this.guide.start(); });
-    panel.querySelector('[data-roha-forward]')!.addEventListener('click', () => { this.rescan(); this.advanceToNextStep(); });
-    panel.querySelector('[data-roha-back]')!.addEventListener('click', () => this.guide.back());
-    panel.querySelector('[data-roha-confirm]')!.addEventListener('click', () => { void this.guide.confirm(); command.focus(); });
-    panel.querySelector('[data-roha-cancel]')!.addEventListener('click', () => { this.guide.cancel(); command.focus(); });
+    panel.querySelector('[data-roha-guide]')?.addEventListener('click', () => { this.rescan(); this.guide.start(); });
+    panel.querySelector('[data-roha-forward]')?.addEventListener('click', () => { this.rescan(); this.advanceToNextStep(); });
+    panel.querySelector('[data-roha-back]')?.addEventListener('click', () => this.guide.back());
+    panel.querySelector('[data-roha-confirm]')?.addEventListener('click', () => { void this.guide.confirm(); command.focus(); });
+    panel.querySelector('[data-roha-cancel]')?.addEventListener('click', () => { this.guide.cancel(); command.focus(); });
     panel.addEventListener('pointerdown', () => this.readExecutor.unlock());
     panel.addEventListener('click', () => this.readExecutor.unlock());
     command.addEventListener('keydown', () => this.readExecutor.unlock());
@@ -1707,8 +1760,10 @@ export class RohaSDK {
         const config = await provider.describe();
         if (version !== this.requestVersion) return;
         const providerNames: Record<string, string> = { openai: 'OpenAI', gemini: 'Google Gemini', anthropic: 'Anthropic Claude', ollama: 'Ollama', custom: text('roha.aiCustom') };
-        panel.querySelector('[data-ai-description]')!.textContent = config.provider === 'disabled' ? text('roha.aiDisabled') : rc('roha.aiSelected', this.locale, { provider: providerNames[config.provider] || text('roha.aiCustom'), model: config.model });
-        panel.querySelector<HTMLElement>('[data-ai-consent-label]')!.hidden = config.provider === 'disabled';
+        const descEl = panel.querySelector('[data-ai-description]');
+        if (descEl) descEl.textContent = config.provider === 'disabled' ? text('roha.aiDisabled') : rc('roha.aiSelected', this.locale, { provider: providerNames[config.provider] || text('roha.aiCustom'), model: config.model });
+        const consentLabel = panel.querySelector<HTMLElement>('[data-ai-consent-label]');
+        if (consentLabel) consentLabel.hidden = config.provider === 'disabled';
         serverProvider = provider; this.setLLMProvider(provider);
         consent.disabled = false;
         if (autoConsent && config.provider !== 'disabled') {
@@ -1719,7 +1774,8 @@ export class RohaSDK {
         if (!autoConsent) this.announce(text('roha.notUnderstood'));
       }
     };
-    panel.querySelector<HTMLButtonElement>('[data-ai-options]')!.onclick = () => void initProvider(false);
+    const aiOptBtn = panel.querySelector<HTMLButtonElement>('[data-ai-options]');
+    if (aiOptBtn) aiOptBtn.onclick = () => void initProvider(false);
     consent.onchange = () => { this.requestVersion++; serverProvider?.consent(consent.checked); };
     void initProvider(true);
 

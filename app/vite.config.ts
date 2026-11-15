@@ -17,6 +17,7 @@ function autoApiServer() {
       });
       socket.once('error', () => {
         socket.destroy();
+        if (apiProcess) return;
         const apiPath = resolve(__dirname, '../api/server.mjs');
         apiProcess = spawn('node', [apiPath], {
           stdio: 'inherit',
