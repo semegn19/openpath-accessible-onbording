@@ -28,6 +28,7 @@ import { ConversationManager } from './conversation';
 import { RuntimeProfileManager } from './runtime-profile';
 import { PageObserver } from './observer';
 import { DraftService } from './drafts';
+import { spokenToDigits } from '../digits';
 import {
   PartnerAssistedManager,
   SMSResumeService,
@@ -461,8 +462,12 @@ export class RohaSDK {
           }
           if (!suppressAnnounce) this.announce(rc('roha.movedBack', this.locale));
         } else if (proposal.payload?.direction === 'forward') {
+          const err = this.getVisibleFormError();
+          if (err) {
+            this.speakAndFocusError(err);
+            return { success: false, error: err };
+          }
           this.advanceToNextStep();
-          if (!suppressAnnounce) this.announce(this.locale === 'am' ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.');
         } else {
           const focused = this.formAction.focusTarget(proposal.targetId);
           return focused ? { success: true } : { success: false, error: 'Target could not receive focus' };
@@ -547,6 +552,8 @@ export class RohaSDK {
       .map(el => el.textContent?.trim() || (el as HTMLInputElement).value || '')
       .filter(t => t && !t.includes('🔊') && t !== currentHeading && t !== currentDesc);
 
+    const visibleError = this.getVisibleFormError();
+
     const context = {
       activeTargetId: undefined,
       currentTextScalePercent: this.textScale.getPercent(),
@@ -555,6 +562,8 @@ export class RohaSDK {
         activeQuestion: currentHeading,
         description: currentDesc,
         options: Array.from(new Set(currentChoices)).slice(0, 10),
+        hasError: Boolean(visibleError),
+        errorMessage: visibleError || '',
       },
     };
 
@@ -681,7 +690,52 @@ export class RohaSDK {
     }, delay);
   }
 
+  public getVisibleFormError(): string | null {
+    // 1. Check top error summary banner
+    const summaryItem = document.querySelector<HTMLElement>('.op-error-summary li, .op-error-summary a');
+    if (summaryItem?.textContent?.trim()) {
+      return summaryItem.textContent.trim().replace(/^[•\s]+/, '');
+    }
+    // 2. Check inline field error
+    const fieldErrors = document.querySelectorAll<HTMLElement>('.op-error, [role="alert"]:not([data-roha-assistant] *), .op-field-error');
+    for (const err of Array.from(fieldErrors)) {
+      if (err.closest('[data-roha-ignore], [data-roha-assistant], aside')) continue;
+      const txt = err.textContent?.trim();
+      if (txt) return txt.replace(/^[⚠•\s]+/, '');
+    }
+    return null;
+  }
+
+  public speakAndFocusError(errorMsg: string): void {
+    const isAm = this.locale === 'am';
+    const cleanErr = errorMsg.replace(/^[⚠•\s]+/, '').trim();
+    const alertMsg = isAm
+      ? `ስህተት ተከስቷል፦ ${cleanErr}። እባክዎ አስተካክለው እንደገና ይሞክሩ።`
+      : `There is an error: ${cleanErr}. Please correct it before continuing.`;
+    this.announce(alertMsg);
+    this.readExecutor.speak(alertMsg, this.locale);
+
+    const target = document.querySelector<HTMLElement>('[aria-invalid="true"], .op-input:invalid, .op-error-summary a');
+    if (target) {
+      if (target instanceof HTMLAnchorElement && target.hash) {
+        const linked = document.querySelector<HTMLElement>(target.hash);
+        if (linked) {
+          try { linked.focus(); linked.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+        }
+      } else {
+        try { target.focus(); target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+      }
+    }
+  }
+
   private advanceToNextStep(): void {
+    const existingError = this.getVisibleFormError();
+    if (existingError) {
+      this.speakAndFocusError(existingError);
+      return;
+    }
+
+    const currentStepHeading = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
     const nextBtn = document.querySelector<HTMLButtonElement>(
       '#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"], button[type="submit"]'
     );
@@ -698,9 +752,22 @@ export class RohaSDK {
     }
 
     setTimeout(() => {
-      this.rescan();
-      this.autoReadStep(500);
-    }, 500);
+      const errorAfter = this.getVisibleFormError();
+      const newStepHeading = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
+
+      if (errorAfter && newStepHeading === currentStepHeading) {
+        this.speakAndFocusError(errorAfter);
+        return;
+      }
+
+      if (newStepHeading !== currentStepHeading) {
+        const isAm = this.locale === 'am';
+        const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
+        this.announce(msg);
+        this.rescan();
+        this.autoReadStep(400);
+      }
+    }, 250);
   }
 
   private selectOptionAndAdvance(targetLabel: HTMLElement, input: HTMLInputElement, fallbackText = ''): boolean {
@@ -733,15 +800,15 @@ export class RohaSDK {
     const rawText = targetLabel.textContent?.trim() || '';
     const cleanChosen = rawText.replace(/^[A-Zሀ-ፐ0-9\s]+(?=[A-Za-z\u1200-\u137F])/u, '').trim() || fallbackText || input.value;
     const msg = isAm
-      ? `«${cleanChosen}» ተመርጧል። ወደ ቀጣዩ ደረጃ እየሄድን ነው።`
-      : `"${cleanChosen}" selected. Moving to the next step.`;
+      ? `«${cleanChosen}» ተመርጧል።`
+      : `"${cleanChosen}" selected.`;
 
     this.announce(msg);
     this.readExecutor.speak(msg, this.locale);
 
     setTimeout(() => {
       this.advanceToNextStep();
-    }, 850);
+    }, 600);
     return true;
   }
 
@@ -778,6 +845,39 @@ export class RohaSDK {
 
   private fillTextInput(textInput: HTMLInputElement | HTMLTextAreaElement, val: string): boolean {
     const isAm = this.locale === 'am';
+    const isPhone = textInput.type === 'tel' ||
+      textInput.name === 'phone' ||
+      textInput.id === 'phone' ||
+      textInput.getAttribute('inputmode') === 'tel' ||
+      /ስልክ|phone|bilbila/i.test(document.querySelector('#op-main h1, main h1, h1')?.textContent || '');
+
+    let finalVal = val;
+    let isPhoneIncomplete = false;
+
+    if (isPhone) {
+      // 1. Convert spoken words to digits
+      let digits = spokenToDigits(val, (this.locale as any) || 'am').replace(/[^\d+]/g, '');
+
+      // 2. If user already had partial digits in the input and is speaking continuation
+      const currentDigits = textInput.value.replace(/[^\d+]/g, '');
+      if (currentDigits && digits && !digits.startsWith('0') && !digits.startsWith('+251')) {
+        digits = currentDigits + digits;
+      }
+
+      // 3. Normalize Ethiopian 9-digit format (912345678 -> 0912345678)
+      if (digits.length === 9 && (digits.startsWith('9') || digits.startsWith('7'))) {
+        digits = '0' + digits;
+      }
+
+      finalVal = digits;
+
+      // 4. Check if all digits are told (Ethiopian format: 10 digits starting with 09 or 07, or +251...)
+      const isComplete = /^(?:0[79]\d{8}|\+251[79]\d{8}|251[79]\d{8})$/.test(digits);
+      if (!isComplete) {
+        isPhoneIncomplete = true;
+      }
+    }
+
     try {
       if ((textInput as any)._valueTracker) {
         (textInput as any)._valueTracker.setValue('');
@@ -785,18 +885,29 @@ export class RohaSDK {
       const proto = textInput instanceof HTMLInputElement ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype;
       const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
       if (setter) {
-        setter.call(textInput, val);
+        setter.call(textInput, finalVal);
       } else {
-        textInput.value = val;
+        textInput.value = finalVal;
       }
       textInput.dispatchEvent(new Event('input', { bubbles: true }));
       textInput.dispatchEvent(new Event('change', { bubbles: true }));
       textInput.focus();
     } catch {}
 
-    const msg = isAm
-      ? `«${val}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`
-      : `Entered "${val}". If correct, say "Next" to continue.`;
+    let msg: string;
+    if (isPhone && isPhoneIncomplete) {
+      msg = isAm
+        ? `«${finalVal}» የተሟላ ስልክ ቁጥር አይደለም። ስልክ ቁጥር 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`
+        : `"${finalVal}" is incomplete. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`;
+    } else if (isPhone) {
+      msg = isAm
+        ? `ስልክ ቁጥር «${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`
+        : `Phone number "${finalVal}" is complete. If correct, say "Next" to continue.`;
+    } else {
+      msg = isAm
+        ? `«${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`
+        : `Entered "${finalVal}". If correct, say "Next" to continue.`;
+    }
 
     this.announce(msg);
     this.readExecutor.speak(msg, this.locale);
@@ -820,10 +931,12 @@ export class RohaSDK {
     // 1. Next step / Proceed
     if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)\b/iu.test(lower) ||
         /(?:ቀጣይ\s*ደረጃ|next\s*step|ቀጣዩ|ቀጣይ)/iu.test(lower)) {
-      const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
-      this.announce(msg);
-      this.readExecutor.speak(msg, this.locale);
-      setTimeout(() => this.advanceToNextStep(), 300);
+      const existingError = this.getVisibleFormError();
+      if (existingError) {
+        this.speakAndFocusError(existingError);
+        return true;
+      }
+      this.advanceToNextStep();
       return true;
     }
 
@@ -972,8 +1085,8 @@ export class RohaSDK {
         .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል)$/iu, '')
         .trim();
 
-      // Accept if explicitly phrased, or if on a text-only input screen (no choices) and utterance has at least 2 chars
-      if (cleanVal && (isExplicitDictation || (optionLabels.length === 0 && cleanVal.length >= 2))) {
+      // Accept if explicitly phrased, or if on a text-only input screen (no choices) and utterance has at least 1 char
+      if (cleanVal && (isExplicitDictation || (optionLabels.length === 0 && cleanVal.length >= 1))) {
         return this.fillTextInput(textInput, cleanVal);
       }
     }

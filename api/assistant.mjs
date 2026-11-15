@@ -220,6 +220,11 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
 
     // Next / forward
     if (/ቀጣይ|ወደፊት|ቀጥል|next|forward|continue/iu.test(utt)) {
+      if (ctx.screenContext?.hasError) {
+        const err = ctx.screenContext.errorMessage;
+        const msg = isAm ? `ስህተት ስላለ ማለፍ አይቻልም፦ ${err}` : `Cannot continue due to an error: ${err}`;
+        return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
+      }
       const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
       return { intent: 'navigate', targetId: 'page.main', payload: { direction: 'forward' }, message: msg };
     }
@@ -244,6 +249,18 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
+    // Direct answer dictation when on a text/phone input screen without multiple choices
+    if (opts.length === 0 && q && utt.length >= 1) {
+      const cleanAns = ctx.utterance.trim()
+        .replace(/^(?:my\s*name\s*is\s+|i\s*am\s+|call\s*me\s+|it\s*is\s+|answer\s*:?\s*|ስሜ\s+|ስሜ\s*የሚባለው\s+|የምባለው\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|የስልክ\s*ቁጥሬ\s*)/iu, '')
+        .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል)$/iu, '')
+        .trim();
+      if (cleanAns) {
+        const msg = isAm ? `«${cleanAns}» አስገብቻለሁ።` : `Entered "${cleanAns}".`;
+        return { intent: 'propose_answer', targetId: 'page.main', payload: { value: cleanAns }, message: msg };
+      }
+    }
+
     // Generic fallback with context
     const defaultMsg = isAm
       ? (q ? `ጥያቄው "${q}" ነው።${optsStr ? ' አማራጮቹ፡ ' + optsStr + '።' : ''} ምን ማድረግ ይፈልጋሉ?` : 'እርስዎን ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?')
@@ -255,9 +272,12 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
     if (config.provider === 'disabled') throw failure(503, 'ai-disabled');
     const isAm = ctx.locale === 'am' || /[\u1200-\u137F]/.test(ctx.utterance);
     const sc = ctx.screenContext;
-    const screenBlock = sc?.activeQuestion
-      ? `\n\n=== CURRENT SCREEN (what the user sees right now) ===\nQuestion: "${sc.activeQuestion}"\nDescription: "${sc.description || ''}"\nOptions: ${JSON.stringify(sc.options || [])}\n=== END SCREEN ===\n\nIf the user asks what is on the screen, what to choose, what this means, or asks any question about this form step, answer it warmly and clearly using the screen info above.\n`
+    const errorBlock = sc?.hasError
+      ? `\n\n=== ACTIVE ERROR ON SCREEN ===\n"${sc.errorMessage}"\nDo NOT navigate forward or say you are moving to the next step! Tell the user about this error and how to fix it.\n=== END ERROR ===\n`
       : '';
+    const screenBlock = (sc?.activeQuestion
+      ? `\n\n=== CURRENT SCREEN (what the user sees right now) ===\nQuestion: "${sc.activeQuestion}"\nDescription: "${sc.description || ''}"\nOptions: ${JSON.stringify(sc.options || [])}\n=== END SCREEN ===\n\nIf the user asks what is on the screen, what to choose, what this means, or asks any question about this form step, answer it warmly and clearly using the screen info above.\n`
+      : '') + errorBlock;
     const prompt = 'You are Roha (ሮሃ), a warm, smart, bilingual (Amharic/English) AI voice assistant for OpenPath onboarding. '
       + 'You speak naturally like a helpful friend — not robotic. You respond in the same language the user speaks. '
       + 'You can answer ANY question the user asks: about the form, about what a word means, about what comes next, about accessibility, or general questions. '
