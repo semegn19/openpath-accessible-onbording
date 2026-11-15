@@ -224,6 +224,7 @@ export class RohaSDK {
       },
       onRouteChange: () => {
         this.rescan();
+        this.autoReadStep(600);
       },
     });
     this.observer.observe(this.rootElement);
@@ -320,8 +321,6 @@ export class RohaSDK {
     this.router.updateMap(this.currentMap);
     this.conversation.refreshFieldLabels(this.currentMap.resources);
     this.guide.refresh();
-    // Auto-read the new step if the heading changed (smooth step-to-step flow)
-    this.autoReadStep(700);
     return this.currentMap;
   }
 
@@ -475,8 +474,21 @@ export class RohaSDK {
         if (!suppressAnnounce) this.announce(rc('roha.filtered', this.locale, { query: proposal.payload.query }));
         return { success: true };
 
-      case 'propose_answer':
+      case 'propose_answer': {
+        const val = proposal.payload?.value;
+        if (val) {
+          const handledOption = this.handleSelectOptionIntent(val);
+          if (handledOption) return { success: true };
+
+          const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+            '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input, #op-main input:not([type="checkbox"]):not([type="radio"]):not([type="file"])'
+          );
+          if (textInput && textInput.offsetParent !== null) {
+            return { success: this.fillTextInput(textInput, val) };
+          }
+        }
         return { success: this.guide.propose(proposal.targetId, proposal.payload.value) };
+      }
 
       case 'choose_file':
         this.closeAssistantForHostAction();
@@ -659,6 +671,7 @@ export class RohaSDK {
     if (this.stepReadTimer) { clearTimeout(this.stepReadTimer); this.stepReadTimer = null; }
     this.stepReadTimer = setTimeout(() => {
       this.stepReadTimer = null;
+      if (this.readExecutor.getSpeakingState()) return;
       const summary = this.buildStepSummary('normal');
       if (summary) {
         this.readExecutor.unlock();
@@ -688,6 +701,114 @@ export class RohaSDK {
       this.rescan();
       this.autoReadStep(500);
     }, 500);
+  }
+
+  private selectOptionAndAdvance(targetLabel: HTMLElement, input: HTMLInputElement, fallbackText = ''): boolean {
+    const isAm = this.locale === 'am';
+    const isLangStep = input.name === 'language' ||
+      document.querySelector('main[data-step-type="language"]') !== null ||
+      input.value === 'am' || input.value === 'en';
+
+    if (isLangStep) {
+      const targetLang = input.value || 'am';
+      const topLangBtn = document.querySelector<HTMLButtonElement>(`.op-lang button[lang="${targetLang}"]`);
+      if (topLangBtn) { try { topLangBtn.click(); } catch {} }
+    }
+
+    try {
+      const proto = window.HTMLInputElement.prototype;
+      const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
+      if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
+      if (setChecked) {
+        setChecked.call(input, false);
+        setChecked.call(input, true);
+      } else input.checked = true;
+    } catch {}
+
+    try { targetLabel.click(); } catch {}
+    try { input.click(); } catch {}
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const rawText = targetLabel.textContent?.trim() || '';
+    const cleanChosen = rawText.replace(/^[A-Zሀ-ፐ0-9\s]+(?=[A-Za-z\u1200-\u137F])/u, '').trim() || fallbackText || input.value;
+    const msg = isAm
+      ? `«${cleanChosen}» ተመርጧል። ወደ ቀጣዩ ደረጃ እየሄድን ነው።`
+      : `"${cleanChosen}" selected. Moving to the next step.`;
+
+    this.announce(msg);
+    this.readExecutor.speak(msg, this.locale);
+
+    setTimeout(() => {
+      this.advanceToNextStep();
+    }, 850);
+    return true;
+  }
+
+  private handleSelectOptionIntent(query: string): boolean {
+    const optionLabels = Array.from(document.querySelectorAll<HTMLElement>(
+      '#op-main .op-options label, #op-main label.op-option, #op-main label.op-check, #op-main .op-choice'
+    ));
+    if (optionLabels.length === 0) return false;
+    const clean = query.trim().toLowerCase();
+
+    if (/^(?:this|current|here|ይህ|ይሄ)$/i.test(clean)) {
+      const checkedLabel = optionLabels.find(l => l.querySelector<HTMLInputElement>('input')?.checked) || optionLabels[0];
+      const inp = checkedLabel?.querySelector<HTMLInputElement>('input');
+      if (checkedLabel && inp) return this.selectOptionAndAdvance(checkedLabel, inp);
+    }
+
+    const num = parseInt(clean, 10);
+    if (!isNaN(num) && num >= 1 && num <= optionLabels.length) {
+      const target = optionLabels[num - 1];
+      const inp = target.querySelector<HTMLInputElement>('input');
+      if (inp) return this.selectOptionAndAdvance(target, inp);
+    }
+
+    for (const label of optionLabels) {
+      const inp = label.querySelector<HTMLInputElement>('input');
+      if (!inp) continue;
+      const labelText = label.textContent?.toLowerCase() || '';
+      if (inp.value.toLowerCase() === clean || labelText.includes(clean) || clean.includes(inp.value.toLowerCase())) {
+        return this.selectOptionAndAdvance(label, inp);
+      }
+    }
+    return false;
+  }
+
+  private fillTextInput(textInput: HTMLInputElement | HTMLTextAreaElement, val: string): boolean {
+    const isAm = this.locale === 'am';
+    try {
+      if ((textInput as any)._valueTracker) {
+        (textInput as any)._valueTracker.setValue('');
+      }
+      const proto = textInput instanceof HTMLInputElement ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+      if (setter) {
+        setter.call(textInput, val);
+      } else {
+        textInput.value = val;
+      }
+      textInput.dispatchEvent(new Event('input', { bubbles: true }));
+      textInput.dispatchEvent(new Event('change', { bubbles: true }));
+      textInput.focus();
+    } catch {}
+
+    const msg = isAm
+      ? `«${val}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`
+      : `Entered "${val}". If correct, say "Next" to continue.`;
+
+    this.announce(msg);
+    this.readExecutor.speak(msg, this.locale);
+
+    if (this.voice.getState() !== 'unpermitted') {
+      setTimeout(() => {
+        if (!this.readExecutor.getSpeakingState()) {
+          this.voice.startListening(true, false);
+        }
+      }, 500);
+    }
+    return true;
   }
 
   private tryDirectVoiceAction(utterance: string): boolean {
@@ -772,124 +893,88 @@ export class RohaSDK {
 
     // 6. Matching and selecting options on the active screen
     const optionLabels = Array.from(document.querySelectorAll<HTMLElement>(
-      '#op-main .op-options label, #op-main label.op-option, #op-main label.op-check'
+      '#op-main .op-options label, #op-main label.op-option, #op-main label.op-check, #op-main .op-choice'
     ));
 
-    const cleanUtt = lower.replace(/^(?:እባክሽን|እባክህ|please|select|choose|ምረጥ|ምረጪ|አድርግ|አድርጊ|የሚለውን)\s*/iu, '').trim();
+    // Clean conversational prefixes & fillers
+    const cleanUtt = lower
+      .replace(/^(?:i\s+said\s+|i\s+say\s+|i\s+would\s+say\s+)/iu, '')
+      .replace(/^(?:i\s+want\s+to\s+|i\s+want\s+|i\s+prefer\s+to\s+|i\s+prefer\s+|i\s+choose\s+|i\s+select\s+|i\s+pick\s+|i\s+take\s+)/iu, '')
+      .replace(/^(?:please\s+|let\s+me\s+choose\s+|let\s+me\s+select\s+|choose\s+|select\s+|pick\s+|take\s+)/iu, '')
+      .replace(/^(?:the\s+)?(?:option\s+)?/iu, '')
+      .replace(/^(?:እኔ\s+)?(?:የምመርጠው\s+|የምፈልገው\s+|እመርጣለሁ\s+|እፈልጋለሁ\s+)?/iu, '')
+      .replace(/^(?:እባክሽን\s+|እባክህ\s+|እባክዎ\s+|እባክዎት\s+)?(?:ይምረጡ\s+|ይምረጡልኝ\s+|ምረጥ\s+|ምረጪ\s+|አድርግ\s+|አድርጊ\s+|አድርግልኝ\s+)?/iu, '')
+      .replace(/(?:የሚለውን|የሚለውን\s+አማራጭ|እመርጣለሁ|እፈልጋለሁ|ነው\s+የምመርጠው|ነው\s+የምፈልገው)$/iu, '')
+      .trim();
 
-    // 6a. Ordinal selection: first, second, third, last
-    const isFirst = /(?:የመጀመሪያ|አንደኛ|first|1st)\b/iu.test(cleanUtt);
-    const isSecond = /(?:ሁለተኛ|second|2nd)\b/iu.test(cleanUtt);
-    const isThird = /(?:ሶስተኛ|ሦስተኛ|third|3rd)\b/iu.test(cleanUtt);
+    // 6a. "This option" / "This one" / "ይህን" / "ይሄን"
+    const isThis = /^(?:this\s*(?:one|option)?|that\s*(?:one|option)?|here|ይህ(?:ን|ንን)?|ይሄ(?:ን|ንን)?|ይኸው|ይህንኑ)$/iu.test(cleanUtt) ||
+      /(?:i\s+choose\s+this|i\s+pick\s+this|choose\s+this|select\s+this|ይህን\s*ምረጥ|ይሄን\s*ምረጥ)/iu.test(lower);
+    if (isThis && optionLabels.length > 0) {
+      const checkedLabel = optionLabels.find(l => {
+        const inp = l.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
+        return inp?.checked;
+      }) || optionLabels[0];
+      const inp = checkedLabel?.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
+      if (checkedLabel && inp) {
+        return this.selectOptionAndAdvance(checkedLabel, inp, isAm ? 'ይህ አማራጭ' : 'This option');
+      }
+    }
+
+    // 6b. Ordinal & Letter selection: first, second, A, B, 1, 2, etc.
+    const isFirst = /(?:የመጀመሪያ|አንደኛ|first|1st|^1$|^a$|^ሀ$|^አ$)/iu.test(cleanUtt) || /(?:option\s*(?:1|a)|አማራጭ\s*(?:1|አ|ሀ))/iu.test(lower);
+    const isSecond = /(?:ሁለተኛ|second|2nd|^2$|^b$|^ለ$)/iu.test(cleanUtt) || /(?:option\s*(?:2|b)|አማራጭ\s*(?:2|ለ))/iu.test(lower);
+    const isThird = /(?:ሶስተኛ|ሦስተኛ|third|3rd|^3$|^c$|^ሐ$)/iu.test(cleanUtt) || /(?:option\s*(?:3|c)|አማራጭ\s*(?:3|ሐ))/iu.test(lower);
+    const isFourth = /(?:አራተኛ|fourth|4th|^4$|^d$|^መ$)/iu.test(cleanUtt) || /(?:option\s*(?:4|d)|አማራጭ\s*(?:4|መ))/iu.test(lower);
     const isLast = /(?:የመጨረሻ|last)\b/iu.test(cleanUtt);
 
-    if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isLast)) {
-      const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : optionLabels.length - 1;
+    if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isFourth || isLast)) {
+      const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : isFourth ? 3 : optionLabels.length - 1;
       const targetLabel = optionLabels[idx];
       if (targetLabel) {
         const input = targetLabel.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
         if (input) {
-          const isLangStep = input.name === 'language' ||
-            document.querySelector('main[data-step-type="language"]') !== null;
-          if (isLangStep) {
-            const topLangBtn = document.querySelector<HTMLButtonElement>(`.op-lang button[lang="${input.value}"]`);
-            if (topLangBtn) { try { topLangBtn.click(); } catch {} }
-          }
-          try {
-            const proto = window.HTMLInputElement.prototype;
-            const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
-            if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
-            if (setChecked) {
-              setChecked.call(input, false);
-              setChecked.call(input, true);
-            } else input.checked = true;
-          } catch {}
-          try { targetLabel.click(); } catch {}
-          try { input.click(); } catch {}
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          const chosenText = targetLabel.textContent?.trim() || '';
-          const msg = isAm ? `«${chosenText}» ተመርጧል። ወደ ቀጣዩ ደረጃ እየሄድን ነው።` : `"${chosenText}" selected. Moving forward.`;
-          this.announce(msg);
-          this.readExecutor.speak(msg, this.locale);
-          setTimeout(() => this.advanceToNextStep(), 800);
-          return true;
+          return this.selectOptionAndAdvance(targetLabel, input);
         }
       }
     }
 
+    // 6c. Matching label text, keywords, and values
     for (const label of optionLabels) {
       const labelText = label.textContent?.trim().toLowerCase() || '';
       const input = label.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
       if (!input || !labelText) continue;
 
-      const isAmharicOption = /አማርኛ|amharic/i.test(labelText);
-      const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText);
+      const isAmharicOption = /አማርኛ|amharic/i.test(labelText) || input.value === 'am';
+      const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || input.value === 'en';
 
-      const mentionsAmharic = /አማርኛ|amharic/i.test(cleanUtt);
-      const mentionsEnglish = /english|እንግሊዝኛ/i.test(cleanUtt);
+      const mentionsAmharic = /አማርኛ|amharic/i.test(lower);
+      const mentionsEnglish = /english|እንግሊዝኛ/i.test(lower);
 
-      const directMatch = cleanUtt.length >= 3 && (labelText.includes(cleanUtt) || cleanUtt.includes(labelText));
+      const valMatch = Boolean(input.value && input.value.length >= 2 && lower.includes(input.value.toLowerCase()));
+      const directMatch = cleanUtt.length >= 2 && (labelText.includes(cleanUtt) || cleanUtt.includes(labelText));
+      const significantWords = labelText.split(/[\s,()/-]+/).filter(w => w.length >= 3 && !['option', 'አማራጭ', 'label'].includes(w));
+      const wordMatch = significantWords.length > 0 && significantWords.some(w => lower.includes(w));
 
-      if (directMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
-        const isLangStep = input.name === 'language' ||
-          document.querySelector('main[data-step-type="language"]') !== null ||
-          isAmharicOption || isEnglishOption;
-
-        if (isLangStep) {
-          const targetLang = (isAmharicOption && mentionsAmharic) ? 'am' : (isEnglishOption && mentionsEnglish) ? 'en' : (input.value || 'am');
-          const topLangBtn = document.querySelector<HTMLButtonElement>(`.op-lang button[lang="${targetLang}"]`);
-          if (topLangBtn) { try { topLangBtn.click(); } catch {} }
-        }
-
-        try {
-          const proto = window.HTMLInputElement.prototype;
-          const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
-          if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
-          if (setChecked) {
-            setChecked.call(input, false);
-            setChecked.call(input, true);
-          } else input.checked = true;
-        } catch {}
-
-        try { label.click(); } catch {}
-        try { input.click(); } catch {}
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        const chosenText = label.textContent?.trim() || cleanUtt;
-
-        const nextMessage = isLangStep
-          ? (isAm ? `«${chosenText}» ተመርጧል። ወደ ቀጣዩ ደረጃ እየሄድን ነው።` : `"${chosenText}" selected. Moving to the next step.`)
-          : (isAm ? `«${chosenText}» ተመርጧል።` : `"${chosenText}" selected.`);
-
-        this.announce(nextMessage);
-        this.readExecutor.speak(nextMessage, this.locale);
-
-        // Automatically advance to next question when a choice (language or radio option) is selected
-        if (isLangStep || input.type === 'radio') {
-          setTimeout(() => {
-            this.advanceToNextStep();
-          }, 800);
-        }
-        return true;
+      if (directMatch || valMatch || wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
+        return this.selectOptionAndAdvance(label, input);
       }
     }
 
     // 7. Dictating answers into active text inputs
     const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-      '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input'
+      '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input, #op-main input:not([type="checkbox"]):not([type="radio"]):not([type="file"])'
     );
-    if (textInput && /^(?:ስሜ\s+|my\s*name\s*is\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ቁጥሬ\s*)/iu.test(raw)) {
-      const val = raw.replace(/^(?:ስሜ\s+|my\s*name\s*is\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ቁጥሬ\s*)/iu, '').trim();
-      if (val) {
-        const proto = textInput instanceof HTMLInputElement ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype;
-        Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(textInput, val);
-        textInput.dispatchEvent(new Event('input', { bubbles: true }));
-        textInput.dispatchEvent(new Event('change', { bubbles: true }));
-        const msg = isAm ? `«${val}» ተሞልቷል።` : `"${val}" entered.`;
-        this.announce(msg);
-        this.readExecutor.speak(msg, this.locale);
-        return true;
+    if (textInput && textInput.offsetParent !== null) {
+      const isExplicitDictation = /^(?:ስሜ\s+|my\s*name\s*is\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|ስልኬ\s*)/iu.test(raw);
+      const cleanVal = raw
+        .replace(/^(?:my\s*name\s*is\s+|i\s*am\s+|call\s*me\s+|it\s*is\s+|answer\s*:?\s*|ስሜ\s+|ስሜ\s*የሚባለው\s+|የምባለው\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|የስልክ\s*ቁጥሬ\s*)/iu, '')
+        .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል)$/iu, '')
+        .trim();
+
+      // Accept if explicitly phrased, or if on a text-only input screen (no choices) and utterance has at least 2 chars
+      if (cleanVal && (isExplicitDictation || (optionLabels.length === 0 && cleanVal.length >= 2))) {
+        return this.fillTextInput(textInput, cleanVal);
       }
     }
 

@@ -267,12 +267,13 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       + 'RESPONSE FORMAT: Return ONLY valid JSON with these fields: intent, targetId, payload, message. '
       + 'In "message": write a warm, natural, conversational reply in ' + (isAm ? 'Amharic' : 'English') + '. Keep it concise (1-3 sentences). '
       + 'For greetings, questions, clarifications, explanations — use intent "chat", targetId "page.main", payload {}. '
+      + 'If the user provides an answer to the current field (e.g. gives their name, phone number, ID number, or text answer) or selects an option shown on the screen, use intent "propose_answer", targetId: "page.main", payload {"value": "<the_exact_answer_or_option>"}. '
       + 'For navigation: intent "navigate", payload {"direction":"forward"} or {"direction":"back"}. '
       + 'For text size: intent "text_scale", payload {"percent":150}. '
       + 'For contrast: intent "contrast", payload {"theme":"high-contrast"}. '
       + 'For simple mode: intent "simple_mode", payload {"enabled":true}. '
       + 'Available targets: ' + JSON.stringify(ctx.resources) + '. '
-      + 'NEVER submit forms, fill answers, invent targets, or execute code. '
+      + 'NEVER submit forms, fill unprompted answers, or invent fake targets. '
       + 'ALWAYS include a "message" field with a helpful spoken reply.';
     const headers = { 'Content-Type': 'application/json' };
     let url, body;
