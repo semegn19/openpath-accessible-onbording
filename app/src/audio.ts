@@ -48,6 +48,11 @@ async function load(): Promise<void> {
   return loading;
 }
 
+// Prefetch manifest eagerly so audio playback in user click ticks avoids network latency
+if (typeof window !== 'undefined') {
+  void load();
+}
+
 export function stopAudio(): void {
   if (current) {
     try { current.pause(); current.currentTime = 0; } catch { /* already gone */ }
@@ -125,13 +130,22 @@ export async function playQuestionAudio(opts: QuestionAudioOptions): Promise<boo
 
   // 2. Candidate keys in index.json
   const keys: string[] = [];
-  if (opts.formId) {
-    if (opts.simple) keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}:simple`);
-    keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}`);
-  }
+  const formPrefix = opts.formId ? opts.formId.replace(/-v\d+$/, '').replace(/^savanna-/, '') : '';
+
   if (opts.simple) {
+    if (opts.formId) keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}:simple`);
+    if (formPrefix) {
+      keys.push(`${formPrefix}:${opts.stepId}:${opts.lang}:simple`);
+      keys.push(`${formPrefix}_${opts.stepId}.${opts.lang}.simple`);
+    }
     keys.push(`${opts.stepId}:${opts.lang}:simple`);
     keys.push(`${opts.stepId}.${opts.lang}.simple`);
+  }
+
+  if (opts.formId) keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}`);
+  if (formPrefix) {
+    keys.push(`${formPrefix}:${opts.stepId}:${opts.lang}`);
+    keys.push(`${formPrefix}_${opts.stepId}.${opts.lang}`);
   }
   keys.push(
     `${opts.stepId}:${opts.lang}`,

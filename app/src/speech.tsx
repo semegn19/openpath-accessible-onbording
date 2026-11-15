@@ -5,7 +5,7 @@ import type { Lang, Schema, Step } from './types';
 import { c } from './copy';
 import { Icon } from './icons';
 import { spokenToDigits } from './digits';
-import { playRecorded, playQuestionAudio, stopAudio } from './audio';
+import { playRecorded, playQuestionAudio, stopAudio, isAudioPlaying } from './audio';
 
 /** Speak one string with the browser. Amharic only if a matching voice exists — otherwise say so. */
 export function speak(text: string, lang: Lang) {
@@ -44,6 +44,10 @@ export function ReadAloudButton({
         className="op-btn op-btn-quiet"
         onClick={async () => {
           setMsg('');
+          if (isAudioPlaying()) {
+            stopAudio();
+            return;
+          }
           // 1. A pre-recorded human audio clip (works offline, on any phone)
           if (
             step &&

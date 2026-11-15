@@ -5,7 +5,7 @@ import { useForm, useCancelSpeechOnKey } from './useForm';
 import { Field, questionText, hintText, whyText, bodyText, optionText } from './fields';
 import { ErrorSummary, ReviewScreen, SettingsBar, reviewText } from './screens';
 import { ReadAloudButton, speak } from './speech';
-import { stopAudio } from './audio';
+import { playQuestionAudio, stopAudio } from './audio';
 import { Icon } from './icons';
 import { syncJsonLdScript } from './jsonld';
 
@@ -319,8 +319,32 @@ function Shell({ schema }: { schema: Schema }) {
 
   const stepId = step?.id;
   useEffect(() => {
-    if (!settings.readAloud || !step) return;
-    speak(readAloudText(step), lang);
+    if (!settings.readAloud || !step) {
+      stopAudio();
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const played = await playQuestionAudio({
+        stepId: step.id,
+        formId: schema.id,
+        lang,
+        simple: settings.simple,
+        text: readAloudText(step),
+        audioProp: step.audio,
+      });
+      if (cancelled) {
+        stopAudio();
+        return;
+      }
+      if (!played) {
+        speak(readAloudText(step), lang);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      stopAudio();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId, settings.readAloud, lang, settings.simple]);
 
