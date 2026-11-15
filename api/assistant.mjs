@@ -145,6 +145,8 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       activeQuestion: String(body.screenContext.activeQuestion || '').slice(0, 300),
       description: String(body.screenContext.description || '').slice(0, 500),
       options: Array.isArray(body.screenContext.options) ? body.screenContext.options.slice(0, 15).map(o => String(o || '').slice(0, 100)) : [],
+      hasError: Boolean(body.screenContext.hasError),
+      errorMessage: String(body.screenContext.errorMessage || '').slice(0, 300),
     } : undefined;
     return { utterance: body.utterance, mapId: map.mapId, mapVersion: map.mapVersion, resources, locale: body.locale || 'am', screenContext };
   }
@@ -219,10 +221,10 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
     }
 
     // Next / forward
-    if (/ቀጣይ|ወደፊት|ቀጥል|next|forward|continue/iu.test(utt)) {
+    if (/ቀጣይ|ወደፊት|ቀጥል|next|forward|continue|ሂድ|አልፍ/iu.test(utt)) {
       if (ctx.screenContext?.hasError) {
         const err = ctx.screenContext.errorMessage;
-        const msg = isAm ? `ስህተት ስላለ ማለፍ አይቻልም፦ ${err}` : `Cannot continue due to an error: ${err}`;
+        const msg = isAm ? `ስህተት ስላለ ማለፍ አይቻልም፦ ${err}። እባክዎ መጀመሪያ ያስተካክሉት።` : `Cannot continue due to an error: ${err}. Please correct it first.`;
         return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
       }
       const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
@@ -247,6 +249,48 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
         ? (q ? `አሁን ያለው ጥያቄ \"${q}\" ነው። ሲጨርሱ ወደ ቀጣዩ ደረጃ ይሸጋገራሉ።` : 'ቀጣዩን ደረጃ ለማወቅ ወደፊት ብሎ ማለፍ ያስፈልጋል።')
         : (q ? `You are on "${q}". Once you answer, you will move to the next step.` : 'Complete this step to see what comes next.');
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
+    }
+
+    // Review screen inquiries and edit commands
+    if (/(?:መልሶቼን\s*ንገረኝ|የመለስኩትን\s*ንገረኝ|ምን\s*መለስኩ|ዘርዝር|ዝርዝር|read\s*answers|list\s*answers|what\s*did\s*i\s*answer|my\s*answers)/iu.test(utt)) {
+      return {
+        intent: 'read',
+        targetId: 'page.main',
+        payload: { readReview: true },
+        message: isAm ? 'የሰጧቸውን መልሶች ላንብብልዎት።' : 'Let me read your answers.'
+      };
+    }
+    if (/(?:ስም\s*(?:ቀይር|አስተካክል)|ስሜን\s*(?:ቀይር|አስተካክል)|edit\s*name|change\s*name)/iu.test(utt)) {
+      return {
+        intent: 'navigate',
+        targetId: 'name',
+        payload: { editStep: 'name' },
+        message: isAm ? 'ስምዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your name.'
+      };
+    }
+    if (/(?:ስልክ\s*(?:ቀይር|አስተካክል)|ስልኬን\s*(?:ቀይር|አስተካክል)|edit\s*phone|change\s*phone)/iu.test(utt)) {
+      return {
+        intent: 'navigate',
+        targetId: 'phone',
+        payload: { editStep: 'phone' },
+        message: isAm ? 'ስልክ ቁጥርዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your phone number.'
+      };
+    }
+    if (/(?:ቋንቋ\s*(?:ቀይር|አስተካክል)|edit\s*lang|change\s*lang)/iu.test(utt)) {
+      return {
+        intent: 'navigate',
+        targetId: 'language',
+        payload: { editStep: 'language' },
+        message: isAm ? 'ቋንቋ ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your language.'
+      };
+    }
+    if (/(?:መታወቂያ\s*(?:ቀይር|አስተካክል)|ሰነድ\s*(?:ቀይር|አስተካክል)|edit\s*id|change\s*id)/iu.test(utt)) {
+      return {
+        intent: 'navigate',
+        targetId: 'id-route',
+        payload: { editStep: 'id-route' },
+        message: isAm ? 'የመታወቂያ አማራጭዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your ID route.'
+      };
     }
 
     // Statement / Consent screen (e.g. referral agreement to share name/phone)

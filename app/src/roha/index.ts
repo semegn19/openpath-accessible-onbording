@@ -426,6 +426,12 @@ export class RohaSDK {
         return { success: true };
 
       case 'read':
+        if ((proposal.payload as any)?.readReview) {
+          const summary = this.buildStepSummary('normal');
+          this.announce(summary);
+          this.readExecutor.speak(summary, this.locale);
+          return { success: true };
+        }
         this.readExecutor.readTarget(proposal.targetId, this.locale);
         return { success: true };
 
@@ -453,6 +459,21 @@ export class RohaSDK {
       case 'focus':
       case 'navigate':
         this.closeAssistantForHostAction();
+        if ((proposal.payload as any)?.editStep) {
+          const stepKey = String((proposal.payload as any).editStep).toLowerCase();
+          const reviewItems = this.getReviewItems();
+          const target = reviewItems.find(item =>
+            item.question.toLowerCase().includes(stepKey) ||
+            (stepKey === 'name' && item.question.includes('ስም')) ||
+            (stepKey === 'phone' && item.question.includes('ስልክ')) ||
+            (stepKey === 'language' && item.question.includes('ቋንቋ')) ||
+            (stepKey === 'id-route' && (item.question.includes('መታወቂያ') || item.question.includes('ማንነት') || item.question.includes('ሰነድ')))
+          );
+          if (target?.editBtn) {
+            target.editBtn.click();
+            return { success: true };
+          }
+        }
         if (proposal.payload?.direction === 'back') {
           const backBtn = (document.querySelector('.op-btn-back') || document.querySelector('button[aria-label*="Back"], button[aria-label*="ተመለስ"]')) as HTMLButtonElement;
           if (backBtn) {
@@ -577,6 +598,14 @@ export class RohaSDK {
         if (requestVersion !== this.requestVersion) return;
         if (llmIntent) {
           const aiMessage = (llmIntent as any).message || (llmIntent.payload as any)?.message;
+          const isForwardNav = llmIntent.intent === 'navigate' && (llmIntent.payload as any)?.direction === 'forward';
+          const activeErr = isForwardNav ? this.getVisibleFormError() : null;
+
+          if (isForwardNav && activeErr) {
+            this.speakAndFocusError(activeErr);
+            return;
+          }
+
           if (aiMessage) {
             this.announce(aiMessage);
             this.readExecutor.speak(aiMessage, this.locale);
@@ -624,8 +653,37 @@ export class RohaSDK {
     }
   }
 
+  public getReviewItems(): Array<{ question: string; answer: string; editBtn: HTMLButtonElement | null }> {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('#op-main .op-review-row, dl.op-review div.op-review-row'));
+    return rows.map(row => {
+      const dt = row.querySelector('dt');
+      const dd = row.querySelector('dd');
+      const span = dd?.querySelector('span:not(.op-sr)');
+      const btn = row.querySelector<HTMLButtonElement>('button.op-btn-link, button');
+      return {
+        question: dt?.textContent?.trim() || '',
+        answer: span?.textContent?.trim() || '',
+        editBtn: btn
+      };
+    }).filter(item => item.question && item.answer);
+  }
+
   /** Build a brief 1–2 sentence summary of the current step for auto-reading. */
   private buildStepSummary(mode: 'normal' | 'simple' = 'normal'): string {
+    const isAm = this.locale === 'am';
+    const reviewItems = this.getReviewItems();
+    if (reviewItems.length > 0) {
+      const itemSummaries = reviewItems.map(item => `${item.question}፦ «${item.answer}»`).join('፤ ');
+      if (mode === 'simple') {
+        return isAm
+          ? `የሰጧቸው መልሶች፦ ${itemSummaries}። ለመቀየር «ስም ቀይር» ይበሉ። ትክክል ከሆነ «ቀጥል» ይበሉ።`
+          : `Your answers: ${itemSummaries}. To change, say "Edit name". If correct, say "Continue".`;
+      }
+      return isAm
+        ? `መረጃዎን ይመልከቱ። የሰጧቸው መልሶች፦ ${itemSummaries}። ማስተካከል የሚፈልጉት ካለ «ስም ቀይር» ወይም «ስልክ አስተካክል» ማለት ይችላሉ። ትክክል ከሆነ «ቀጥል» ይበሉ።`
+        : `Review your information. Your answers: ${itemSummaries}. To edit, say "Edit name" or "Change phone". If correct, say "Continue".`;
+    }
+
     const h1 = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
     const desc = document.querySelector('.op-step-desc, .op-desc, #op-main p:not([hidden]):not([aria-hidden="true"])')?.textContent?.trim() || '';
     const choiceEls = Array.from(document.querySelectorAll<HTMLElement>(
@@ -635,7 +693,6 @@ export class RohaSDK {
       choiceEls.map(el => el.textContent?.trim() || '').filter(t => t && !t.includes('🔊'))
     )).slice(0, 5);
 
-    const isAm = this.locale === 'am';
     const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
       '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input'
     );
@@ -747,6 +804,51 @@ export class RohaSDK {
   }
 
   private advanceToNextStep(): void {
+    const isAm = this.locale === 'am';
+
+    // 1. If an error is already visible on the screen, announce it and do not advance
+    const existingError = this.getVisibleFormError();
+    if (existingError) {
+      this.speakAndFocusError(existingError);
+      return;
+    }
+
+    // 2. If on the phone step, verify the phone number is valid and complete before submitting
+    const phoneInput = document.querySelector<HTMLInputElement>(
+      '#op-main input[type="tel"], #op-main input[name="phone"], #op-main input#phone'
+    );
+    if (phoneInput && phoneInput.offsetParent !== null) {
+      const rawVal = phoneInput.value.trim().replace(/[\s\-()]/g, '');
+      const isCompletePhone = /^(?:0[79]\d{8}|\+251[79]\d{8}|251[79]\d{8}|[79]\d{8})$/.test(rawVal);
+      if (!isCompletePhone) {
+        const msg = isAm
+          ? (rawVal.length === 0
+              ? 'እባክዎ መጀመሪያ ስልክ ቁጥርዎን ያስገቡ። ምሳሌ፦ 0912345678'
+              : `ስልክ ቁጥሩ አልተሟላም ወይም ትክክል አይደለም። 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ ወይም ያስተካክሉ።`)
+          : (rawVal.length === 0
+              ? 'Please enter your phone number first. Example: 0912345678'
+              : `The phone number is incomplete or invalid. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`);
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        try { phoneInput.focus(); } catch {}
+        return;
+      }
+    }
+
+    // 3. If on a statement / consent step with an unchecked required checkbox, alert user
+    const requiredCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>(
+      '#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"][required]'
+    )).filter(cb => cb.offsetParent !== null && !cb.checked);
+    if (requiredCheckboxes.length > 0) {
+      const msg = isAm
+        ? 'እባክዎ ከመቀጠልዎ በፊት ስምምነትዎን ያረጋግጡ ወይም «ተስማምቻለሁ» ይበሉ።'
+        : 'Please confirm your consent or say "I agree" before proceeding.';
+      this.announce(msg);
+      this.readExecutor.speak(msg, this.locale);
+      try { requiredCheckboxes[0].focus(); } catch {}
+      return;
+    }
+
     const currentStepHeading = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
     const nextBtn = document.querySelector<HTMLButtonElement>(
       '#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"], button[type="submit"]'
@@ -773,7 +875,6 @@ export class RohaSDK {
       }
 
       if (newStepHeading !== currentStepHeading) {
-        const isAm = this.locale === 'am';
         const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
         this.announce(msg);
         this.rescan();
@@ -796,9 +897,20 @@ export class RohaSDK {
 
     if (input.type === 'checkbox') {
       if (!input.checked) {
-        targetLabel.click();
+        input.click();
         if (!input.checked) {
-          input.click();
+          try {
+            const proto = window.HTMLInputElement.prototype;
+            const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
+            if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
+            if (setChecked) {
+              setChecked.call(input, true);
+            } else {
+              input.checked = true;
+            }
+          } catch {}
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
         }
       }
     } else {
@@ -1002,6 +1114,103 @@ export class RohaSDK {
         this.readExecutor.speak(msg, this.locale);
         const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back');
         if (backBtn) setTimeout(() => backBtn.click(), 400);
+        return true;
+      }
+    }
+
+    // 0c. Review screen: inquiries about answers & editing fields
+    const reviewItems = this.getReviewItems();
+    if (reviewItems.length > 0) {
+      // 1. User asks to list or read all answered questions
+      if (/(?:ዘርዝር|አንብብ|አንብቢ|አንብቢልኝ|ዝርዝር|መልሶቼን|የመለስኩትን|ምን\s*መለስኩ|የመዘገብኩትን|ምን\s*መዘገብኩ|read\s*answers|list\s*answers|what\s*did\s*i\s*answer|my\s*answers|review\s*answers)/iu.test(lower)) {
+        const summary = this.buildStepSummary('normal');
+        this.announce(summary);
+        this.readExecutor.speak(summary, this.locale);
+        return true;
+      }
+
+      // 2. Targeted inquiries about specific answers
+      if (/(?:ስሜ\s*(?:ማን|ምን)|ስሜ\s*ምን\s*ተብሏል|ስም\s*ምን\s*ነው|ስሜን\s*ንገረኝ|ስሜ\s*ማነው|what\s*is\s*my\s*name)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ስም') || i.question.toLowerCase().includes('name'));
+        if (item) {
+          const msg = isAm ? `የተመዘገበው ስምዎ «${item.answer}» ነው።` : `Your registered name is "${item.answer}".`;
+          this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
+        }
+      }
+      if (/(?:ስልኬ\s*(?:ስንት|ምን)|ስልክ\s*ቁጥሬ|ስልኬ\s*ስንት\s*ነው|ስልኬን\s*ንገረኝ|what\s*is\s*my\s*phone)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ስልክ') || i.question.toLowerCase().includes('phone'));
+        if (item) {
+          const msg = isAm ? `የተመዘገበው ስልክ ቁጥርዎ «${item.answer}» ነው።` : `Your registered phone number is "${item.answer}".`;
+          this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
+        }
+      }
+      if (/(?:ምን\s*ቋንቋ|ቋንቋዬ\s*ምንድን|ምን\s*ቋንቋ\s*መረጥኩ|what\s*language)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language'));
+        if (item) {
+          const msg = isAm ? `የመረጡት ቋንቋ «${item.answer}» ነው።` : `Your selected language is "${item.answer}".`;
+          this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
+        }
+      }
+      if (/(?:ምን\s*(?:መታወቂያ|ሰነድ)|መታወቂያዬ\s*ምን|ምን\s*ሰነድ\s*መረጥኩ|what\s*id|what\s*document)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id'));
+        if (item) {
+          const msg = isAm ? `የመረጡት የመታወቂያ አማራጭ «${item.answer}» ነው።` : `Your selected ID route is "${item.answer}".`;
+          this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
+        }
+      }
+
+      // 3. User requests to edit or change a question
+      const isEditRequest = /(?:ቀይር|አስተካክል|ላስተካክል|ልቀይር|አስተካክለው|ቀይረው|edit|change|modify|correct)/iu.test(lower);
+      if (isEditRequest) {
+        let targetItem = reviewItems.find(i => {
+          if (/(?:ስም|name)/iu.test(lower) && (i.question.includes('ስም') || i.question.toLowerCase().includes('name'))) return true;
+          if (/(?:ስልክ|phone)/iu.test(lower) && (i.question.includes('ስልክ') || i.question.toLowerCase().includes('phone'))) return true;
+          if (/(?:ቋንቋ|language|lang)/iu.test(lower) && (i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language'))) return true;
+          if (/(?:መታወቂያ|ሰነድ|ማንነት|id|document)/iu.test(lower) && (i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id'))) return true;
+          if (/(?:አጋር|ስምምነት|እገዛ|partner|referral)/iu.test(lower) && (i.question.includes('አጋር') || i.question.includes('ስምምነት') || i.question.toLowerCase().includes('partner'))) return true;
+          if (/(?:ቅጽ|ቅጹ|ምርጫ|አሠራር|accessibility|support)/iu.test(lower) && (i.question.includes('ቅጽ') || i.question.includes('ቅጹ'))) return true;
+          return false;
+        });
+
+        // Check ordinals: first, second, 3rd, etc.
+        if (!targetItem) {
+          if (/(?:የመጀመሪያ|አንደኛ|1st|first)/iu.test(lower)) targetItem = reviewItems[0];
+          else if (/(?:ሁለተኛ|2nd|second)/iu.test(lower)) targetItem = reviewItems[1];
+          else if (/(?:ሶስተኛ|ሦስተኛ|3rd|third)/iu.test(lower)) targetItem = reviewItems[2];
+          else if (/(?:አራተኛ|4th|fourth)/iu.test(lower)) targetItem = reviewItems[3];
+          else if (/(?:አምስተኛ|5th|fifth)/iu.test(lower)) targetItem = reviewItems[4];
+        }
+
+        if (targetItem && targetItem.editBtn) {
+          const msg = isAm ? `ስለ «${targetItem.question}» ለማስተካከል ወደ ጥያቄው እየሄድን ነው።` : `Navigating to edit "${targetItem.question}".`;
+          this.announce(msg);
+          this.readExecutor.speak(msg, this.locale);
+
+          // Check if user also gave a replacement value inline (e.g. "ስሜን ወደ ካሳሁን ቀይር")
+          const valueMatch = raw.match(/(?:ወደ\s+([^\s]+(?:\s+[^\s]+)?)\s+(?:ቀይር|አድርግ|አስተካክል)|change\s+(?:my\s+)?(?:name|phone)\s+to\s+([^\s]+(?:\s+[^\s]+)?))/iu);
+          const inlineVal = valueMatch ? (valueMatch[1] || valueMatch[2]) : null;
+
+          targetItem.editBtn.click();
+
+          if (inlineVal) {
+            setTimeout(() => {
+              const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+                '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input'
+              );
+              if (textInput) {
+                this.fillTextInput(textInput, inlineVal);
+              }
+            }, 350);
+          }
+          return true;
+        }
+
+        // General edit request without specific field
+        const msg = isAm
+          ? 'የትኛውን ጥያቄ ማስተካከል ይፈልጋሉ? «ስም ቀይር» ወይም «ስልክ አስተካክል» ማለት ይችላሉ።'
+          : 'Which question would you like to edit? You can say "Edit name" or "Change phone".';
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
         return true;
       }
     }
