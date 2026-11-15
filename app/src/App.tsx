@@ -404,54 +404,62 @@ function Shell({ schema }: { schema: Schema }) {
           <p className="op-brand">{t(schema.title, lang)}</p>
         </div>
         <main className="op-root op-done">
-          <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
-            <Icon name={send.state === 'sent' ? 'check' : send.state === 'sending' ? 'clock' : 'alert'} />
-            {send.state === 'sent'
-              ? (c('status.complete', lang))
-              : send.state === 'sending'
-                ? (c('status.sending', lang))
-                : send.state === 'rejected'
-                  ? (c('status.rejected', lang))
-                  : (c('status.saved', lang))}
-          </h1>
+          {(() => {
+            const isPartner = f.submitted && (f.submitted as Record<string, unknown>)['id-route'] === 'refer';
+            return (
+              <>
+                <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
+                  <Icon name={send.state === 'sent' ? 'check' : send.state === 'sending' ? 'clock' : 'alert'} />
+                  {send.state === 'sent'
+                    ? (isPartner ? c('status.pendingPartner', lang) : c('status.complete', lang))
+                    : send.state === 'sending'
+                      ? (c('status.sending', lang))
+                      : send.state === 'rejected'
+                        ? (c('status.rejected', lang))
+                        : (c('status.saved', lang))}
+                </h1>
 
-          <p role="status" aria-live="polite" className="op-receipt">
-            {send.state === 'sent' && (
-              <>
-                <span>{c('receipt.reference', lang)}</span>
-                {/* on its own line: an id broken mid-token reads like a rendering bug */}
-                <span className="op-mono op-ref">{send.id}</span>
-                <span className="op-hint">{c('receipt.keep', lang)}</span>
+                <p role="status" aria-live="polite" className="op-receipt">
+                  {send.state === 'sent' && (
+                    <>
+                      <span>{c('receipt.reference', lang)}</span>
+                      {/* on its own line: an id broken mid-token reads like a rendering bug */}
+                      <span className="op-mono op-ref">{send.id}</span>
+                      <span className="op-hint">{c('receipt.keep', lang)}</span>
+                      {isPartner && <span className="op-hint">{c('receipt.pendingPartnerHelp', lang)}</span>}
+                    </>
+                  )}
+                  {send.state === 'sending' && (c('status.wait', lang))}
+                  {send.state === 'queued' && (
+                    <>
+                      {send.reason === 'full'
+                        ? c('send.storageFull', lang)
+                        : c('send.unreachable', lang)}
+                    </>
+                  )}
+                  {send.state === 'rejected' && (
+                    <>
+                      {c('send.rejected', lang)}
+                      <span className="op-hint">{send.detail}</span>
+                    </>
+                  )}
+                </p>
+                {/* The reference number is the one thing the learner has to carry away. Somebody who
+                    used read-aloud through the whole form must not hit a silent wall at the last step. */}
+                <ReadAloudButton
+                  text={
+                    (send.state === 'sent'
+                      ? tpl(isPartner ? c('announce.pendingPartner', lang) : c('announce.complete', lang), { ref: send.id.split('').join(' ') })
+                      : send.state === 'sending'
+                        ? c('announce.sending', lang)
+                        : c('send.queued', lang))
+                  }
+                  lang={lang}
+                  schema={schema}
+                />
               </>
-            )}
-            {send.state === 'sending' && (c('status.wait', lang))}
-            {send.state === 'queued' && (
-              <>
-                {send.reason === 'full'
-                  ? c('send.storageFull', lang)
-                  : c('send.unreachable', lang)}
-              </>
-            )}
-            {send.state === 'rejected' && (
-              <>
-                {c('send.rejected', lang)}
-                <span className="op-hint">{send.detail}</span>
-              </>
-            )}
-          </p>
-          {/* The reference number is the one thing the learner has to carry away. Somebody who
-              used read-aloud through the whole form must not hit a silent wall at the last step. */}
-          <ReadAloudButton
-            text={
-              (send.state === 'sent'
-                ? tpl(c('announce.complete', lang), { ref: send.id.split('').join(' ') })
-                : send.state === 'sending'
-                  ? c('announce.sending', lang)
-                  : c('send.queued', lang))
-            }
-            lang={lang}
-            schema={schema}
-          />
+            );
+          })()}
 
           {send.state === 'sent' && <p>{c('status.thanks', lang)}</p>}
 

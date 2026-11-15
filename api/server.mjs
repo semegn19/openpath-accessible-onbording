@@ -236,6 +236,15 @@ const NEVER_STORED = new Set([
   'accommodations', 'medical', 'disability', 'diagnosis',
 ]);
 
+function isStepVisible(step, answers) {
+  if (!step.showIf) return true;
+  const conds = Array.isArray(step.showIf) ? step.showIf : [step.showIf];
+  return conds.every((c) => {
+    const dep = answers[c.step];
+    return typeof dep === 'string' && c.in.includes(dep);
+  });
+}
+
 function validateSubmission(body) {
   const problems = [];
   const stripped = [];
@@ -252,6 +261,7 @@ function validateSubmission(body) {
 
   const answers = {};
   for (const step of schema.steps) {
+    if (!isStepVisible(step, answersIn)) continue;
     const raw = answersIn[step.id];
     const isEmployerAccommodation = schema.kind === 'employer' && step.id === 'accommodations';
     if (!isEmployerAccommodation && (NEVER_STORED.has(step.id) || step.localOnly)) {
