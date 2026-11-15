@@ -83,7 +83,7 @@ export class ReadExecutor {
     return this.speak(textToRead, locale);
   }
 
-  public speak(text: string, locale: string = 'en'): boolean {
+  public speak(text: string, locale: string = 'en', onEnd?: () => void): boolean {
     this.stop();
     const playId = ++this.currentPlayId;
 
@@ -131,6 +131,7 @@ export class ReadExecutor {
                   this.isSpeaking = false;
                   this.currentSource = null;
                   this.statusCallback?.({ speaking: false });
+                  onEnd?.();
                 }
               };
               this.currentSource = source;
@@ -148,6 +149,7 @@ export class ReadExecutor {
                   this.isSpeaking = false;
                   this.currentAudio = null;
                   this.statusCallback?.({ speaking: false });
+                  onEnd?.();
                 }
               };
               audio.play().catch(() => {
@@ -190,6 +192,7 @@ export class ReadExecutor {
         if (this.currentPlayId === playId) {
           this.isSpeaking = false;
           this.statusCallback?.({ speaking: false });
+          onEnd?.();
         }
       };
 

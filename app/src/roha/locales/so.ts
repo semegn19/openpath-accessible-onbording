@@ -45,7 +45,7 @@ export const SO_COPY: Record<string, string> = {
   'roha.filtered': 'Waxaa lagu shaandheeyay "{query}".',
   'roha.undone': 'Jawaabtii ugu dambeysay waa laga noqday.',
   'roha.stopped': 'Waa la joojiyay.',
-  'roha.reply': 'Jawaabta Roha',
+  'roha.reply': 'Roha: {text}',
   'roha.currentQuestion': 'Su’aasha hadda',
   'roha.currentPage': 'Bogga hadda',
   'roha.mainContent': 'Nuxurka bogga',

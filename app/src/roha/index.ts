@@ -35,6 +35,7 @@ import {
   HumanHandoffManager,
   PluggableWakeWordManager,
   WakeWordDetector,
+  WebSpeechWakeDetector,
 } from './integrations';
 import {
   LLMProvider,
@@ -173,9 +174,10 @@ export class RohaSDK {
     this.partnerManager = new PartnerAssistedManager();
     this.smsService = new SMSResumeService();
     this.humanHandoff = new HumanHandoffManager();
-    this.wakeWordManager = new PluggableWakeWordManager();
+    const defaultWakeDetector = new WebSpeechWakeDetector(this.locale);
+    this.wakeWordManager = new PluggableWakeWordManager(defaultWakeDetector);
     this.wakeWordManager.setOnWakeAction(() => {
-      this.voice.startListening(true);
+      this.handleWakeWordActivation();
     });
 
     // Voice manager
@@ -187,6 +189,10 @@ export class RohaSDK {
         },
         onTranscript: (transcript: string, isFinal: boolean) => {
           this.updateTranscriptUI(transcript, isFinal);
+          const detector = this.wakeWordManager.getDetector();
+          if (detector && 'evaluateTranscript' in detector) {
+            (detector as any).evaluateTranscript(transcript);
+          }
           if (isFinal) {
             this.handleUserUtterance(transcript, true);
           }
@@ -294,6 +300,27 @@ export class RohaSDK {
 
     this.isMounted = true;
     this.updateVoiceStatusUI(this.voice.getState());
+
+    // Start Wake-Word detection ("Roha")
+    const wakeDetector = this.wakeWordManager.getDetector();
+    if (wakeDetector && 'setLocale' in wakeDetector) {
+      (wakeDetector as any).setLocale(this.locale);
+    }
+    void this.wakeWordManager.enable();
+
+    // Ensure wake word activation binds seamlessly on first gesture if browser blocks early listening
+    if (typeof window !== 'undefined') {
+      const armWake = () => {
+        this.readExecutor.unlock();
+        if (!this.wakeWordManager.isListening()) {
+          void this.wakeWordManager.enable();
+        }
+        window.removeEventListener('pointerdown', armWake);
+        window.removeEventListener('keydown', armWake);
+      };
+      window.addEventListener('pointerdown', armWake, { once: true });
+      window.addEventListener('keydown', armWake, { once: true });
+    }
     if (!options.language) {
       this.languageObserver = new MutationObserver(() => {
         const docLang = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
@@ -313,6 +340,10 @@ export class RohaSDK {
     this.voice.setLocale(language);
     this.conversation.setLocale(language);
     this.smsService.setLocale(language);
+    const wakeDetector = this.wakeWordManager.getDetector();
+    if (wakeDetector && 'setLocale' in wakeDetector) {
+      (wakeDetector as any).setLocale(language);
+    }
     const provider = this.router.getLLMProvider();
     if (provider instanceof ServerLLMProvider) provider.consent(false);
     if (!this.isMounted) return;
@@ -607,10 +638,41 @@ export class RohaSDK {
     }
   }
 
+  public handleWakeWordActivation(): void {
+    const greeting = this.t({
+      en: 'Hello! I can assist you to register the form, just say a word.',
+      am: 'ሰላም! ይህንን ቅጽ ለመመዝገብ ልረዳዎት እችላለሁ፡ ዝም ብለው ይናገሩ።',
+      om: 'Akkam! Foormii kana galmeessuuf si gargaaruu nan danda\'a, waan barbaaddu dubbadhu.',
+      ti: 'ሰላም! ነዚ ፎርም ንምምዝጋብ ክሕግዘኩም እኽእል እየ፡ ቃል ጥራይ ተዛረቡ።',
+      so: 'Hayye! Waxaan kaa caawin karaa diiwaangelinta foomkan, kaliya hal eray dheh.',
+    });
+
+    this.announce(greeting);
+    this.readExecutor.speak(greeting, this.locale, () => {
+      if (this.voice.getState() !== 'unpermitted') {
+        this.voice.startListening(true, false);
+      }
+    });
+
+    if (this.assistantPanel) {
+      this.assistantPanel.classList.remove('roha-hidden');
+    }
+  }
+
+  public wake(): void {
+    this.handleWakeWordActivation();
+  }
+
   public async handleUserUtterance(utterance: string, useProvider = true): Promise<void> {
     const requestVersion = ++this.requestVersion;
     this.rescan();
     this.readExecutor.unlock();
+
+    // Wake word direct speech trigger
+    if (/^(?:roha|hey\s*roha|hello\s*roha|hi\s*roha|ሮሃ|ሮሀ|ሰላም\s*ሮሃ|akkam\s*roha|hayye\s*roha)[.!?]*$/iu.test(utterance.trim())) {
+      this.handleWakeWordActivation();
+      return;
+    }
 
     // Direct Voice & Command Actions (Option select, Next, Back, Read, Scale, High Contrast, Dictation)
     if (this.tryDirectVoiceAction(utterance)) return;
@@ -2036,6 +2098,13 @@ export class RohaSDK {
       <div id="roha-full-card" class="roha-card">
         <div class="roha-header">
           <h2 class="roha-title">${text('roha.title')}</h2>
+          <span class="roha-wake-pill" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:3px 8px;border-radius:12px;background:#eef2ff;color:#1e40af;font-weight:600;letter-spacing:0.02em;">🎙️ ${this.t({
+            en: 'Say "Roha"',
+            am: '"ሮሃ" ይበሉ',
+            om: '"Roha" jedhaa',
+            ti: '"ሮሃ" በሉ',
+            so: 'Dheh "Roha"',
+          })}</span>
         </div>
         <p class="roha-subtitle">${text('roha.inlineIntro')}</p>
         <div class="roha-grid roha-top-actions">
@@ -2081,7 +2150,7 @@ export class RohaSDK {
     this.liveRegion = panel.querySelector('[data-roha-control="roha-live-region"]');
     const pill = panel.querySelector('[data-roha-control="roha-launcher-pill"]') as HTMLButtonElement;
     const command = panel.querySelector<HTMLInputElement>('[data-roha-control="roha-command"]')!;
-    pill.addEventListener('click', () => { command.focus(); void this.enableVoice(); });
+    pill.addEventListener('click', () => { command.focus(); this.handleWakeWordActivation(); });
     panel.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         this.requestVersion++; this.guide.reset(); this.readExecutor.stop(); this.voice.stopListening();

@@ -162,28 +162,56 @@ export class TFLiteWakeDetector implements WakeWordDetector {
 }
 
 /**
- * Foreground WebSpeech Keyword Detector
- * Matches "Hey Roha" from speech transcript stream when active
+ * Foreground & Background WebSpeech Keyword Detector
+ * Continuously listens for "Roha" / "Hey Roha" / "ሮሃ" / "Akkam Roha" / "Hayye Roha"
  */
 export class WebSpeechWakeDetector implements WakeWordDetector {
   public readonly id = 'webspeech-keyword-matcher';
-  public readonly name = 'Foreground Speech Keyword Matcher';
-  public readonly isBackgroundSupported = false;
+  public readonly name = 'Background & Foreground Speech Keyword Matcher';
+  public readonly isBackgroundSupported = true;
 
   private status: WakeDetectorStatus = 'idle';
   private listening: boolean = false;
   private listeners: WakeWordCallback[] = [];
   private lastTriggerTime: number = 0;
+  private recognition: any = null;
+  private locale: string = 'en-US';
+  private restartTimeout: any = null;
+
+  constructor(locale: string = 'en') {
+    this.setLocale(locale);
+  }
+
+  public setLocale(locale: string): void {
+    const l = locale.toLowerCase().slice(0, 2);
+    this.locale = l === 'am' ? 'am-ET'
+      : l === 'ti' ? 'ti-ET'
+      : l === 'om' ? 'om-ET'
+      : l === 'so' ? 'so-ET'
+      : 'en-US';
+    if (this.recognition) {
+      this.recognition.lang = this.locale;
+    }
+  }
 
   public async start(): Promise<boolean> {
     this.listening = true;
     this.status = 'listening';
+    this.startBackgroundRecognition();
     return true;
   }
 
   public stop(): void {
     this.listening = false;
     this.status = 'idle';
+    if (this.restartTimeout) {
+      clearTimeout(this.restartTimeout);
+      this.restartTimeout = null;
+    }
+    if (this.recognition) {
+      try { this.recognition.abort(); } catch {}
+      this.recognition = null;
+    }
   }
 
   public isListening(): boolean {
@@ -202,36 +230,79 @@ export class WebSpeechWakeDetector implements WakeWordDetector {
     this.listeners = this.listeners.filter((l) => l !== callback);
   }
 
+  private startBackgroundRecognition(): void {
+    if (!this.listening || typeof window === 'undefined') return;
+    const Recognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!Recognition) return;
+
+    if (this.recognition) {
+      try { this.recognition.abort(); } catch {}
+      this.recognition = null;
+    }
+
+    try {
+      const r = new Recognition();
+      this.recognition = r;
+      r.continuous = true;
+      r.interimResults = true;
+      r.lang = this.locale;
+
+      r.onresult = (event: any) => {
+        if (!this.listening) return;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0]?.transcript || '';
+          if (transcript) {
+            this.evaluateTranscript(transcript);
+          }
+        }
+      };
+
+      r.onerror = (event: any) => {
+        if (event.error === 'not-allowed') {
+          this.status = 'unsupported';
+          this.listening = false;
+        }
+      };
+
+      r.onend = () => {
+        if (this.listening) {
+          clearTimeout(this.restartTimeout);
+          this.restartTimeout = setTimeout(() => {
+            if (this.listening) this.startBackgroundRecognition();
+          }, 300);
+        }
+      };
+
+      r.start();
+    } catch {
+      // Speech recognition might require a user gesture on some browsers
+    }
+  }
+
   /**
    * Evaluates incoming transcript for wake phrase
    */
   public evaluateTranscript(transcript: string): boolean {
-    if (!this.listening) return false;
+    if (!transcript) return false;
 
     const lower = transcript.toLowerCase().trim();
-    const matches = [
-      'hey roha',
-      'hello roha',
-      'hi roha',
-      'ok roha',
-      'okay roha',
-      'roha',
-      'ሄይ ሮሃ',
-      'ሰላም ሮሃ',
-      'ሮሃ',
-    ];
+    // Comprehensive multilingual wake word regex
+    const isWake = /(?:^|\b|\s)(?:hey\s*roha|hello\s*roha|hi\s*roha|ok(?:ay)?\s*roha|roha|rohaa|roxa|ሄይ\s*ሮሃ|ሰላም\s*ሮሃ|ሮሃ|ሮሀ|ሮሓ|akkam\s*roha|hayye\s*roha)(?:$|\b|\s|[.,!?])/iu.test(lower);
 
-    const detected = matches.some((phrase) => lower.includes(phrase));
-    if (detected) {
+    if (isWake) {
       const now = Date.now();
-      if (now - this.lastTriggerTime > 2000) {
+      if (now - this.lastTriggerTime > 2500) {
         this.lastTriggerTime = now;
         const event: WakeWordEvent = {
-          keyword: 'Hey Roha',
-          confidence: 0.95,
+          keyword: 'Roha',
+          confidence: 0.96,
           timestamp: now,
         };
+        this.status = 'detected';
         this.listeners.forEach((fn) => fn(event));
+        setTimeout(() => {
+          if (this.listening) this.status = 'listening';
+        }, 500);
         return true;
       }
     }
