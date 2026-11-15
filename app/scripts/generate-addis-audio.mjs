@@ -25,16 +25,25 @@ if (!API_KEY) {
   process.exit(1);
 }
 
+const args = process.argv.slice(2);
+const DRY_RUN = args.includes('--dry-run');
+const FORCE = args.includes('--force');
+const targetLang = args.find(a => a.startsWith('--lang='))?.split('=')[1];
+const targetFile = args.find(a => a.startsWith('--file='))?.split('=')[1];
+
 const content = readFileSync(PROMPTS_FILE, 'utf8');
 const onboardSection = content.split('## Job Application Form')[0];
+
 const lines = onboardSection.split('\n');
 
 const items = [];
 for (const line of lines) {
   const trimmed = line.trim();
-  const match = trimmed.match(/^([a-z0-9_.-]+\.(om|ti)(?:\.simple)?\.mp3)\s*:\s*"(.*)"$/);
+  const match = trimmed.match(/^([a-z0-9_.-]+\.(am|om|ti)(?:\.simple)?\.mp3)\s*:\s*"(.*)"$/);
   if (match) {
     const [, filename, lang, text] = match;
+    if (targetLang && lang !== targetLang) continue;
+    if (targetFile && !filename.includes(targetFile)) continue;
     items.push({
       filename,
       lang,
@@ -43,7 +52,7 @@ for (const line of lines) {
   }
 }
 
-console.log(`Found ${items.length} prompts for onboarding in Afaan Oromoo (om) and Tigrinya (ti):`);
+console.log(`Found ${items.length} prompts for onboarding:`);
 let totalChars = 0;
 for (const item of items) {
   totalChars += item.text.length;
@@ -51,15 +60,13 @@ for (const item of items) {
 }
 console.log(`\nTotal characters: ${totalChars}`);
 
-const args = process.argv.slice(2);
-const DRY_RUN = args.includes('--dry-run');
-
 if (DRY_RUN) {
   console.log('\nDRY RUN complete. Use without --dry-run to generate.');
   process.exit(0);
 }
 
 const VOICE_MAP = {
+  am: 'am-hamen',
   om: 'om-bikila',
   ti: 'ti-berhane',
 };
