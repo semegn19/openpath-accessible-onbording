@@ -639,6 +639,8 @@ export class RohaSDK {
     const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
       '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input'
     );
+    const fileInput = document.querySelector<HTMLInputElement>('#op-main input[type="file"], input[type="file"]');
+    const hasFilePreview = document.querySelector('.op-file-preview') !== null;
 
     if (mode === 'simple') {
       const question = h1 || desc;
@@ -647,6 +649,16 @@ export class RohaSDK {
         return isAm
           ? `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። አማራጮቹ፡ ${choices.join('፣ ')} ናቸው። ከእነዚህ አንዱን ይምረጡ።`
           : `Listen carefully. The question is: "${question}". Choices are: ${choices.join(', ')}. Please choose one.`;
+      }
+      if (fileInput) {
+        if (hasFilePreview) {
+          return isAm
+            ? 'ፎቶ ተመርጧል። ለመቀጠል «ቀጣይ» ይበሉ፣ ወይም ለመቀየር «ፎቶ አንሳ» ይበሉ።'
+            : 'Photo selected. Say "Next" to continue, or "Take photo" to replace it.';
+        }
+        return isAm
+          ? `የመታወቂያ ወይም የሰነድ ፎቶ ያስፈልጋል። ፎቶ ለማንሳት «ፎቶ አንሳ» ወይም «ፋይል ምረጥ» ይበሉ።`
+          : `ID or document photo needed. Say "Take photo" or "Upload file" to choose.`;
       }
       if (textInput) {
         return isAm
@@ -663,6 +675,12 @@ export class RohaSDK {
     if (desc && desc !== h1 && desc.length < 180) parts.push(desc);
     if (choices.length > 0) {
       parts.push(isAm ? `አማራጮቹ፡ ${choices.join('፣ ')}።` : `Options: ${choices.join(', ')}.`);
+    } else if (fileInput) {
+      if (hasFilePreview) {
+        parts.push(isAm ? 'ሰነድ ወይም ፎቶ ተመርጧል። ለመቀጠል «ቀጣይ» ይበሉ።' : 'Document photo selected. Say "Next" to continue.');
+      } else {
+        parts.push(isAm ? 'ፎቶ ለማንሳት ወይም ሰነድ ለመስቀል «ፎቶ አንሳ» ወይም «ፋይል ምረጥ» ይበሉ።' : 'To take a photo or upload, say "Take photo" or "Upload file".');
+      }
     } else if (textInput) {
       parts.push(isAm ? 'መልስዎን በድምጽ መናገር ወይም መጻፍ ይችላሉ።' : 'You can speak or type your answer.');
     }
@@ -1058,19 +1076,63 @@ export class RohaSDK {
       const input = label.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
       if (!input || !labelText) continue;
 
-      const isAmharicOption = /አማርኛ|amharic/i.test(labelText) || input.value === 'am';
-      const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || input.value === 'en';
+      const val = input.value.toLowerCase();
+      const valMatch = Boolean(val && val.length >= 2 && lower.includes(val));
 
+      // Clean label text: remove punctuation and whitespace
+      const cleanLabel = labelText.replace(/[\(\)\[\],.፣፤፥/\\-]/g, ' ').replace(/\s+/g, ' ').trim();
+      const directMatch = cleanUtt.length >= 2 && (cleanLabel.includes(cleanUtt) || cleanUtt.includes(cleanLabel));
+
+      // Specific semantic recognition for Step 5 options
+      const isFayda = (val === 'fayda' || cleanLabel.includes('ፋይዳ')) && /ፋይዳ|fayda/iu.test(lower);
+      const isKebele = (val === 'kebele' || cleanLabel.includes('ቀበሌ')) && /ቀበሌ|kebele/iu.test(lower);
+      const isRefugee = (val === 'refugee' || cleanLabel.includes('ስደተኛ')) && /ስደተኛ|refugee/iu.test(lower);
+      const isOther = (val === 'other' || cleanLabel.includes('ሌላ')) && /ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(lower);
+      const isRefer = (val === 'refer' || cleanLabel.includes('አጋር') || cleanLabel.includes('የለኝም')) &&
+        /(?:የለኝም|አጋር|እገዛ|እርዳታ|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(lower);
+
+      const isAmharicOption = /አማርኛ|amharic/i.test(labelText) || val === 'am';
+      const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || val === 'en';
       const mentionsAmharic = /አማርኛ|amharic/i.test(lower);
       const mentionsEnglish = /english|እንግሊዝኛ/i.test(lower);
 
-      const valMatch = Boolean(input.value && input.value.length >= 2 && lower.includes(input.value.toLowerCase()));
-      const directMatch = cleanUtt.length >= 2 && (labelText.includes(cleanUtt) || cleanUtt.includes(labelText));
-      const significantWords = labelText.split(/[\s,()/-]+/).filter(w => w.length >= 3 && !['option', 'አማራጭ', 'label'].includes(w));
-      const wordMatch = significantWords.length > 0 && significantWords.some(w => lower.includes(w));
+      // Extract significant words and strip Amharic prefixes (e.g. የፋይዳ -> ፋይዳ, የቀበሌ -> ቀበሌ)
+      const words = cleanLabel.split(/\s+/).filter(w => w.length >= 3 && !['option', 'አማራጭ', 'label'].includes(w));
+      const wordMatch = words.some(w => {
+        const root = w.replace(/^[የበለከወ]/, '');
+        return lower.includes(w) || (root.length >= 3 && lower.includes(root));
+      });
 
-      if (directMatch || valMatch || wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
+      if (directMatch || valMatch || isFayda || isKebele || isRefugee || isOther || isRefer ||
+          wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
         return this.selectOptionAndAdvance(label, input);
+      }
+    }
+
+    // 6d. File upload & Photo camera trigger (Step 6)
+    const fileInput = document.querySelector<HTMLInputElement>('#op-main input[type="file"], input[type="file"]');
+    if (fileInput && fileInput.offsetParent !== null) {
+      if (/(?:ፎቶ|ካሜራ|ስቀል|ፋይል|ምረጥ|መታወቂያ|ሰነድ|photo|camera|upload|file|choose|take)/iu.test(lower) &&
+          !/(?:የለኝም|የለም|don'?t|no)/iu.test(lower)) {
+        const msg = isAm
+          ? 'የካሜራ ወይም የፋይል መምረጫው ተከፍቷል። ፎቶ ያንሱ ወይም ሰነድ ይምረጡ።'
+          : 'File and camera picker opened. Please take a photo or select your document.';
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        fileInput.focus();
+        fileInput.click();
+        return true;
+      }
+
+      if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|no\s*document|no\s*id|don'?t\s*have/iu.test(lower)) {
+        const msg = isAm
+          ? 'ሰነድ ከሌለዎት ወደ ኋላ ተመልሰን የአጋር ድርጅት እገዛ መምረጥ እንችላለን። ወደ ኋላ እየተመለስን ነው።'
+          : 'If you do not have a document, we can go back and choose partner help. Going back.';
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back');
+        if (backBtn) setTimeout(() => backBtn.click(), 400);
+        return true;
       }
     }
 

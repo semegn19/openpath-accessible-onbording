@@ -86,6 +86,7 @@ export class DiscoveryEngine {
         'undo',
         'chat',
         'navigate',
+        'choose_file',
       ],
       privacy: 'page-metadata',
     });

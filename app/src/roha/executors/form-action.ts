@@ -80,7 +80,10 @@ export class FormActionExecutor {
   }
 
   public chooseFile(targetId: string): boolean {
-    const el = this.registry.getElement(targetId);
+    const raw = this.registry.getElement(targetId);
+    const el = (raw instanceof HTMLInputElement && raw.type === 'file')
+      ? raw
+      : (raw?.querySelector('input[type="file"]') || document.querySelector('#op-main input[type="file"], input[type="file"]'));
     if (!el || !(el instanceof HTMLInputElement) || el.type !== 'file') {
       return false;
     }

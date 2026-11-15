@@ -249,6 +249,29 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
+    // Step 5: ID route options (Fayda, Kebele, Refugee, Other, Refer)
+    if (/ፋይዳ|fayda/iu.test(utt)) {
+      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'fayda' }, message: isAm ? '«የፋይዳ መታወቂያ» ተመርጧል።' : '"Fayda ID" selected.' };
+    }
+    if (/ቀበሌ|kebele/iu.test(utt)) {
+      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'kebele' }, message: isAm ? '«የቀበሌ መታወቂያ» ተመርጧል።' : '"Kebele ID" selected.' };
+    }
+    if (/ስደተኛ|refugee/iu.test(utt)) {
+      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refugee' }, message: isAm ? '«የስደተኛ መታወቂያ» ተመርጧል።' : '"Refugee ID" selected.' };
+    }
+    if (/ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(utt)) {
+      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'other' }, message: isAm ? '«ሌላ ሰነድ» ተመርጧል።' : '"Another document" selected.' };
+    }
+    if (/(?:ሰነድ|መታወቂያ)\s*የለኝም|የለኝም|አጋር|እገዛ|እርዳታ|refer|partner|no\s*id|no\s*document/iu.test(utt)) {
+      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refer' }, message: isAm ? '«በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ» ተመርጧል።' : '"Refer me to a partner" selected.' };
+    }
+
+    // Step 6: File upload / Camera trigger
+    if (/ፎቶ|ካሜራ|ስቀል|ፋይል|photo|camera|upload|file/iu.test(utt)) {
+      const msg = isAm ? 'የካሜራ ወይም የፋይል መምረጫው ተከፍቷል። ፎቶ ያንሱ ወይም ሰነድ ይምረጡ።' : 'Camera and file picker opened. Please take a photo or select your document.';
+      return { intent: 'choose_file', targetId: 'page.main', payload: {}, message: msg };
+    }
+
     // Direct answer dictation when on a text/phone input screen without multiple choices
     if (opts.length === 0 && q && utt.length >= 1) {
       const cleanAns = ctx.utterance.trim()
