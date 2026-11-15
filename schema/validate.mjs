@@ -50,21 +50,22 @@ function checkI18n(file, step, path, val, { required = true } = {}) {
 /** Runtime copy: the strings the app prints that are not form questions.
  *  Shared by all three forms, so it lives once, in its own document. */
 function validateRuntimeCopy(file, doc) {
+  const docLangs = doc.langs || (file.includes('roha-') ? ['am', 'en'] : LANGS);
   const strings = doc.strings;
   if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
-    err(file, null, 'E26', 'strings must be an object of key -> {am,en}');
+    err(file, null, 'E26', `strings must be an object of key -> {${docLangs.join(',')}}`);
     return;
   }
-  const seenByLang = Object.fromEntries(LANGS.map((l) => [l, new Map()]));
+  const seenByLang = Object.fromEntries(docLangs.map((l) => [l, new Map()]));
   for (const [key, val] of Object.entries(strings)) {
     if (!/^[a-z][A-Za-z0-9]*(\.[a-zA-Z0-9]+)+$/.test(key)) {
       err(file, key, 'E26', 'key must look like "area.name" — dot-separated, lowerCamel segments');
     }
     if (!val || typeof val !== 'object' || Array.isArray(val)) {
-      err(file, key, 'E26', 'must be an object {am,en}');
+      err(file, key, 'E26', `must be an object {${docLangs.join(',')}}`);
       continue;
     }
-    for (const l of LANGS) {
+    for (const l of docLangs) {
       if (typeof val[l] !== 'string' || val[l].trim() === '') err(file, key, 'E26', `missing or empty .${l}`);
     }
     // A placeholder that exists in one language and not the other renders "{count}" to a user.
@@ -73,7 +74,7 @@ function validateRuntimeCopy(file, doc) {
     for (const h of a) if (!b.has(h)) err(file, key, 'E27', `{${h}} is in .am but not .en`);
     for (const h of b) if (!a.has(h)) err(file, key, 'E27', `{${h}} is in .en but not .am`);
     // Identical sentences under two keys become two clips and two things to keep in step.
-    for (const l of LANGS) {
+    for (const l of docLangs) {
       const t = val[l]?.trim();
       if (!t) continue;
       const seen = seenByLang[l];
