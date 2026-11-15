@@ -379,6 +379,63 @@ async function handleRequest(req, res) {
     return send(res, 200, readFileSync(f, 'utf8'), { 'Content-Type': 'application/yaml; charset=utf-8' });
   }
 
+  if (path === '/api/tts' && req.method === 'GET') {
+    const text = (url.searchParams.get('text') || '').trim();
+    const lang = (url.searchParams.get('lang') || 'am').trim().toLowerCase();
+    console.log('[TTS Request]', { lang, text: text.slice(0, 80) });
+    if (!text) return error(res, 400, 'text-required', 'Text parameter is required.');
+    if (text.length > 2000) return error(res, 413, 'text-too-large', 'Text exceeds 2000 characters.');
+
+    try {
+      const chunks = [];
+      const maxLength = 180;
+      let remaining = text;
+      while (remaining.length > 0) {
+        if (remaining.length <= maxLength) {
+          chunks.push(remaining);
+          break;
+        }
+        let splitIdx = remaining.lastIndexOf('።', maxLength);
+        if (splitIdx === -1) splitIdx = remaining.lastIndexOf('.', maxLength);
+        if (splitIdx === -1) splitIdx = remaining.lastIndexOf(' ', maxLength);
+        if (splitIdx === -1 || splitIdx < 50) splitIdx = maxLength;
+        chunks.push(remaining.substring(0, splitIdx + 1).trim());
+        remaining = remaining.substring(splitIdx + 1).trim();
+      }
+
+      const audioBuffers = [];
+      for (const chunk of chunks) {
+        if (!chunk) continue;
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+        const ttsRes = await fetch(ttsUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (ttsRes.ok) {
+          const buf = Buffer.from(await ttsRes.arrayBuffer());
+          audioBuffers.push(buf);
+        }
+      }
+
+      if (!audioBuffers.length) {
+        return error(res, 502, 'tts-failed', 'Could not generate speech.');
+      }
+
+      const combined = Buffer.concat(audioBuffers);
+      res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': combined.length,
+        'Cache-Control': 'public, max-age=86400',
+        'Access-Control-Allow-Origin': req.headers.origin || '*',
+      });
+      res.end(combined);
+      return;
+    } catch (err) {
+      console.error('[TTS Error]', err);
+      return error(res, 502, 'tts-error', 'Speech synthesis request failed.');
+    }
+  }
+
   if (path === '/api/forms' && req.method === 'GET') {
     return send(res, 200, {
       forms: [...schemas.values()].map((s) => ({ id: s.id, version: s.version, kind: s.kind, title: s.title, langs: s.langs })),

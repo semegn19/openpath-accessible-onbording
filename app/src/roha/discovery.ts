@@ -84,6 +84,8 @@ export class DiscoveryEngine {
         'pause',
         'resume',
         'undo',
+        'chat',
+        'navigate',
       ],
       privacy: 'page-metadata',
     });

@@ -32,6 +32,7 @@ const VALID_INTENTS = new Set([
   'resume',
   'undo',
   'reset_preferences',
+  'chat',
 ]);
 
 const ID_PATTERN = /^[a-z][a-z0-9_.-]{0,79}$/;
@@ -177,6 +178,17 @@ export class IntentValidator {
           }
           if (Object.keys(payload).length > 1) {
             errors.push('propose_answer payload must only contain "value"');
+          }
+          break;
+        }
+
+        case 'chat': {
+          break;
+        }
+
+        case 'navigate': {
+          if (payload.direction && !['back', 'forward'].includes(payload.direction)) {
+            errors.push('navigate direction must be "back" or "forward"');
           }
           break;
         }

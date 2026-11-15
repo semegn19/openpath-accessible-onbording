@@ -78,8 +78,13 @@ function render() {
     get<HTMLButtonElement>('#save').disabled = true; get<HTMLButtonElement>('#test').disabled = true;
     message(c(test ? 'admin.testing' : 'admin.saving'));
     try { await request(test ? 'test' : 'config', test ? 'POST' : 'PUT', data);
-      if (!test) await load();
-      message(c(test ? 'admin.tested' : 'admin.saved'));
+      if (test) {
+        message(c('admin.tested'));
+      } else {
+        await load();
+        message(c('admin.saved') + ' — Redirecting to registration...');
+        setTimeout(() => { window.location.href = '/onboard'; }, 1000);
+      }
     } catch(error) { message((error as Error).message); }
     finally { get<HTMLButtonElement>('#save').disabled = false; updateProvider(); }
   };

@@ -8,16 +8,37 @@ import { Icon } from './icons';
 import { spokenToDigits } from './digits';
 import { playRecorded, stopAudio } from './audio';
 
-/** Speak one string with the browser. Amharic only if a matching voice exists — otherwise say so. */
+/** Speak one string with the browser. Amharic uses matching device voice or TTS endpoint. */
 export function speak(text: string, lang: Lang) {
   stopAudio();
+  if (lang === 'am') {
+    const want = 'am';
+    const voice = 'speechSynthesis' in window ? window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want)) : null;
+    if (voice && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice = voice;
+      u.lang = voice.lang;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+      return true;
+    }
+    try {
+      const audio = new Audio(`/api/tts?lang=am&text=${encodeURIComponent(text)}`);
+      audio.play().catch(() => {});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   if (!('speechSynthesis' in window)) return false;
   const u = new SpeechSynthesisUtterance(text);
-  const want = lang === 'am' ? 'am' : 'en';
+  const want = 'en';
   const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want));
-  if (!voice) return false;
-  u.voice = voice;
-  u.lang = voice.lang;
+  if (voice) {
+    u.voice = voice;
+    u.lang = voice.lang;
+  }
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
   return true;

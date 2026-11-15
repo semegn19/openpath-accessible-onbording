@@ -137,7 +137,7 @@ export class RohaSDK {
         onTranscript: (transcript: string, isFinal: boolean) => {
           this.updateTranscriptUI(transcript, isFinal);
           if (isFinal) {
-          this.handleUserUtterance(transcript, false);
+            this.handleUserUtterance(transcript, true);
           }
         },
         onError: (err: string) => {
@@ -378,7 +378,7 @@ export class RohaSDK {
     return this.conversation.normalizeSpokenDigits(str);
   }
 
-  public executeIntent(proposal: RohaIntent): { success: boolean; error?: string } {
+  public executeIntent(proposal: RohaIntent, suppressAnnounce = false): { success: boolean; error?: string } {
     const validation = this.validator.validate(proposal);
     if (!validation.valid) {
       const err = `Intent validation rejected: ${validation.errors.join('; ')}`;
@@ -387,24 +387,27 @@ export class RohaSDK {
     }
 
     switch (proposal.intent) {
+      case 'chat':
+        return { success: true };
+
       case 'text_scale':
         this.textScale.apply(proposal.payload.percent);
-        this.announce(rc('roha.textScaled', this.locale, { percent: proposal.payload.percent }));
+        if (!suppressAnnounce) this.announce(rc('roha.textScaled', this.locale, { percent: proposal.payload.percent }));
         return { success: true };
 
       case 'simple_mode':
         this.simpleMode.apply(proposal.payload.enabled, this.rootElement || document.body, this.locale === 'am' ? 'am' : 'en');
-        this.announce(rc(proposal.payload.enabled ? 'roha.simpleOn' : 'roha.simpleOff', this.locale));
+        if (!suppressAnnounce) this.announce(rc(proposal.payload.enabled ? 'roha.simpleOn' : 'roha.simpleOff', this.locale));
         return { success: true };
 
       case 'contrast':
         this.contrast.applyContrast(proposal.payload.theme);
-        this.announce(rc(proposal.payload.theme === 'high-contrast' ? 'roha.contrastOn' : 'roha.contrastOff', this.locale));
+        if (!suppressAnnounce) this.announce(rc(proposal.payload.theme === 'high-contrast' ? 'roha.contrastOn' : 'roha.contrastOff', this.locale));
         return { success: true };
 
       case 'reduced_motion':
         this.contrast.applyReducedMotion(proposal.payload.enabled);
-        this.announce(rc(proposal.payload.enabled ? 'roha.motionOn' : 'roha.motionOff', this.locale));
+        if (!suppressAnnounce) this.announce(rc(proposal.payload.enabled ? 'roha.motionOn' : 'roha.motionOff', this.locale));
         return { success: true };
 
       case 'read':
@@ -442,7 +445,7 @@ export class RohaSDK {
           } else {
             this.conversation.goBack();
           }
-          this.announce(rc('roha.movedBack', this.locale));
+          if (!suppressAnnounce) this.announce(rc('roha.movedBack', this.locale));
         } else {
           const focused = this.formAction.focusTarget(proposal.targetId);
           return focused ? { success: true } : { success: false, error: 'Target could not receive focus' };
@@ -451,7 +454,7 @@ export class RohaSDK {
 
       case 'filter':
         this.formAction.filterItems(proposal.targetId, proposal.payload.query);
-        this.announce(rc('roha.filtered', this.locale, { query: proposal.payload.query }));
+        if (!suppressAnnounce) this.announce(rc('roha.filtered', this.locale, { query: proposal.payload.query }));
         return { success: true };
 
       case 'propose_answer':
@@ -469,7 +472,7 @@ export class RohaSDK {
         this.guide.reset();
         this.readExecutor.stop();
         this.voice.stopListening();
-        this.announce(rc('roha.paused', this.locale));
+        if (!suppressAnnounce) this.announce(rc('roha.paused', this.locale));
         return { success: true };
 
       case 'resume':
@@ -480,14 +483,14 @@ export class RohaSDK {
       case 'undo':
         this.textScale.undo();
         this.conversation.undoLastAnswer();
-        this.announce(rc('roha.undone', this.locale));
+        if (!suppressAnnounce) this.announce(rc('roha.undone', this.locale));
         return { success: true };
 
       case 'reset_preferences':
         this.textScale.reset();
         this.contrast.reset();
         this.simpleMode.apply(false, this.rootElement || document.body);
-        this.announce(rc('roha.resetDone', this.locale));
+        if (!suppressAnnounce) this.announce(rc('roha.resetDone', this.locale));
         return { success: true };
 
       default:
@@ -501,30 +504,42 @@ export class RohaSDK {
     if (this.guide.command(utterance)) return;
     if (/^(?:answer\s*:?\s+|my name is\s+|ስሜ\s+)/iu.test(utterance) && this.guide.answer(utterance)) return;
     // A field answer is accepted only after the user starts guided filling.
+    // Extract real-time screen context from the active page
+    const currentHeading = document.querySelector('#op-main h1, main h1, h1, [role="heading"][aria-level="1"]')?.textContent?.trim() || '';
+    const currentDesc = document.querySelector('.op-step-desc, .op-desc, #op-main p:not([hidden]):not([aria-hidden="true"])')?.textContent?.trim() || '';
+    const currentChoices = Array.from(document.querySelectorAll<HTMLElement>('.op-choice, label, input[type="radio"], input[type="checkbox"]'))
+      .filter(el => el.offsetParent !== null && !el.closest('[data-roha-ignore], [data-roha-assistant], aside'))
+      .map(el => el.textContent?.trim() || (el as HTMLInputElement).value || '')
+      .filter(t => t && !t.includes('🔊') && t !== currentHeading && t !== currentDesc);
+
     const context = {
       activeTargetId: undefined,
       currentTextScalePercent: this.textScale.getPercent(),
       locale: this.locale,
+      screenContext: {
+        activeQuestion: currentHeading,
+        description: currentDesc,
+        options: Array.from(new Set(currentChoices)).slice(0, 10),
+      },
     };
 
-    // 1. Synchronous deterministic local route (0ms latency)
-    // Note: executes synchronously before any await
-    const localIntent = this.router.route(utterance, context);
-    if (localIntent) {
-      this.executeIntent(localIntent);
-      return;
-    }
-
-    if (this.guide.answer(utterance)) return;
-
-    // 2. Asynchronous LLM fallback if an LLMProvider is attached
     const llm = this.router.getLLMProvider();
-    if (useProvider && llm && this.currentMap) {
+    const hasAi = useProvider && llm && (llm instanceof ServerLLMProvider ? llm.hasConsent() : true);
+
+    if (hasAi && this.currentMap) {
       try {
+        this.updateTranscriptUI(this.locale === 'am' ? 'ሮሃ እያሰበች ነው...' : 'Roha is thinking...', false);
         const llmIntent = await llm.interpret(utterance, this.currentMap, context);
         if (requestVersion !== this.requestVersion) return;
         if (llmIntent) {
-          this.executeIntent(llmIntent);
+          const aiMessage = (llmIntent as any).message || (llmIntent.payload as any)?.message;
+          if (aiMessage) {
+            this.announce(aiMessage);
+            this.readExecutor.speak(aiMessage, this.locale);
+          }
+          if (llmIntent.intent && (llmIntent.intent as string) !== 'chat') {
+            this.executeIntent(llmIntent, Boolean(aiMessage));
+          }
           return;
         }
       } catch {
@@ -536,6 +551,15 @@ export class RohaSDK {
         }
       }
     }
+
+    // 1. Synchronous deterministic local route (0ms latency fallback)
+    const localIntent = this.router.route(utterance, context);
+    if (localIntent) {
+      this.executeIntent(localIntent);
+      return;
+    }
+
+    if (this.guide.answer(utterance)) return;
 
     if (requestVersion !== this.requestVersion) return;
     this.announce(rc('roha.notUnderstood', this.locale));
@@ -661,10 +685,14 @@ export class RohaSDK {
     panel.querySelector('[data-roha-back]')!.addEventListener('click', () => this.guide.back());
     panel.querySelector('[data-roha-confirm]')!.addEventListener('click', () => { void this.guide.confirm(); command.focus(); });
     panel.querySelector('[data-roha-cancel]')!.addEventListener('click', () => { this.guide.cancel(); command.focus(); });
+    panel.addEventListener('pointerdown', () => this.readExecutor.unlock());
+    panel.addEventListener('click', () => this.readExecutor.unlock());
+    command.addEventListener('keydown', () => this.readExecutor.unlock());
     panel.querySelector('form')!.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!command.value.trim()) { command.focus(); return; }
       const value = command.value; command.value = '';
+      this.readExecutor.unlock();
       void this.handleUserUtterance(value);
       if (!panel.querySelector<HTMLElement>('[data-roha-pending]')!.hidden) {
         panel.querySelector<HTMLButtonElement>('[data-roha-confirm]')!.focus();
@@ -672,11 +700,13 @@ export class RohaSDK {
     });
     const consent = panel.querySelector<HTMLInputElement>('[data-ai-consent]')!;
     let serverProvider: ServerLLMProvider | null = null;
-    panel.querySelector<HTMLButtonElement>('[data-ai-options]')!.onclick = async () => {
+    const initProvider = async (autoConsent = false) => {
       const version = ++this.requestVersion;
-      consent.checked = false;
-      consent.disabled = true;
-      serverProvider?.consent(false);
+      if (!autoConsent) {
+        consent.checked = false;
+        consent.disabled = true;
+        serverProvider?.consent(false);
+      }
       const provider = new ServerLLMProvider(this.aiEndpoint);
       try {
         const config = await provider.describe();
@@ -686,9 +716,17 @@ export class RohaSDK {
         panel.querySelector<HTMLElement>('[data-ai-consent-label]')!.hidden = config.provider === 'disabled';
         serverProvider = provider; this.setLLMProvider(provider);
         consent.disabled = false;
-      } catch { this.announce(text('roha.notUnderstood')); }
+        if (autoConsent && config.provider !== 'disabled') {
+          consent.checked = true;
+          provider.consent(true);
+        }
+      } catch {
+        if (!autoConsent) this.announce(text('roha.notUnderstood'));
+      }
     };
+    panel.querySelector<HTMLButtonElement>('[data-ai-options]')!.onclick = () => void initProvider(false);
     consent.onchange = () => { this.requestVersion++; serverProvider?.consent(consent.checked); };
+    void initProvider(true);
 
     // Attach button event listeners
     panel.querySelector('[data-roha-control="roha-btn-mic"]')?.addEventListener('click', () => {
@@ -751,6 +789,7 @@ export class RohaSDK {
     });
 
     panel.querySelector('[data-roha-control="roha-btn-read"]')?.addEventListener('click', () => {
+      this.readExecutor.unlock();
       this.executeIntent({
         schemaVersion: '2.0',
         utteranceId: 'ui-click',

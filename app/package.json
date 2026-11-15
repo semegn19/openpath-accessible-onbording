@@ -9,7 +9,7 @@
     "dev": "vite --host 0.0.0.0 --port 5173",
     "prebuild": "npm run sync:schemas",
     "build": "tsc --noEmit && vite build && npm run build:roha",
-    "build:roha": "esbuild src/roha/index.ts --bundle --minify --format=iife --global-name=RohaBundle --outfile=dist/roha.js && cp dist/roha.js public/roha.js && esbuild src/admin/main.ts --bundle --minify --outfile=dist/roha-admin.js && cp dist/roha-admin.js public/roha-admin.js",
+    "build:roha": "esbuild src/roha/index.ts --bundle --minify --format=iife --global-name=RohaBundle --outfile=dist/roha.js && node -e \"const fs=require('fs');fs.copyFileSync('dist/roha.js','public/roha.js');\" && esbuild src/admin/main.ts --bundle --minify --outfile=dist/roha-admin.js && node -e \"const fs=require('fs');fs.copyFileSync('dist/roha-admin.js','public/roha-admin.js');\"",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "test:roha": "node tests/roha_runtime.spec.mjs",
     "validate": "node ../schema/validate.mjs ../schema/*.json ../schema/templates/*.json",
@@ -25,7 +25,7 @@
     "verify:prod": "node tests/nginx-sim.mjs 8081 & SRV=$!; sleep 1; ORIGIN=http://127.0.0.1:8081 node tests/pages.mjs && URL=http://127.0.0.1:8081/ node tests/a11y.spec.mjs && node tests/csp.mjs; RC=$?; kill $SRV 2>/dev/null; exit $RC",
     "api": "node tests/api.mjs",
     "submit": "node tests/submit.mjs",
-    "api:dev": "node ../api/server.mjs",
+    "api:dev": "node --watch --env-file-if-exists=../.env ../api/server.mjs",
     "focus": "node tests/focus-obscured.mjs",
     "hosts": "node tests/no-third-party.mjs",
     "offline": "node tests/offline.mjs",
@@ -45,7 +45,8 @@
     "check:roha": "npm run build && npm run test:roha && npm run test:access && npm run test:settings && npm run test:localisation && npm run test:commands && npm run test:guide && npm --prefix ../api test",
     "test:localisation": "node tests/roha-localisation.mjs",
     "test:commands": "node tests/roha-commands.mjs",
-    "test:guide": "node tests/roha-form-guide.mjs"
+    "test:guide": "node tests/roha-form-guide.mjs",
+    "set:gemini": "node --env-file-if-exists=../.env scripts/set-gemini-key.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

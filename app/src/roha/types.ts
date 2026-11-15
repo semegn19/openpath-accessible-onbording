@@ -65,7 +65,8 @@ export type RohaIntentType =
   | 'pause'
   | 'resume'
   | 'undo'
-  | 'reset_preferences';
+  | 'reset_preferences'
+  | 'chat';
 
 export interface FieldOption {
   id: string;
@@ -107,6 +108,12 @@ export interface BaseIntent {
   mapVersion: number;
   intent: RohaIntentType;
   targetId: string;
+  message?: string;
+}
+
+export interface ChatIntent extends BaseIntent {
+  intent: 'chat';
+  payload: Record<string, any>;
 }
 
 export interface TextScaleIntent extends BaseIntent {
@@ -184,7 +191,8 @@ export type RohaIntent =
   | ReadIntent
   | NavigateIntent
   | ProposeAnswerIntent
-  | EmptyPayloadIntent;
+  | EmptyPayloadIntent
+  | ChatIntent;
 
 export type CapabilityStatus = 'planned' | 'not-tested' | 'partial' | 'verified' | 'unavailable';
 
