@@ -27,13 +27,21 @@
     }
     if (script && script.src) {
       try {
-        var u = new URL(script.src);
-        return u.origin;
+        var base = (window.location && window.location.href && window.location.protocol.startsWith('http'))
+          ? window.location.href
+          : undefined;
+        var u = base ? new URL(script.src, base) : new URL(script.src, 'http://localhost:5173');
+        if (u.origin && u.origin !== 'null' && u.protocol.startsWith('http')) {
+          return u.origin;
+        }
       } catch (e) {
         /* fallback below */
       }
     }
-    return window.location.origin;
+    if (window.location && window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) {
+      return window.location.origin;
+    }
+    return 'http://localhost:5173';
   }
 
   function createEmbed(cfg) {

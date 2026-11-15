@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OpenPath Integration Level 1 — Drop-in Embed Demo</title>
-  <link rel="stylesheet" href="/fonts.css">
+  <link rel="stylesheet" href="fonts.css">
   <style>
     :root {
       --bg: #eef2f6;
@@ -149,6 +149,17 @@
     </details>
   </header>
 
+  <!-- File protocol advisory banner if opened directly via filesystem -->
+  <div id="file-protocol-banner" style="display:none; max-width:900px; margin:0 auto 1.5rem; background:#fff8e6; color:#78350f; border:1px solid #fcd34d; padding:1rem 1.25rem; border-radius:10px; font-size:0.95rem;">
+    <strong>ℹ️ Opened via <code>file://</code> protocol:</strong> Browsers restrict features (service workers, local SPA routes) when opening raw HTML files directly from disk. The widget below is connected to your local dev server at <code>http://localhost:5173</code>. For the best interactive experience, open <a href="http://localhost:5173/embed-demo.html" style="color:#002b56; font-weight:700; text-decoration:underline;">http://localhost:5173/embed-demo.html</a> in your browser.
+  </div>
+  <script>
+    if (window.location.protocol === 'file:') {
+      var b = document.getElementById('file-protocol-banner');
+      if (b) b.style.display = 'block';
+    }
+  </script>
+
   <!-- The embedded OpenPath form container -->
   <main class="container" id="openpath-embed-container"></main>
 
@@ -204,7 +215,7 @@
   </script>
 
   <!-- Load OpenPath via the Level 1 script tag -->
-  <script src="/embed.js"
+  <script src="./embed.js"
           data-form="onboard"
           data-lang="am"
           data-target="#openpath-embed-container"
