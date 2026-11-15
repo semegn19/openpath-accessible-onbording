@@ -446,6 +446,12 @@ export class RohaSDK {
             this.conversation.goBack();
           }
           if (!suppressAnnounce) this.announce(rc('roha.movedBack', this.locale));
+        } else if (proposal.payload?.direction === 'forward') {
+          const nextBtn = document.querySelector<HTMLButtonElement>('#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"]');
+          if (nextBtn) {
+            nextBtn.click();
+          }
+          if (!suppressAnnounce) this.announce(this.locale === 'am' ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.');
         } else {
           const focused = this.formAction.focusTarget(proposal.targetId);
           return focused ? { success: true } : { success: false, error: 'Target could not receive focus' };
@@ -501,6 +507,11 @@ export class RohaSDK {
   public async handleUserUtterance(utterance: string, useProvider = true): Promise<void> {
     const requestVersion = ++this.requestVersion;
     this.rescan();
+    this.readExecutor.unlock();
+
+    // Direct Voice & Command Actions (Option select, Next, Back, Read, Scale, High Contrast, Dictation)
+    if (this.tryDirectVoiceAction(utterance)) return;
+
     if (this.guide.command(utterance)) return;
     if (/^(?:answer\s*:?\s+|my name is\s+|ስሜ\s+)/iu.test(utterance) && this.guide.answer(utterance)) return;
     // A field answer is accepted only after the user starts guided filling.
@@ -570,6 +581,118 @@ export class RohaSDK {
     if (this.liveRegion) {
       this.liveRegion.textContent = message;
     }
+  }
+
+  private tryDirectVoiceAction(utterance: string): boolean {
+    const raw = utterance.trim();
+    if (!raw) return false;
+    const lower = raw.toLowerCase();
+    const isAm = this.locale === 'am' || /[\u1200-\u137F]/.test(raw);
+
+    // 1. Next step / Proceed
+    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)\b/iu.test(lower) ||
+        /(?:ቀጣይ\s*ደረጃ|next\s*step)/iu.test(lower)) {
+      const nextBtn = document.querySelector<HTMLButtonElement>('#op-main button[type="submit"].op-btn-primary, button.op-btn-primary, #op-main button[type="submit"]');
+      if (nextBtn) {
+        const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        setTimeout(() => nextBtn.click(), 300);
+        return true;
+      }
+    }
+
+    // 2. Previous step / Back
+    if (/^(?:ተመለስ|ወደ\s*ኋላ|ቀዳሚ|back|previous|go\s*back)\b/iu.test(lower) ||
+        /(?:ያለፈው\s*ደረጃ|previous\s*step)/iu.test(lower)) {
+      const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back, button[aria-label*="Back"], button[aria-label*="ተመለስ"]');
+      if (backBtn) {
+        const msg = isAm ? 'ወደ ቀደመው ደረጃ ተመልሰናል።' : 'Going back to the previous step.';
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        setTimeout(() => backBtn.click(), 300);
+        return true;
+      }
+    }
+
+    // 3. Read aloud
+    if (/^(?:አንብብ|አንብቢ|አንብቢልኝ|ስማ|read|speak|listen)\b/iu.test(lower)) {
+      const msg = isAm ? 'ጥያቄውን ላንብብልዎት።' : 'Reading the question aloud.';
+      this.announce(msg);
+      this.readExecutor.readTarget('page.main', this.locale);
+      return true;
+    }
+
+    // 4. Text scale enlarge
+    if (/(?:ትልቅ\s*ጽሑፍ|ጽሑፉን\s*አተልቅ|ጽሑፍ\s*አተልቅ|make\s*text\s*bigger|bigger\s*text|zoom)/iu.test(lower)) {
+      const nextScale = this.textScale.getPercent() >= 150 ? 100 : 150;
+      this.textScale.apply(nextScale as 100 | 150);
+      const msg = isAm ? 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።' : 'Text size has been increased.';
+      this.announce(msg);
+      this.readExecutor.speak(msg, this.locale);
+      return true;
+    }
+
+    // 5. High contrast
+    if (/(?:ከፍተኛ\s*ንፅፅር|ንፅፅር|high\s*contrast|dark\s*mode)/iu.test(lower)) {
+      const nextTheme = this.contrast.getTheme() === 'high-contrast' ? 'default' : 'high-contrast';
+      this.contrast.applyContrast(nextTheme);
+      const msg = isAm ? 'የቀለም ንፅፅር ተቀይሯል።' : 'Contrast mode toggled.';
+      this.announce(msg);
+      this.readExecutor.speak(msg, this.locale);
+      return true;
+    }
+
+    // 6. Matching and selecting options on the active screen
+    const optionLabels = Array.from(document.querySelectorAll<HTMLElement>(
+      '#op-main .op-options label, #op-main label.op-option, #op-main label.op-check'
+    ));
+
+    const cleanUtt = lower.replace(/^(?:እባክሽን|እባክህ|please|select|choose|ምረጥ|ምረጪ|አድርግ|አድርጊ|የሚለውን)\s*/iu, '').trim();
+
+    for (const label of optionLabels) {
+      const labelText = label.textContent?.trim().toLowerCase() || '';
+      const input = label.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
+      if (!input || !labelText) continue;
+
+      const isAmharicOption = /አማርኛ|amharic/i.test(labelText);
+      const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText);
+
+      const mentionsAmharic = /አማርኛ|amharic/i.test(cleanUtt);
+      const mentionsEnglish = /english|እንግሊዝኛ/i.test(cleanUtt);
+
+      const directMatch = cleanUtt.length >= 3 && (labelText.includes(cleanUtt) || cleanUtt.includes(labelText));
+
+      if (directMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
+        input.click();
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        const chosenText = label.textContent?.trim() || cleanUtt;
+        const msg = isAm ? `«${chosenText}» ተመርጧል።` : `"${chosenText}" selected.`;
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        return true;
+      }
+    }
+
+    // 7. Dictating answers into active text inputs
+    const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+      '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input'
+    );
+    if (textInput && /^(?:ስሜ\s+|my\s*name\s*is\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ቁጥሬ\s*)/iu.test(raw)) {
+      const val = raw.replace(/^(?:ስሜ\s+|my\s*name\s*is\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ቁጥሬ\s*)/iu, '').trim();
+      if (val) {
+        const proto = textInput instanceof HTMLInputElement ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(textInput, val);
+        textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        textInput.dispatchEvent(new Event('change', { bubbles: true }));
+        const msg = isAm ? `«${val}» ተሞልቷል።` : `"${val}" entered.`;
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private async enableVoice(): Promise<void> {
