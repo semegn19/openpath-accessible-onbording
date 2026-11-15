@@ -260,6 +260,9 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
 .op-btn-link {
   border: 0; background: none; color: var(--op-accent); text-decoration: underline;
   min-height: 48px; min-width: 48px; display: inline-flex; align-items: center; padding: 0 0.4rem;
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
 }
 .op-btn-voice { margin-top: 0.8rem; border-style: dashed; }
 .op-btn-voice[aria-pressed='true'] { background: var(--op-error-surface); border-color: var(--op-error-brand); }
@@ -295,8 +298,22 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--op-line);
 }
-.op-review dt { font-weight: 600; flex: 1 1 15rem; }
-.op-review dd { margin: 0; flex: 1 1 15rem; display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; }
+.op-review dt { font-weight: 600; flex: 1 1 100%; }
+.op-review dd {
+  margin: 0;
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+}
+.op-review dd > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
 .op-payload {
   overflow-x: auto;
   background: #f4f6f8;
@@ -388,8 +405,40 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
 }
 
 /* ---- job accommodation filter (Career Gateway) ------------------------- */
-.op-job-filter-wrapper {
-  margin-bottom: 1.5rem;
+.op-job-listing-page {
+  display: flex;
+  flex-direction: column;
+}
+.op-job-listing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.op-job-listing-h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--op-primary);
+  flex: 1 1 auto;
+}
+.op-job-filter-legend {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--op-text);
+  margin-bottom: 0.6rem;
+}
+.op-job-listing-footer {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+.op-job-listing-footer .op-btn {
+  min-height: 48px;
+  min-width: 140px;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 .op-selected-job-banner {
   display: flex;
@@ -401,6 +450,7 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   border: 2px solid var(--op-primary);
   border-radius: var(--op-radius);
   padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
 }
 .op-selected-job-info {
   display: flex;

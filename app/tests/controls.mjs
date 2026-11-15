@@ -129,7 +129,7 @@ for (const form of FORMS) {
 /* ---------- the two setup screens must SHOW what is applied ----------
    A checkbox that stays blank while the setting is on is worse than no checkbox: it tells the
    person the opposite of the truth about the page they are looking at. */
-for (const slug of ['onboard', 'job']) {
+for (const slug of ['onboard', 'job?apply=1']) {
   const page = await ctx.newPage();
   await page.goto(`${SITE}/${slug}`, { waitUntil: 'load' });
   await page.evaluate(() => localStorage.clear());

@@ -503,10 +503,22 @@
       "ti": "መጻረዪ ኣጽሪ"
     },
     "jobFilter.applyForThis": {
-      "am": "ለዚህ ሥራ አመልክት",
-      "en": "Apply for this job",
-      "om": "Hojii kanaaf iyyadhaa",
-      "ti": "ነዚ ስራሕ ኣመልክቱ"
+      "am": "ይመዝገቡ",
+      "en": "Register",
+      "om": "Galmaa'aa",
+      "ti": "ተመዝገቡ"
+    },
+    "jobFilter.backToListings": {
+      "am": "ወደ ሥራዎች ዝርዝር ተመለስ",
+      "en": "Back to job listings",
+      "om": "Gara tarree hojiitti deebi'aa",
+      "ti": "ናብ ዝርዝር ስራሕቲ ተመለሱ"
+    },
+    "jobFilter.nextToRegister": {
+      "am": "ቀጣይ — ይመዝገቡ",
+      "en": "Next — Register",
+      "om": "Itti fufaa — Galmaa'aa",
+      "ti": "ቀጽሉ — ተመዝገቡ"
     },
     "jobFilter.applyingFor": {
       "am": "የሚያመለክቱት ለ፦",
