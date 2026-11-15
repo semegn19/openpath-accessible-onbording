@@ -87,9 +87,12 @@ export class ReadExecutor {
     this.stop();
     const playId = ++this.currentPlayId;
 
-    if (!text || !text.trim()) return false;
+    if (!text || !text.trim()) {
+      onEnd?.();
+      return false;
+    }
 
-    // Use /api/tts for Ethiopian languages: Amharic, Tigrinya, and Afaan Oromoo
+    // Use /api/tts for Ethiopian languages: Amharic, Tigrinya, Afaan Oromoo, and Somali
     const langCode = locale.toLowerCase().slice(0, 2);
     const isEthiopicScript = /[\u1200-\u137F]/u.test(text);
     const effectiveLang = (langCode === 'ti' || (isEthiopicScript && langCode !== 'am')) ? 'ti'
@@ -103,82 +106,80 @@ export class ReadExecutor {
         this.isSpeaking = true;
         this.statusCallback?.({ speaking: true, text });
 
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioCtx) {
-          if (!this.audioCtx) this.audioCtx = new AudioCtx();
-          if (this.audioCtx.state === 'suspended') void this.audioCtx.resume();
+        const controller = new AbortController();
+        this.currentAbortController = controller;
 
-          const controller = new AbortController();
-          this.currentAbortController = controller;
+        fetch(ttsUrl, { signal: controller.signal })
+          .then((res) => {
+            if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
+            return res.blob();
+          })
+          .then((blob) => {
+            if (this.currentPlayId !== playId) return;
+            const blobUrl = URL.createObjectURL(blob);
+            const audio = new Audio(blobUrl);
+            this.currentAudio = audio;
 
-          fetch(ttsUrl, { signal: controller.signal })
-            .then(res => {
-              if (!res.ok) throw new Error(`TTS HTTP ${res.status}`);
-              return res.arrayBuffer();
-            })
-            .then(buf => {
-              if (this.currentPlayId !== playId) return null;
-              return this.audioCtx!.decodeAudioData(buf);
-            })
-            .then(decoded => {
-              if (!decoded || this.currentPlayId !== playId) return;
-              this.stopAudio();
-              const source = this.audioCtx!.createBufferSource();
-              source.buffer = decoded;
-              source.connect(this.audioCtx!.destination);
-              source.onended = () => {
-                if (this.currentPlayId === playId) {
-                  this.isSpeaking = false;
-                  this.currentSource = null;
-                  this.statusCallback?.({ speaking: false });
-                  onEnd?.();
-                }
-              };
-              this.currentSource = source;
-              if (this.audioCtx!.state === 'suspended') {
-                void this.audioCtx!.resume();
+            const cleanup = () => {
+              URL.revokeObjectURL(blobUrl);
+              if (this.currentPlayId === playId) {
+                this.isSpeaking = false;
+                this.currentAudio = null;
+                this.statusCallback?.({ speaking: false });
+                onEnd?.();
               }
-              source.start(0);
-            })
-            .catch(err => {
-              if (err.name === 'AbortError' || this.currentPlayId !== playId) return;
-              const audio = new Audio(ttsUrl);
-              this.currentAudio = audio;
-              audio.onended = () => {
-                if (this.currentPlayId === playId) {
-                  this.isSpeaking = false;
-                  this.currentAudio = null;
-                  this.statusCallback?.({ speaking: false });
-                  onEnd?.();
-                }
-              };
-              audio.play().catch(() => {
-                if (this.currentPlayId === playId) {
-                  this.isSpeaking = false;
-                  this.statusCallback?.({ speaking: false, text });
-                }
-              });
+            };
+
+            audio.onended = cleanup;
+            audio.onerror = () => {
+              cleanup();
+              this.speakWithSpeechSynthesis(text, locale, playId, onEnd);
+            };
+
+            audio.play().catch(() => {
+              cleanup();
+              this.speakWithSpeechSynthesis(text, locale, playId, onEnd);
             });
-          return true;
-        }
-      } catch (e) {
-        console.error('[Roha TTS Exception]', e);
+          })
+          .catch((err) => {
+            if (err.name === 'AbortError' || this.currentPlayId !== playId) return;
+            this.speakWithSpeechSynthesis(text, locale, playId, onEnd);
+          });
+        return true;
+      } catch {
+        return this.speakWithSpeechSynthesis(text, locale, playId, onEnd);
       }
-      return true;
     }
 
+    return this.speakWithSpeechSynthesis(text, locale, playId, onEnd);
+  }
+
+  private speakWithSpeechSynthesis(text: string, locale: string, playId: number, onEnd?: () => void): boolean {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
-      this.statusCallback?.({ speaking: false, text });
+      if (this.currentPlayId === playId) {
+        this.isSpeaking = false;
+        this.statusCallback?.({ speaking: false, text });
+        onEnd?.();
+      }
       return false;
     }
 
     try {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
+      const langCode = locale.toLowerCase().slice(0, 2);
+      utterance.lang = langCode === 'am' ? 'am-ET'
+        : langCode === 'ti' ? 'ti-ET'
+        : langCode === 'om' ? 'om-ET'
+        : langCode === 'so' ? 'so-ET'
+        : 'en-US';
       utterance.rate = 0.95;
 
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+      const preferredVoice = voices.find((v) => v.lang.toLowerCase().startsWith(langCode))
+        || (langCode === 'ti' ? voices.find((v) => v.lang.toLowerCase().startsWith('am')) : null)
+        || ((langCode === 'om' || langCode === 'so') ? voices.find((v) => v.lang.toLowerCase().startsWith('sw') || v.lang.toLowerCase().startsWith('it')) : null)
+        || voices.find((v) => v.lang.toLowerCase().startsWith('en'))
+        || voices[0];
       if (preferredVoice) utterance.voice = preferredVoice;
 
       utterance.onstart = () => {
@@ -188,7 +189,7 @@ export class ReadExecutor {
         }
       };
 
-      utterance.onend = () => {
+      const finish = () => {
         if (this.currentPlayId === playId) {
           this.isSpeaking = false;
           this.statusCallback?.({ speaking: false });
@@ -196,18 +197,17 @@ export class ReadExecutor {
         }
       };
 
-      utterance.onerror = () => {
-        if (this.currentPlayId === playId) {
-          this.isSpeaking = false;
-          this.statusCallback?.({ speaking: false });
-        }
-      };
+      utterance.onend = finish;
+      utterance.onerror = finish;
 
       window.speechSynthesis.speak(utterance);
       return true;
     } catch {
-      this.isSpeaking = false;
-      this.statusCallback?.({ speaking: false, text });
+      if (this.currentPlayId === playId) {
+        this.isSpeaking = false;
+        this.statusCallback?.({ speaking: false, text });
+        onEnd?.();
+      }
       return false;
     }
   }

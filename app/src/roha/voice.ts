@@ -25,11 +25,10 @@ export class VoiceManager {
 
   public setLocale(locale: string): void {
     const l = locale.toLowerCase().slice(0, 2);
-    const next = l === 'am' ? 'am-ET'
-      : l === 'ti' ? 'ti-ET'
-      : l === 'om' ? 'om-ET'
-      : l === 'so' ? 'so-ET'
-      : 'en-US';
+    // Web Speech API in Chrome only recognizes am-ET (Ge'ez script) and en-US (Latin script).
+    // ti (Tigrinya) maps to am-ET for Ge'ez fidäl characters.
+    // om (Afaan Oromoo) and so (Somali) map to en-US for Latin text input.
+    const next = (l === 'am' || l === 'ti') ? 'am-ET' : 'en-US';
     if (next === this.locale) return;
     this.locale = next;
     const resume = this.autoRestart && !this.isEchoMuted;
@@ -180,6 +179,14 @@ export class VoiceManager {
     };
     recognition.onerror = (event: any) => {
       if (!active() || event.error === 'aborted' || event.error === 'no-speech') return;
+      if (event.error === 'language-not-supported') {
+        this.locale = 'en-US';
+        this.releaseRecognition();
+        if (this.autoRestart && this.permissionGranted) {
+          this.scheduleRestart();
+        }
+        return;
+      }
       this.autoRestart = false;
       this.releaseRecognition();
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {

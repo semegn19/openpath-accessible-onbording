@@ -161,6 +161,8 @@ export class TFLiteWakeDetector implements WakeWordDetector {
   }
 }
 
+export const WAKE_WORD_REGEX = /(?:^|\b|\s)(?:hey\s*roha|hello\s*roha|hi\s*roha|ok(?:ay)?\s*roha|roha|ro-ha|ro\s+ha|rohaa|roxa|ruha|roya|row\s*ha|rhoa|rohan|raw\s*ha|loha|broha|ሮሃ|ሮሀ|ሮሓ|ሮሐ|ሮኃ|ሮኻ|ሰላም\s*ሮሃ|ሄይ\s*ሮሃ|akkam\s*roha|hayye\s*roha)(?:$|\b|\s|[.,!?])/iu;
+
 /**
  * Foreground & Background WebSpeech Keyword Detector
  * Continuously listens for "Roha" / "Hey Roha" / "ሮሃ" / "Akkam Roha" / "Hayye Roha"
@@ -184,11 +186,8 @@ export class WebSpeechWakeDetector implements WakeWordDetector {
 
   public setLocale(locale: string): void {
     const l = locale.toLowerCase().slice(0, 2);
-    this.locale = l === 'am' ? 'am-ET'
-      : l === 'ti' ? 'ti-ET'
-      : l === 'om' ? 'om-ET'
-      : l === 'so' ? 'so-ET'
-      : 'en-US';
+    // Chrome Web Speech API only supports am-ET for Ethiopic and en-US for Latin
+    this.locale = (l === 'am' || l === 'ti') ? 'am-ET' : 'en-US';
     if (this.recognition) {
       this.recognition.lang = this.locale;
     }
@@ -258,6 +257,11 @@ export class WebSpeechWakeDetector implements WakeWordDetector {
       };
 
       r.onerror = (event: any) => {
+        if (event.error === 'language-not-supported') {
+          this.locale = 'en-US';
+          if (this.recognition) this.recognition.lang = 'en-US';
+          return;
+        }
         if (event.error === 'not-allowed') {
           this.status = 'unsupported';
           this.listening = false;
@@ -287,7 +291,7 @@ export class WebSpeechWakeDetector implements WakeWordDetector {
 
     const lower = transcript.toLowerCase().trim();
     // Comprehensive multilingual wake word regex
-    const isWake = /(?:^|\b|\s)(?:hey\s*roha|hello\s*roha|hi\s*roha|ok(?:ay)?\s*roha|roha|rohaa|roxa|ሄይ\s*ሮሃ|ሰላም\s*ሮሃ|ሮሃ|ሮሀ|ሮሓ|akkam\s*roha|hayye\s*roha)(?:$|\b|\s|[.,!?])/iu.test(lower);
+    const isWake = WAKE_WORD_REGEX.test(lower);
 
     if (isWake) {
       const now = Date.now();

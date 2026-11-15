@@ -78,6 +78,55 @@ try {
     'Roha greeted in Somali on wake word "roha"'
   );
 
+  // 5. Test Wake Word activation in Tigrinya
+  await page.evaluate(async () => {
+    const roha = window.Roha || window.rohaInstance;
+    if (roha) {
+      roha.setLanguage('ti');
+      await roha.handleUserUtterance('ሮሃ');
+    }
+  });
+  await page.waitForTimeout(400);
+
+  const tiTranscript = await page.evaluate(() => {
+    return document.querySelector('[data-roha-control="roha-transcript"]')?.textContent || '';
+  });
+  console.log('Roha response to "ሮሃ" (Tigrinya):', tiTranscript);
+  ok(
+    tiTranscript.includes('ሰላም') && tiTranscript.includes('ፎርም') && tiTranscript.includes('ተዛረቡ'),
+    'Roha greeted in Tigrinya on wake word "ሮሃ"'
+  );
+
+  // 6. Test Wake Word activation in Afaan Oromoo
+  await page.evaluate(async () => {
+    const roha = window.Roha || window.rohaInstance;
+    if (roha) {
+      roha.setLanguage('om');
+      await roha.handleUserUtterance('roha');
+    }
+  });
+  await page.waitForTimeout(400);
+
+  const omTranscript = await page.evaluate(() => {
+    return document.querySelector('[data-roha-control="roha-transcript"]')?.textContent || '';
+  });
+  console.log('Roha response to "roha" (Afaan Oromoo):', omTranscript);
+  ok(
+    omTranscript.includes('Akkam') && omTranscript.includes('Foormii') && omTranscript.includes('dubbadhu'),
+    'Roha greeted in Afaan Oromoo on wake word "roha"'
+  );
+
+  // 7. Test Voice speak in Tigrinya, Afaan Oromoo, and Somali does not crash or error
+  const speakTests = await page.evaluate(() => {
+    const roha = window.Roha || window.rohaInstance;
+    if (!roha) return false;
+    const resTi = roha.readExecutor.speak('ሰላም፡ ከመይ ኣለኹም', 'ti');
+    const resOm = roha.readExecutor.speak('Akkam jirtu', 'om');
+    const resSo = roha.readExecutor.speak('Sidee tahay', 'so');
+    return resTi && resOm && resSo;
+  });
+  ok(speakTests, 'Voice speak successfully initiates for ti, om, and so');
+
 } catch (err) {
   console.error('Test error:', err);
   fail++;

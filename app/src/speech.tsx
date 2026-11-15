@@ -7,11 +7,15 @@ import { Icon } from './icons';
 import { spokenToDigits } from './digits';
 import { playRecorded, playQuestionAudio, stopAudio, isAudioPlaying } from './audio';
 
-/** Speak one string with the browser. Amharic uses matching device voice or TTS endpoint. */
+/** Speak one string with the browser. Ethiopian languages & Somali use matching device voice or TTS endpoint. */
 export function speak(text: string, lang: Lang) {
   stopAudio();
-  if (lang === 'am') {
-    const want = 'am';
+  const langCode = (lang as string).toLowerCase().slice(0, 2);
+  const isEthiopicScript = /[\u1200-\u137F]/u.test(text);
+  const isMulti = langCode === 'am' || langCode === 'ti' || langCode === 'om' || langCode === 'so' || isEthiopicScript;
+
+  if (isMulti) {
+    const want = langCode === 'am' ? 'am' : langCode === 'ti' ? 'ti' : langCode === 'om' ? 'om' : langCode === 'so' ? 'so' : 'am';
     const voice = 'speechSynthesis' in window ? window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want)) : null;
     if (voice && 'speechSynthesis' in window) {
       const u = new SpeechSynthesisUtterance(text);
@@ -22,7 +26,7 @@ export function speak(text: string, lang: Lang) {
       return true;
     }
     try {
-      const audio = new Audio(`/api/tts?lang=am&text=${encodeURIComponent(text)}`);
+      const audio = new Audio(`/api/tts?lang=${encodeURIComponent(want)}&text=${encodeURIComponent(text)}`);
       audio.play().catch(() => {});
       return true;
     } catch {
@@ -32,8 +36,7 @@ export function speak(text: string, lang: Lang) {
 
   if (!('speechSynthesis' in window)) return false;
   const u = new SpeechSynthesisUtterance(text);
-  const want = (lang as string) === 'am' ? 'am' : lang === 'om' ? 'om' : lang === 'ti' ? 'ti' : 'en';
-  const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want));
+  const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('en'));
   if (voice) {
     u.voice = voice;
     u.lang = voice.lang;

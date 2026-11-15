@@ -418,8 +418,8 @@ async function handleRequest(req, res) {
     const lang = (url.searchParams.get('lang') || 'am').trim().toLowerCase();
     // Map language for optimal phonetic pronunciation
     // Tigrinya uses Ge'ez script, phonetically shared with Amharic
-    // Afaan Oromoo uses Latin script (Qubee), phonetically mapped to East African Swahili phonemes
-    const ttsLang = lang === 'ti' ? 'am' : lang === 'om' ? 'sw' : lang;
+    // Afaan Oromoo and Somali use Latin script, phonetically mapped to East African Swahili phonemes
+    const ttsLang = lang === 'ti' ? 'am' : (lang === 'om' || lang === 'so') ? 'sw' : lang;
     console.log('[TTS Request]', { lang, ttsLang, text: text.slice(0, 80) });
     if (!text) return error(res, 400, 'text-required', 'Text parameter is required.');
     if (text.length > 2000) return error(res, 413, 'text-too-large', 'Text exceeds 2000 characters.');

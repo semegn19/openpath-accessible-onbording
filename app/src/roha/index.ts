@@ -36,6 +36,7 @@ import {
   PluggableWakeWordManager,
   WakeWordDetector,
   WebSpeechWakeDetector,
+  WAKE_WORD_REGEX,
 } from './integrations';
 import {
   LLMProvider,
@@ -312,8 +313,17 @@ export class RohaSDK {
     if (typeof window !== 'undefined') {
       const armWake = () => {
         this.readExecutor.unlock();
-        if (!this.wakeWordManager.isListening()) {
-          void this.wakeWordManager.enable();
+        void this.wakeWordManager.enable();
+        if (navigator.permissions?.query) {
+          navigator.permissions.query({ name: 'microphone' as any }).then((p) => {
+            if (p.state === 'granted') {
+              void this.voice.requestPermission().then((permitted) => {
+                if (permitted && this.voice.getState() !== 'listening') {
+                  this.voice.startListening(true, false);
+                }
+              });
+            }
+          }).catch(() => {});
         }
         window.removeEventListener('pointerdown', armWake);
         window.removeEventListener('keydown', armWake);
@@ -648,15 +658,17 @@ export class RohaSDK {
     });
 
     this.announce(greeting);
-    this.readExecutor.speak(greeting, this.locale, () => {
-      if (this.voice.getState() !== 'unpermitted') {
-        this.voice.startListening(true, false);
-      }
-    });
-
     if (this.assistantPanel) {
       this.assistantPanel.classList.remove('roha-hidden');
     }
+
+    this.readExecutor.speak(greeting, this.locale, () => {
+      void this.voice.requestPermission().then((permitted) => {
+        if (permitted) {
+          this.voice.startListening(true, false);
+        }
+      });
+    });
   }
 
   public wake(): void {
@@ -669,7 +681,7 @@ export class RohaSDK {
     this.readExecutor.unlock();
 
     // Wake word direct speech trigger
-    if (/^(?:roha|hey\s*roha|hello\s*roha|hi\s*roha|ሮሃ|ሮሀ|ሰላም\s*ሮሃ|akkam\s*roha|hayye\s*roha)[.!?]*$/iu.test(utterance.trim())) {
+    if (WAKE_WORD_REGEX.test(utterance.trim())) {
       this.handleWakeWordActivation();
       return;
     }
@@ -2098,13 +2110,19 @@ export class RohaSDK {
       <div id="roha-full-card" class="roha-card">
         <div class="roha-header">
           <h2 class="roha-title">${text('roha.title')}</h2>
-          <span class="roha-wake-pill" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:3px 8px;border-radius:12px;background:#eef2ff;color:#1e40af;font-weight:600;letter-spacing:0.02em;">🎙️ ${this.t({
+          <button id="roha-wake-trigger" type="button" class="roha-wake-pill" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:3px 8px;border-radius:12px;background:#eef2ff;color:#1e40af;font-weight:600;letter-spacing:0.02em;border:none;cursor:pointer;" title="${this.t({
+            en: 'Say "Roha" or click to wake',
+            am: '"ሮሃ" ይበሉ ወይም እዚህ ይጫኑ',
+            om: '"Roha" jedhaa ykn as tuqaa',
+            ti: '"ሮሃ" በሉ ወይ ኣብዚ ጠውቁ',
+            so: 'Dheh "Roha" ama riix halkan',
+          })}">🎙️ ${this.t({
             en: 'Say "Roha"',
             am: '"ሮሃ" ይበሉ',
             om: '"Roha" jedhaa',
             ti: '"ሮሃ" በሉ',
             so: 'Dheh "Roha"',
-          })}</span>
+          })}</button>
         </div>
         <p class="roha-subtitle">${text('roha.inlineIntro')}</p>
         <div class="roha-grid roha-top-actions">
@@ -2149,8 +2167,10 @@ export class RohaSDK {
     this.assistantPanel = panel;
     this.liveRegion = panel.querySelector('[data-roha-control="roha-live-region"]');
     const pill = panel.querySelector('[data-roha-control="roha-launcher-pill"]') as HTMLButtonElement;
+    const wakeTrigger = panel.querySelector('[data-roha-control="roha-wake-trigger"]') as HTMLButtonElement | null;
     const command = panel.querySelector<HTMLInputElement>('[data-roha-control="roha-command"]')!;
     pill.addEventListener('click', () => { command.focus(); this.handleWakeWordActivation(); });
+    wakeTrigger?.addEventListener('click', () => { command.focus(); this.handleWakeWordActivation(); });
     panel.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         this.requestVersion++; this.guide.reset(); this.readExecutor.stop(); this.voice.stopListening();
