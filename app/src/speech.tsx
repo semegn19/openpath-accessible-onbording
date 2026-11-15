@@ -65,7 +65,8 @@ export function ReadAloudButton({
           if (await playRecorded(lang, text)) return;
           // 2. The device's own voice fallback, if it has one for this language
           const ok = speak(text, lang);
-          setMsg(ok ? '' : c('voice.noVoice', lang));
+          if (ok) return;
+          setMsg(c('voice.noVoice', lang));
         }}
       >
         <Icon name="speaker" />{label}

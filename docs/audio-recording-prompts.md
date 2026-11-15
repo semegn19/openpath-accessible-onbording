@@ -23,6 +23,8 @@ id-document-image.am.mp3 : "የመታወቂያ ወይም የሰነድዎን ፎ�
 
 referral.am.mp3 : "ከአጋር ድርጅት ጋር መገናኘት ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ። ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።"
 
+review.am.mp3 : "መረጃዎን ይመልከቱ ያስገቡትን መረጃ ያረጋግጡ። ለማስተካከል ቀይር የሚለውን ይጫኑ። ዝግጁ ሲሆኑ ቀጣይ የሚለውን ይጫኑ።"
+
 onboard_submit.am.mp3 : "ማረጋገጫ መረጃዬ ለትምህርት ፕሮግራሙ እንዲውል ተስማምቻለሁ።"
 
 ### Amharic (አማርኛ) — Simple Words Mode (ቀላል ቃላት)
@@ -40,6 +42,8 @@ id-route.am.simple.mp3 : "መታወቂያ አለዎት? ይህ ማንነትዎ�
 id-document-image.am.simple.mp3 : "የመታወቂያ ወይም የሰነድ ፎቶ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ግልጽ ፎቶ ስቀሉ።"
 
 referral.am.simple.mp3 : "የአጋር እርዳታ ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ። አዎ፣ ስሜና ስልኬ ይሰጥ"
+
+review.am.simple.mp3 : "መረጃዎን ያረጋግጡ። ለማስተካከል ቀይርን ይጫኑ።"
 
 onboard_submit.am.simple.mp3 : "ለመጨረስ ዝግጁ ነዎት? መረጃዬ ለትምህርቴ እንዲውል ተስማምቻለሁ።"
 
@@ -59,6 +63,8 @@ id-document-image.om.mp3 : "Suuraa waraqaa eenyummaa ykn sanada keessanii kaasaa
 
 referral.om.mp3 : "Dhaabbata tumsaa wajjin walqunnamsiisuu Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaan koo fi bilbilli koo dhaabbata tumsaatti akka kennamu walii nan gala."
 
+review.om.mp3 : "Deebii keessan irra deebi'aa ilaalaa Oodeeffannoo galchtan mirkaneessaa. Sirreessuuf Jijjiiri kan jedhu cuqqaalaa. Yoo qophooftan Itti fufi kan jedhu cuqqaalaa."
+
 onboard_submit.om.mp3 : "Mirkaneessa Odeeffannoon koo sagantaa barumsaatiif akka oolu walii nan gala."
 
 ### Afaan Oromoo — Simple Words Mode (Jechoota Salphaa)
@@ -76,6 +82,8 @@ id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Eenyummaa keessan mirkaneess
 id-document-image.om.simple.mp3 : "Suuraa waraqaa ykn sanadaa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa ifa ta'e fe'aa."
 
 referral.om.simple.mp3 : "Gargaarsa tumsaa Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaa fi bilbilli koo haa kennamu"
+
+review.om.simple.mp3 : "Oodeeffannoo keessan mirkaneessaa. Sirreessuuf Jijjiiri cuqqaalaa."
 
 onboard_submit.om.simple.mp3 : "Xumuruuf qophiidhaa? Odeeffannoon koo haa galu"
 
@@ -95,6 +103,8 @@ id-document-image.ti.mp3 : "ናይ መታወቒ ወይ ናይ ሰነድኩም �
 
 referral.ti.mp3 : "ምስ መሻርኽቲ ትካል ምርኻብ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
 
+review.ti.mp3 : "መልስኹም ርኣዩ ዘእተውዎ ሓበሬታ ኣረጋግጹ። ንምእራም ቀይር ዝብል ጠውቑ። ድሉው ምስ ኮንኩም ቀጻሊ ዝብል ጠውቑ።"
+
 onboard_submit.ti.mp3 : "መረጋገጺ ሓበሬታይ ነቲ ናይ ትምህርቲ ፕሮግራም ክውዕል ተሰማሚዐ ኣለኹ።"
 
 ### Tigrinya (ትግርኛ) — Simple Words Mode (ቀለልቲ ቃላት)
@@ -112,6 +122,8 @@ id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መንነትኩም ን�
 id-document-image.ti.simple.mp3 : "ናይ መታወቒ ወይ ሰነድ ስእሊ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ንጹር ስእሊ ስደዱ።"
 
 referral.ti.simple.mp3 : "ሓገዝ መሻርኽቲ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። እወ፣ ስመይን ስልከይን ይወሃብ"
+
+review.ti.simple.mp3 : "ሓበሬታኹም ኣረጋግጹ። ንምእራም ቀይር ጠውቑ።"
 
 onboard_submit.ti.simple.mp3 : "ክትውድኡ ድሉዋት ዲኹም? ሓበሬታይ ንትምህርተይ ክውዕል ተሰማሚዐ ኣለኹ።"
 

@@ -667,6 +667,8 @@ function Shell({ schema }: { schema: Schema }) {
           {isReview ? (
             <>
               <ReadAloudButton
+                step={step}
+                simple={settings.simple}
                 text={reviewText(
                   steps, values, lang, settings.simple,
                   c('review.intro', lang),

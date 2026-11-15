@@ -19,6 +19,7 @@
  * missing file or a failed play all fall through to the fallback — never to silence.
  */
 import type { Lang } from './types';
+import audioIndex from '../public/audio/index.json';
 
 /** FNV-1a, 32-bit. Duplicated in scripts/audio-manifest.mjs — must stay identical. */
 const hash = (s: string): string => {
@@ -34,16 +35,21 @@ const hash = (s: string): string => {
 export const clipName = (lang: Lang, text: string): string => hash(`${lang}|${text.trim()}`);
 
 type Index = Record<string, string>;          // clipName → file name in /audio/
-let index: Index | null = null;
+let index: Index = (audioIndex && typeof audioIndex === 'object' ? audioIndex : {}) as Index;
 let loading: Promise<void> | null = null;
 let current: HTMLAudioElement | null = null;
 
 async function load(): Promise<void> {
-  if (index || loading) return loading ?? Promise.resolve();
+  if (index && Object.keys(index).length > 0) return Promise.resolve();
+  if (loading) return loading;
   loading = fetch('/audio/index.json', { cache: 'force-cache' })
     .then((r) => (r.ok ? r.json() : {}))
-    .then((j: unknown) => { index = (j && typeof j === 'object' ? j : {}) as Index; })
-    .catch(() => { index = {}; })
+    .then((j: unknown) => {
+      if (j && typeof j === 'object') {
+        index = { ...index, ...(j as Index) };
+      }
+    })
+    .catch(() => {})
     .finally(() => { loading = null; });
   return loading;
 }
@@ -159,6 +165,19 @@ export async function playQuestionAudio(opts: QuestionAudioOptions): Promise<boo
     if (file) {
       if (await playFile(file)) return true;
     }
+  }
+
+  // 3. Direct file fallback probe in /audio/ if not mapped in index:
+  const directFiles: string[] = [];
+  if (opts.simple) {
+    directFiles.push(`${opts.stepId}.${opts.lang}.simple.mp3`);
+    if (formPrefix) directFiles.push(`${formPrefix}_${opts.stepId}.${opts.lang}.simple.mp3`);
+  }
+  directFiles.push(`${opts.stepId}.${opts.lang}.mp3`);
+  if (formPrefix) directFiles.push(`${formPrefix}_${opts.stepId}.${opts.lang}.mp3`);
+
+  for (const f of directFiles) {
+    if (await playFile(f)) return true;
   }
 
   return false;
