@@ -61,6 +61,7 @@ const smsRes = await fetch(`${API}/api/sms/send-resume`, {
     answers: { language: 'am', name: 'አበበ በቀለ', phone: '0920904620' },
     currentStep: 3,
     lang: 'am',
+    simulate: true,
   }),
 });
 const smsData = await smsRes.json();

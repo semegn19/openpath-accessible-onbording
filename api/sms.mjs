@@ -45,10 +45,28 @@ export function formatResumeMessage(resumeUrl, lang = 'am') {
   return MESSAGES[lang] || MESSAGES.am;
 }
 
-export async function sendSms({ to, text, key = process.env.SMS_KEY }) {
+export async function sendSms({
+  to,
+  text,
+  key = process.env.SMS_KEY,
+  simulate = (process.env.SMS_SIMULATE === 'true' || process.env.SMS_MODE === 'simulation')
+}) {
   const recipient = normalizePhone(to);
   if (!recipient) {
     return { ok: false, error: 'invalid-recipient', message: 'No valid recipient phone number provided.' };
+  }
+
+  // If simulation is enabled, do not make any upstream requests or burn credits
+  if (simulate) {
+    return {
+      ok: true,
+      status: 'simulated',
+      to: recipient,
+      msisdn: toMsisdn(recipient),
+      text,
+      provider: 'smsethiopia',
+      description: 'Simulated delivery (testing mode - no credits consumed)',
+    };
   }
 
   const effectiveKey = key || process.env.SMS_KEY || 'JO3V47AAP4X1NFOY3Q2CLZAKQGMSGSNYYG7JH5KJ';

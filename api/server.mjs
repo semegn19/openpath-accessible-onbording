@@ -602,7 +602,8 @@ const server = createServer(async (req, res) => {
     const resumeUrl = `${origin}/${slug}?resume=${token}`;
     const lang = body.lang || cp?.answers?.language || 'am';
     const text = formatResumeMessage(resumeUrl, lang);
-    const smsResult = await sendSms({ to: phone, text });
+    const simulate = Boolean(body.simulate || req.headers['x-simulate-sms'] || process.env.SMS_SIMULATE === 'true' || process.env.SMS_MODE === 'simulation');
+    const smsResult = await sendSms({ to: phone, text, simulate });
     return send(res, 200, {
       ok: true,
       token,
