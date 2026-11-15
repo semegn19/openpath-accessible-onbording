@@ -84,6 +84,42 @@ paths:
                     items: { $ref: '#/components/schemas/FormSummary' }
                     required: [forms]
 
+  /jobs:
+    get:
+      tags: [jobs]
+      operationId: listJobs
+      summary: List available jobs with their workplace accommodation commitments
+      description: |
+        Career gateway endpoint supporting the private "support I need" job filter.
+        Returns job postings with employer-committed accommodations (e.g. remote work,
+        step-free entrance, screen-reader software). Filter matching happens client-side;
+        zero disability data is collected or transmitted.
+      responses:
+        '200':
+          description: Active job postings and accommodation commitments.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  jobs:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, title, company, category, accommodations]
+                      properties:
+                        id: { type: string }
+                        title: { type: object }
+                        company: { type: string }
+                        category: { type: string }
+                        accommodations:
+                          type: array
+                          items: { type: string }
+                        location: { type: object }
+                        description: { type: object }
+
   /forms/{formId}:
     get:
       tags: [forms]

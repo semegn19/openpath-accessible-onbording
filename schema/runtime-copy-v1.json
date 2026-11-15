@@ -471,6 +471,60 @@
       "en": "The support answers are not in this payload — they never left the phone.",
       "om": "Deebiin gargaarsaa tarree kana keessa hin jiru — bilbila kana keessaa matumaa hin baane.",
       "ti": "ናይ ሓገዝ መልሲ ኣብዚ ዝርዝር የለን — ካብዚ ስልኪ ፈጺሙ ኣይወጸን።"
+    },
+    "jobFilter.toggle": {
+      "am": "በሥራ ቦታ ድጋፍ ዓይነት ሥራ ይፈልጉ",
+      "en": "Filter jobs by workplace accommodations",
+      "om": "Hojiiwwan mijaawina isaaniitiin calalaa",
+      "ti": "ስራሕ ብመመዓራረዪ ቦታ ስራሕ ምረጹ"
+    },
+    "jobFilter.title": {
+      "am": "የሥራ ቦታ ድጋፍ ማጣሪያ",
+      "en": "Workplace Support Job Filter",
+      "om": "Calaltuu Mijaawina Hojii",
+      "ti": "ናይ ስራሕ ቦታ መመዓራረዪ መጻረዪ"
+    },
+    "jobFilter.privacy": {
+      "am": "የግል ማጣሪያ፦ የመረጡት ድጋፍ በአሳሽዎ ውስጥ ብቻ ይቆያል፤ ለአሠሪው እንደ አካል ጉዳት አይገለጽም።",
+      "en": "Private filter: Your accommodation choices stay on your device and are never disclosed as a disability to employers.",
+      "om": "Calaltuu dhuunfaa: Filannoon mijaawinaa meeshaa keessan qofarra tura; akka miidhamatti qacaraatti hin beeksisamu.",
+      "ti": "ናይ ውልቂ መጻረዪ፦ ዝመረጽክምዎ መመዓራረዪ ኣብ መሳርሒኹም ጥራይ ይተርፍ፤ ንቀጣሪ ከም ጉድኣት ኣካል ኣይግለጽን።"
+    },
+    "jobFilter.all": {
+      "am": "ሁሉንም አሳይ",
+      "en": "Show all",
+      "om": "Hunda agarsiisi",
+      "ti": "ኩሉ ኣርእይ"
+    },
+    "jobFilter.clear": {
+      "am": "ማጣሪያውን አጽዳ",
+      "en": "Clear filters",
+      "om": "Calaltuu haqaa",
+      "ti": "መጻረዪ ኣጽሪ"
+    },
+    "jobFilter.applyForThis": {
+      "am": "ለዚህ ሥራ አመልክት",
+      "en": "Apply for this job",
+      "om": "Hojii kanaaf iyyadhaa",
+      "ti": "ነዚ ስራሕ ኣመልክቱ"
+    },
+    "jobFilter.applyingFor": {
+      "am": "የሚያመለክቱት ለ፦",
+      "en": "Applying for:",
+      "om": "Waan iyyattan:",
+      "ti": "እተመልክቱሉ ዘለኹም፦"
+    },
+    "jobFilter.matchesCount": {
+      "am": "{count} የሚስማሙ ክፍት የሥራ ቦታዎች ተገኝተዋል",
+      "en": "{count} matching job(s) found",
+      "om": "Hojiiwwan wal siman {count} argamaniiru",
+      "ti": "{count} ዝሰማምዑ ክፍቲ ስራሕቲ ተረኺቦም"
+    },
+    "jobFilter.noMatches": {
+      "am": "የመረጧቸውን ሁሉንም ድጋፎች የሚያሟላ ሥራ አልተገኘም። ማጣሪያውን በመቀነስ ይሞክሩ።",
+      "en": "No jobs match all selected accommodations. Try removing some filters.",
+      "om": "Hojiin mijaawina hunda guutu hin argamne. Calaltuu muraasa hir'isaatii yaalaa.",
+      "ti": "ንኹሉ ዝመረጽክምዎ መመዓራረዪ ዘማልእ ስራሕ ኣይተረኽበን። ገለ መጻረዪታት ኣውጺእኩም ፈትኑ።"
     }
   }
 }

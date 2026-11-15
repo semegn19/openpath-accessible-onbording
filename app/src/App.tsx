@@ -14,6 +14,7 @@ import { flush, type SendState } from './api';
 import * as outbox from './outbox';
 
 import { c } from './copy';
+import { JobAccommodationFilter, type LocalizedJob } from './JobFilter';
 import onboard from './schemas/savanna-onboard-v1.json';
 import job from './schemas/savanna-job-v1.json';
 import employer from './schemas/employer-accommodations-v1.json';
@@ -43,6 +44,8 @@ function Shell({ schema }: { schema: Schema }) {
   const { settings, setSettings, step, steps, index, values, errors, errorList } = f;
   const lang = settings.lang;
   const isEmbed = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('embed') === '1' || window.parent !== window);
+  const [selectedJob, setSelectedJob] = useState<LocalizedJob | null>(null);
+  const [jobFilterOpen, setJobFilterOpen] = useState(false);
 
   // In embed mode, take initial language from ?lang= query param if present
   useEffect(() => {
@@ -606,6 +609,16 @@ function Shell({ schema }: { schema: Schema }) {
               {c('resume.startAgain', lang)}
             </button>
           </div>
+        )}
+
+        {schema.id === 'savanna-job-v1' && !f.submitted && (
+          <JobAccommodationFilter
+            lang={lang}
+            selectedJob={selectedJob}
+            onSelectJob={setSelectedJob}
+            open={jobFilterOpen}
+            onToggleOpen={() => setJobFilterOpen((prev) => !prev)}
+          />
         )}
 
         <ErrorSummary

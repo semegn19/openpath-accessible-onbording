@@ -112,6 +112,7 @@ for (const file of files) {
   }
 
   if (s.kind === 'runtime-copy') { validateRuntimeCopy(file, s); continue; }
+  if (s.kind === 'jobs-catalog') { continue; }
 
   for (const k of ['id', 'version', 'defaultLang', 'langs', 'title', 'steps']) {
     if (s[k] === undefined) err(file, null, 'E02', `missing top-level "${k}"`);

@@ -390,6 +390,49 @@ const server = createServer(async (req, res) => {
     });
   }
 
+  if (path === '/api/jobs' && req.method === 'GET') {
+    const jobsFile = join(SCHEMA_DIR, 'jobs.json');
+    let seedJobs = [];
+    if (existsSync(jobsFile)) {
+      try {
+        const raw = JSON.parse(readFileSync(jobsFile, 'utf8'));
+        seedJobs = Array.isArray(raw?.jobs) ? raw.jobs : [];
+      } catch {}
+    }
+    const employerJobs = [];
+    for (const [id, sub] of store.entries()) {
+      if (sub.formId === 'employer-accommodations-v1' && sub.answers) {
+        const a = sub.answers;
+        employerJobs.push({
+          id: `emp-${id}`,
+          title: {
+            am: a.role || 'ክፍት የሥራ ቦታ',
+            en: a.role || 'Open Position',
+            om: a.role || 'Hojii Banaa',
+            ti: a.role || 'ክፍቲ ስራሕ',
+          },
+          company: a.company || 'አሠሪ ድርጅት',
+          category: a['job-category'] || 'other',
+          accommodations: Array.isArray(a.accommodations) ? a.accommodations : [],
+          location: {
+            am: 'አዲስ አበባ',
+            en: 'Addis Ababa',
+            om: 'Finfinnee',
+            ti: 'ኣዲስ ኣበባ',
+          },
+          description: {
+            am: 'በአሠሪው የተመዘገበ ክፍት የሥራ ቦታ።',
+            en: 'Verified employer opportunity with accommodation commitments.',
+            om: 'Hojii banaa qacaraadhaan galmaa\'e.',
+            ti: 'ብቀጣሪ ዝተመዝገበ ክፍቲ ናይ ስራሕ ዕድል።',
+          },
+        });
+      }
+    }
+    const allJobs = [...seedJobs, ...employerJobs];
+    return send(res, 200, { jobs: allJobs, count: allJobs.length });
+  }
+
   const formJsonLdMatch = path.match(/^\/api\/forms\/([^/]+)\/jsonld$/);
   if (formJsonLdMatch && req.method === 'GET') {
     const s = schemas.get(decodeURIComponent(formJsonLdMatch[1]));
