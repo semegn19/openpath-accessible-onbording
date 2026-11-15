@@ -170,7 +170,7 @@ export const WAKE_WORD_REGEX = /(?:^|\b|\s)(?:hey\s*roha|hello\s*roha|hi\s*roha|
 export class WebSpeechWakeDetector implements WakeWordDetector {
   public readonly id = 'webspeech-keyword-matcher';
   public readonly name = 'Background & Foreground Speech Keyword Matcher';
-  public readonly isBackgroundSupported = true;
+  public readonly isBackgroundSupported = false;
 
   private status: WakeDetectorStatus = 'idle';
   private listening: boolean = false;
@@ -196,7 +196,6 @@ export class WebSpeechWakeDetector implements WakeWordDetector {
   public async start(): Promise<boolean> {
     this.listening = true;
     this.status = 'listening';
-    this.startBackgroundRecognition();
     return true;
   }
 
@@ -227,60 +226,6 @@ export class WebSpeechWakeDetector implements WakeWordDetector {
 
   public removeWakeWordListener(callback: WakeWordCallback): void {
     this.listeners = this.listeners.filter((l) => l !== callback);
-  }
-
-  private startBackgroundRecognition(): void {
-    if (!this.listening || typeof window === 'undefined') return;
-    const Recognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!Recognition) return;
-
-    if (this.recognition) {
-      try { this.recognition.abort(); } catch {}
-      this.recognition = null;
-    }
-
-    try {
-      const r = new Recognition();
-      this.recognition = r;
-      r.continuous = true;
-      r.interimResults = true;
-      r.lang = this.locale;
-
-      r.onresult = (event: any) => {
-        if (!this.listening) return;
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0]?.transcript || '';
-          if (transcript) {
-            this.evaluateTranscript(transcript);
-          }
-        }
-      };
-
-      r.onerror = (event: any) => {
-        if (event.error === 'language-not-supported') {
-          this.locale = 'en-US';
-          if (this.recognition) this.recognition.lang = 'en-US';
-          return;
-        }
-        if (event.error === 'not-allowed') {
-          this.status = 'unsupported';
-          this.listening = false;
-        }
-      };
-
-      r.onend = () => {
-        if (this.listening) {
-          clearTimeout(this.restartTimeout);
-          this.restartTimeout = setTimeout(() => {
-            if (this.listening) this.startBackgroundRecognition();
-          }, 300);
-        }
-      };
-
-      r.start();
-    } catch {
-      // Speech recognition might require a user gesture on some browsers
-    }
   }
 
   /**

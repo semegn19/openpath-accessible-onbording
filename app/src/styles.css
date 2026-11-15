@@ -717,3 +717,24 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   padding: 2rem 1rem;
   color: var(--op-text-muted);
 }
+
+/* ---- Roha side layout for medium-large and desktop screens ----------------- */
+@media (min-width: 56rem) {
+  body.roha-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem) !important;
+    align-items: start !important;
+    gap: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+  body.roha-layout > #root {
+    min-width: 0 !important;
+  }
+  .roha-aside {
+    position: sticky !important;
+    top: 1rem !important;
+    margin: 1.5rem 0 !important;
+    max-height: calc(100vh - 2rem) !important;
+    overflow-y: auto !important;
+  }
+}

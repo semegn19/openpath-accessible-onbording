@@ -302,34 +302,21 @@ export class RohaSDK {
     this.isMounted = true;
     this.updateVoiceStatusUI(this.voice.getState());
 
-    // Start Wake-Word detection ("Roha")
+    // Configure Wake-Word detector locale
     const wakeDetector = this.wakeWordManager.getDetector();
     if (wakeDetector && 'setLocale' in wakeDetector) {
       (wakeDetector as any).setLocale(this.locale);
     }
-    void this.wakeWordManager.enable();
 
-    // Ensure wake word activation binds seamlessly on first gesture if browser blocks early listening
+    // Unlock audio speech synthesis on first user interaction
     if (typeof window !== 'undefined') {
-      const armWake = () => {
+      const unlockAudio = () => {
         this.readExecutor.unlock();
-        void this.wakeWordManager.enable();
-        if (navigator.permissions?.query) {
-          navigator.permissions.query({ name: 'microphone' as any }).then((p) => {
-            if (p.state === 'granted') {
-              void this.voice.requestPermission().then((permitted) => {
-                if (permitted && this.voice.getState() !== 'listening') {
-                  this.voice.startListening(true, false);
-                }
-              });
-            }
-          }).catch(() => {});
-        }
-        window.removeEventListener('pointerdown', armWake);
-        window.removeEventListener('keydown', armWake);
+        window.removeEventListener('pointerdown', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
       };
-      window.addEventListener('pointerdown', armWake, { once: true });
-      window.addEventListener('keydown', armWake, { once: true });
+      window.addEventListener('pointerdown', unlockAudio, { once: true });
+      window.addEventListener('keydown', unlockAudio, { once: true });
     }
     if (!options.language) {
       this.languageObserver = new MutationObserver(() => {
@@ -2147,7 +2134,7 @@ export class RohaSDK {
             <button class="roha-btn-primary-blue" type="submit">${text('roha.send')}</button>
           </div>
         </form>
-        <label data-ai-consent-label class="roha-consent-label" hidden><input type="checkbox" data-ai-consent> ${text('roha.aiConsent')}</label>
+        <label data-ai-consent-label class="roha-consent-label"><input type="checkbox" data-ai-consent checked style="accent-color: #002b56; min-width: 20px; min-height: 20px; cursor: pointer;"> ${text('roha.aiConsent')}</label>
       </div>`;
     // IDs must be unique when more than one component is installed.
     for (const element of Array.from(panel.querySelectorAll('[id]'))) {
@@ -2163,7 +2150,7 @@ export class RohaSDK {
     }
     panel.id = `roha-assistant-panel-${this.instanceId}`;
     document.body.appendChild(panel);
-    if (document.querySelector('body > #root')) document.body.classList.add('roha-layout');
+    document.body.classList.add('roha-layout');
     this.assistantPanel = panel;
     this.liveRegion = panel.querySelector('[data-roha-control="roha-live-region"]');
     const pill = panel.querySelector('[data-roha-control="roha-launcher-pill"]') as HTMLButtonElement;
@@ -2212,14 +2199,16 @@ export class RohaSDK {
         const descEl = panel.querySelector('[data-ai-description]');
         if (descEl) descEl.textContent = config.provider === 'disabled' ? text('roha.aiDisabled') : rc('roha.aiSelected', this.locale, { provider: providerNames[config.provider] || text('roha.aiCustom'), model: config.model });
         const consentLabel = panel.querySelector<HTMLElement>('[data-ai-consent-label]');
-        if (consentLabel) consentLabel.hidden = config.provider === 'disabled';
+        if (consentLabel) consentLabel.hidden = false;
         serverProvider = provider; this.setLLMProvider(provider);
         consent.disabled = false;
-        if (autoConsent && config.provider !== 'disabled') {
-          consent.checked = true;
-          provider.consent(true);
-        }
+        consent.checked = true;
+        provider.consent(true);
       } catch {
+        consent.disabled = false;
+        consent.checked = true;
+        const consentLabel = panel.querySelector<HTMLElement>('[data-ai-consent-label]');
+        if (consentLabel) consentLabel.hidden = false;
         if (!autoConsent) this.announce(text('roha.notUnderstood'));
       }
     };
