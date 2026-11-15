@@ -47,6 +47,7 @@ await page.waitForTimeout(150);
 const bigOn = await page.evaluate(() => document.querySelector('.op-shell')?.getAttribute('data-big'));
 console.log('  prefs→settings wiring (data-big):', bigOn);
 await prefs.getByRole('checkbox').nth(1).uncheck();
+await page.waitForTimeout(200);
 await audit('2b prefs selected');
 await next();
 await page.waitForTimeout(200);
