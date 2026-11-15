@@ -597,7 +597,13 @@ export class RohaSDK {
 
     if (hasAi && this.currentMap) {
       try {
-        this.updateTranscriptUI(this.locale === 'am' ? 'ሮሃ እያሰበች ነው...' : 'Roha is thinking...', false);
+        const thinkingText = this.t({
+          am: 'ሮሃ እያሰበች ነው...',
+          om: 'Roohaan yaadaa jira...',
+          ti: 'ሮሃ ትሓስብ ኣላ...',
+          en: 'Roha is thinking...',
+        });
+        this.updateTranscriptUI(thinkingText, false);
         const llmIntent = await llm.interpret(utterance, this.currentMap, context);
         if (requestVersion !== this.requestVersion) return;
         if (llmIntent) {
@@ -1664,7 +1670,7 @@ export class RohaSDK {
     panel.setAttribute('data-roha-ignore', 'true');
     panel.setAttribute('data-roha-assistant', 'true');
     
-    panel.lang = this.locale === 'am' ? 'am' : 'en';
+    panel.lang = this.locale;
     panel.setAttribute('aria-label', rc('roha.title', this.locale));
     if (!document.querySelector('link[data-roha-styles]')) {
       const sheet = document.createElement('link');

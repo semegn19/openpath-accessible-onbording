@@ -6,13 +6,15 @@ export type RohaCopyKey = keyof typeof copy.strings;
 export function rc(key: RohaCopyKey, locale: string, values: Record<string, string | number> = {}): string {
   const lang = locale.toLowerCase().split('-')[0];
   let template = '';
+  const entry = (copy.strings[key] || {}) as Record<string, string>;
 
-  if (lang === 'om' && OM_COPY[key]) {
-    template = OM_COPY[key];
-  } else if (lang === 'ti' && TI_COPY[key]) {
-    template = TI_COPY[key];
+  if (lang === 'om') {
+    template = OM_COPY[key] || entry['om'] || entry['en'] || '';
+  } else if (lang === 'ti') {
+    template = TI_COPY[key] || entry['ti'] || entry['en'] || '';
+  } else if (lang === 'en') {
+    template = entry['en'] || '';
   } else {
-    const entry = copy.strings[key] as Record<string, string>;
     template = entry[lang] || entry['am'] || entry['en'] || '';
   }
 
