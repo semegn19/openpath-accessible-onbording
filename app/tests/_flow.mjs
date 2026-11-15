@@ -68,14 +68,15 @@ export async function answer(page, {
     refugee: /ስደተኛ|Refugee/,
     kebele: LABELS.kebele,
     other: /ሌላ ሰነድ|Another document/,
+    refer: /አጋር|partner/i,
   }[route] || LABELS.fayda;
   await page.getByRole('radio', { name: routeLabel }).check();
   await next(page);
   await page.waitForTimeout(150);
 
-  // 6. conditional: Fayda ID number, or document upload (optional)
-  if (route === 'fayda') {
-    if (idValue !== null) await page.locator('input[type="text"]').first().fill(idValue);
+  // 6. conditional: document photo upload, or partner referral consent
+  if (route === 'refer') {
+    await page.getByRole('checkbox').first().check();
   }
   await next(page);
   await page.waitForTimeout(150);

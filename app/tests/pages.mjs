@@ -70,7 +70,7 @@ await p.goto(ORIGIN + '/job', { waitUntil: 'networkidle' });
 await p.goBack(); await p.waitForTimeout(300);
 ok((await p.locator('.op-brand').innerText()).trim() === onboardTitle, 'browser back', await p.evaluate(() => location.pathname));
 
-/* ---------- branching: fayda asks for ID number, kebele/other asks for photo ---------- */
+/* ---------- branching: fayda & kebele ask for photo, refer asks for partner consent ---------- */
 const walk = async (routeIndex) => {
   await p.goto(ORIGIN + '/onboard', { waitUntil: 'load' });
   await p.evaluate(() => localStorage.clear());
@@ -83,7 +83,7 @@ const walk = async (routeIndex) => {
     await p.locator('.op-input').first().fill(v, { timeout: 2000 });
     await next(); await p.waitForTimeout(150);                     // name, phone
   }
-  await p.locator('.op-option input').nth(routeIndex).check({ timeout: 2000 });   // 0: fayda, 2: kebele
+  await p.locator('.op-option input').nth(routeIndex).check({ timeout: 2000 });   // 0: fayda, 2: kebele, 4: refer
   await next(); await p.waitForTimeout(250);
   return {
     type: await p.locator('.op-root').getAttribute('data-step-type'),
@@ -92,11 +92,14 @@ const walk = async (routeIndex) => {
   };
 };
 const pickedFayda = await walk(0);
-ok(pickedFayda.type === 'text',
-   'choosing Fayda asks for ID number (text)', `${pickedFayda.type}: ${pickedFayda.heading}`);
+ok(pickedFayda.type === 'file',
+   'choosing Fayda asks for photo upload (file)', `${pickedFayda.type}: ${pickedFayda.heading}`);
 const pickedKebele = await walk(2);
 ok(pickedKebele.type === 'file',
    'choosing Kebele ID asks for photo upload (file)', `${pickedKebele.type}: ${pickedKebele.heading}`);
+const pickedPartner = await walk(4);
+ok(pickedPartner.type === 'statement',
+   'choosing partner referral shows consent statement', `${pickedPartner.type}: ${pickedPartner.heading}`);
 
 await b.close();
 console.log(`\n${fail ? 'FAIL' : 'PASS'} — ${fail} problem(s)`);

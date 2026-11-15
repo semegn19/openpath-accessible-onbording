@@ -54,7 +54,9 @@ for (const form of FORMS) {
           || /ማረጋገጫ|Confirmation/.test(document.querySelector('h1')?.textContent || ''),
         stepType: root?.getAttribute('data-step-type') ?? '',
         isReview: Boolean(root?.querySelector('.op-review')),
-        finished: document.body.textContent?.includes('ምዝገባው ተጠናቅቋል') || document.body.textContent?.includes('Sign-up complete'),
+        finished: Boolean(document.querySelector('.op-done'))
+          || document.body.textContent?.includes('ምዝገባው ተጠናቅቋል')
+          || document.body.textContent?.includes('Sign-up complete'),
         type: root?.querySelector('input[type=radio]') ? 'radio'
           : root?.querySelector('input[type=checkbox]') ? 'checkbox'
           : root?.querySelector('select') ? 'select'
@@ -75,6 +77,7 @@ for (const form of FORMS) {
       for (const el of root.querySelectorAll('input, textarea')) {
         if (el.type === 'radio') { if (!root.querySelector('input[type=radio]:checked')) el.click(); continue; }
         if (el.type === 'checkbox') { if (!el.checked && root.querySelectorAll('input[type=checkbox]').length === 1) el.click(); continue; }
+        if (el.type === 'file') continue;
         if (el.value) continue;
         if (el.type === 'tel') setNative(el, '0912345678');
         else if (el.type === 'email') setNative(el, 'sara@example.com');

@@ -17,7 +17,7 @@ const ok = (c, label, extra = '') => { if (!c) fail++; console.log(`${c ? '✓' 
 let child = null;
 const up = await fetch(`${API}/health`).then((r) => r.ok).catch(() => false);
 if (!up) {
-  child = spawn('node', ['../api/server.mjs'], {
+  child = spawn('node', [fileURLToPath(new URL('../../api/server.mjs', import.meta.url))], {
     env: { ...process.env, PORT: '8080', DATA_DIR: mkdtempSync(join(tmpdir(), 'openpath-e2e-')),
            SCHEMA_DIR: fileURLToPath(new URL('../../schema', import.meta.url)), RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0' },
     stdio: 'ignore', detached: false,

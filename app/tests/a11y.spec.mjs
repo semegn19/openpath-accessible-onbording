@@ -79,30 +79,30 @@ console.log('  h1:', (await h1()).trim());
 const routeOptions = await page.locator('.op-fieldset input[type="radio"]').count();
 console.log('  routes offered:', routeOptions);
 await audit('5 id-route');
-await page.getByRole('radio', { name: /የፋይዳ|Fayda/ }).check();
-await next();
-await page.waitForTimeout(200);
-
-console.log('\n=== 6 id number (conditional) ===');
-console.log('  h1:', (await h1()).trim());
-await audit('6 id value');
-await page.locator('input[type="text"]').first().fill('3910028475');
-
-// go back and switch route to kebele: tests conditional switch to file upload
-await page.getByRole('button', { name: /ተመለስ|Back/ }).click();
-await page.waitForTimeout(200);
 await page.getByRole('radio', { name: /የቀበሌ|Kebele/ }).check();
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 6b id document photo (conditional, file upload) ===');
+console.log('\n=== 6 id document photo (conditional, file upload) ===');
 console.log('  h1:', (await h1()).trim());
 const micOnFile = await page.getByRole('button', { name: /በድምጽ መስጠት|Speak your answer/ }).count();
 const readOnFile = await page.getByRole('button', { name: /ያዳምጡ|አንብብልኝ|Read the question/ }).count();
 console.log('  voice button on file (must be 0):', micOnFile, '| read-aloud (must be 1):', readOnFile);
 if (micOnFile !== 0) failures++;
 if (readOnFile !== 1) failures++;
-await audit('6b file upload');
+await audit('6 file upload');
+
+// go back and switch route to refer: tests conditional switch to partner referral
+await page.getByRole('button', { name: /ተመለስ|Back/ }).click();
+await page.waitForTimeout(200);
+await page.getByRole('radio', { name: /አጋር|partner/i }).check();
+await next();
+await page.waitForTimeout(200);
+
+console.log('\n=== 6b partner referral statement (conditional) ===');
+console.log('  h1:', (await h1()).trim());
+await audit('6b partner referral');
+await page.getByRole('checkbox').first().check();
 await next();
 await page.waitForTimeout(200);
 

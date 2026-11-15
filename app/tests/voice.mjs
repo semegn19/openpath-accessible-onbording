@@ -22,6 +22,12 @@ const installSpeechStub = () => {
     configurable: true,
     value: class { constructor(t) { this.text = t; } },
   });
+  // Force Web Speech fallback in this test so the synthesized text can be verified
+  window.Audio = class {
+    play() { return Promise.reject(new Error('web-speech-test')); }
+    pause() {}
+    addEventListener(evt, cb) { if (evt === 'error') cb(); }
+  };
 };
 await p.addInitScript(installSpeechStub);
 const ok = (cond, label, extra = '') => { if (!cond) fail++; console.log(`${cond ? '✓' : '✗'} ${label}${extra ? ' → ' + extra : ''}`); };
