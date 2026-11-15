@@ -137,10 +137,10 @@
       "ti": "ናይ ኢትዮጵያ ዓመተ ምሕረት — ንኣብነት 1988"
     },
     "file.demoNote": {
-      "am": "በዚህ ሙከራ ውስጥ ፋይሉ አይላክም። ስሙ ብቻ ይታያል።",
-      "en": "In this demo the file is not uploaded. Only its name is used.",
-      "om": "Yaalii kana keessatti faayilli hin olkaa'amu. Maqaan isaa qofti fayyadama.",
-      "ti": "ኣብዚ ፈተነ እዚ እቲ ፋይል ኣይስደድን እዩ። ስሙ ጥራይ እዩ ዝርአ።"
+      "am": "ፎቶው ተጨምቆ በምዝገባ መረጃዎ ውስጥ ይቀመጣል።",
+      "en": "The photo is compressed and stored with your registration details.",
+      "om": "Suuraan salphatee odeeffannoo galmee keessan wajjin qabama.",
+      "ti": "እቲ ስእሊ ተቐኒሱ ምስ ናይ ምዝገባ ሓበሬታኹም ይዕቀብ።"
     },
     "file.compressed": {
       "am": "ፎቶው ተጨምቋል",

@@ -170,7 +170,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             reader.onload = () => {
               const img = new Image();
               img.onload = () => {
-                const maxDim = 800;
+                const maxDim = 400;
                 let { width, height } = img;
                 if (width > maxDim || height > maxDim) {
                   if (width > height) {
@@ -186,7 +186,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx?.drawImage(img, 0, 0, width, height);
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 const sizeKb = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
                 onChange({
                   name: file.name,
