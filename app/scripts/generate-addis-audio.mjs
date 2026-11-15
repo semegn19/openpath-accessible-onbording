@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const PROMPTS_FILE = fileURLToPath(new URL('../../docs/audio-recording-prompts.md', import.meta.url));
 const AUDIO_DIR = fileURLToPath(new URL('../public/audio/', import.meta.url));
 const ENV_FILE = fileURLToPath(new URL('../../api/.env', import.meta.url));
-const ALT_ENV_FILE = fileURLToPath(new URL('../src/.env', import.meta.url));
+const ALT_ENV_FILE = fileURLToPath(new URL('../../.env', import.meta.url));
 
 function getApiKey() {
   if (process.env.ADDIS_AI_API_KEY) return process.env.ADDIS_AI_API_KEY;

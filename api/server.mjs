@@ -22,8 +22,8 @@ import { aiRegistry } from './ai/registry.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// Auto-load .env from api/.env or app/src/.env to populate any unset variables
-for (const envPath of [join(here, '.env'), join(here, '..', 'app', 'src', '.env')]) {
+// Auto-load .env from api/.env or repo root .env to populate any unset variables
+for (const envPath of [join(here, '.env'), join(here, '..', '.env')]) {
   if (existsSync(envPath)) {
     try {
       const lines = readFileSync(envPath, 'utf8').split('\n');
