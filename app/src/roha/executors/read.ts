@@ -89,12 +89,16 @@ export class ReadExecutor {
 
     if (!text || !text.trim()) return false;
 
-    // Detect if text contains Amharic/Ethiopic script ([\u1200-\u137F]) or locale is Amharic
-    const hasAmharic = /[\u1200-\u137F]/u.test(text) || locale.startsWith('am');
+    // Use /api/tts for Ethiopian languages: Amharic, Tigrinya, and Afaan Oromoo
+    const langCode = locale.toLowerCase().slice(0, 2);
+    const isEthiopicScript = /[\u1200-\u137F]/u.test(text);
+    const effectiveLang = (langCode === 'ti' || (isEthiopicScript && langCode !== 'am')) ? 'ti'
+      : (langCode === 'om' ? 'om' : (langCode === 'am' || isEthiopicScript) ? 'am' : langCode);
+    const useApiTts = isEthiopicScript || langCode === 'am' || langCode === 'ti' || langCode === 'om';
 
-    if (hasAmharic && typeof window !== 'undefined') {
+    if (useApiTts && typeof window !== 'undefined') {
       try {
-        const ttsUrl = `/api/tts?lang=am&text=${encodeURIComponent(text.trim())}`;
+        const ttsUrl = `/api/tts?lang=${encodeURIComponent(effectiveLang)}&text=${encodeURIComponent(text.trim())}`;
         this.unlock();
         this.isSpeaking = true;
         this.statusCallback?.({ speaking: true, text });

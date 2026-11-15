@@ -188,7 +188,9 @@ export class RohaSDK {
         : options.root || (document.querySelector('#main') as HTMLElement) || document.body;
 
     this.rootElement = root;
-    this.locale = options.language || (document.documentElement.lang.startsWith('am') ? 'am' : 'en');
+    const initialDocLang = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
+    const initialLocale: Locale = (initialDocLang === 'am' || initialDocLang === 'ti' || initialDocLang === 'om') ? initialDocLang : 'en';
+    this.locale = options.language || initialLocale;
     this.voice.setLocale(this.locale);
     this.conversation.setLocale(this.locale);
     this.smsService.setLocale(this.locale);
@@ -245,7 +247,9 @@ export class RohaSDK {
     this.updateVoiceStatusUI(this.voice.getState());
     if (!options.language) {
       this.languageObserver = new MutationObserver(() => {
-        this.setLanguage(document.documentElement.lang.startsWith('am') ? 'am' : 'en');
+        const docLang = (document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
+        const detected: Locale = (docLang === 'am' || docLang === 'ti' || docLang === 'om') ? docLang : 'en';
+        this.setLanguage(detected);
       });
       this.languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     }
@@ -509,7 +513,7 @@ export class RohaSDK {
           const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
             '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input, #op-main input:not([type="checkbox"]):not([type="radio"]):not([type="file"])'
           );
-          if (textInput && textInput.offsetParent !== null) {
+          if (textInput) {
             return { success: this.fillTextInput(textInput, val) };
           }
         }
@@ -599,9 +603,10 @@ export class RohaSDK {
         if (llmIntent) {
           const aiMessage = (llmIntent as any).message || (llmIntent.payload as any)?.message;
           const isForwardNav = llmIntent.intent === 'navigate' && (llmIntent.payload as any)?.direction === 'forward';
-          const activeErr = isForwardNav ? this.getVisibleFormError() : null;
+          const activeErr = this.getVisibleFormError();
+          const mentionsForward = /(?:ወደ ቀጣይ|ቀጣይ ደረጃ|ቀጥል|sadarkaa itti aanu|ቀጻሊ|moving to the next|going to next)/iu.test(aiMessage || '');
 
-          if (isForwardNav && activeErr) {
+          if ((isForwardNav || mentionsForward) && activeErr) {
             this.speakAndFocusError(activeErr);
             return;
           }
@@ -653,6 +658,14 @@ export class RohaSDK {
     }
   }
 
+  private t(dict: { am: string; om: string; ti: string; en: string }): string {
+    const l = (this.locale || 'en').toLowerCase().slice(0, 2);
+    if (l === 'om') return dict.om;
+    if (l === 'ti') return dict.ti;
+    if (l === 'am') return dict.am;
+    return dict.en;
+  }
+
   public getReviewItems(): Array<{ question: string; answer: string; editBtn: HTMLButtonElement | null }> {
     const rows = Array.from(document.querySelectorAll<HTMLElement>('#op-main .op-review-row, dl.op-review div.op-review-row'));
     return rows.map(row => {
@@ -670,18 +683,23 @@ export class RohaSDK {
 
   /** Build a brief 1–2 sentence summary of the current step for auto-reading. */
   private buildStepSummary(mode: 'normal' | 'simple' = 'normal'): string {
-    const isAm = this.locale === 'am';
     const reviewItems = this.getReviewItems();
     if (reviewItems.length > 0) {
       const itemSummaries = reviewItems.map(item => `${item.question}፦ «${item.answer}»`).join('፤ ');
       if (mode === 'simple') {
-        return isAm
-          ? `የሰጧቸው መልሶች፦ ${itemSummaries}። ለመቀየር «ስም ቀይር» ይበሉ። ትክክል ከሆነ «ቀጥል» ይበሉ።`
-          : `Your answers: ${itemSummaries}. To change, say "Edit name". If correct, say "Continue".`;
+        return this.t({
+          am: `የሰጧቸው መልሶች፦ ${itemSummaries}። ለመቀየር «ስም ቀይር» ይበሉ። ትክክል ከሆነ «ቀጥል» ይበሉ።`,
+          om: `Deebiiwwan keessan: ${itemSummaries}. Jijjiiruuf "maqaa jijjiiri" jedhaa. Sirrii yoo ta'e "itti fufi" jedhaa.`,
+          ti: `ዝሃብኩምዎም መልስታት፦ ${itemSummaries}። ንምቕያር «ስም ቀይር» በሉ። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ።`,
+          en: `Your answers: ${itemSummaries}. To change, say "Edit name". If correct, say "Continue".`
+        });
       }
-      return isAm
-        ? `መረጃዎን ይመልከቱ። የሰጧቸው መልሶች፦ ${itemSummaries}። ማስተካከል የሚፈልጉት ካለ «ስም ቀይር» ወይም «ስልክ አስተካክል» ማለት ይችላሉ። ትክክል ከሆነ «ቀጥል» ይበሉ።`
-        : `Review your information. Your answers: ${itemSummaries}. To edit, say "Edit name" or "Change phone". If correct, say "Continue".`;
+      return this.t({
+        am: `መረጃዎን ይመልከቱ። የሰጧቸው መልሶች፦ ${itemSummaries}። ማስተካከል የሚፈልጉት ካለ «ስም ቀይር» ወይም «ስልክ አስተካክል» ማለት ይችላሉ። ትክክል ከሆነ «ቀጥል» ይበሉ።`,
+        om: `Oodeeffannoo keessan ilaalaa. Deebiiwwan keessan: ${itemSummaries}. Yoo sirreessuu barbaaddan "maqaa jijjiiri" ykn "bilbila jijjiiri" jechuu dandeessu. Sirrii yoo ta'e "itti fufi" jedhaa.`,
+        ti: `ሓበሬታኹም ርኣዩ። ዝሃብኩምዎም መልስታት፦ ${itemSummaries}። ከተዐርዩ እንተደሊኹም «ስም ቀይር» ወይ «ስልኪ ቀይር» ክትብሉ ትኽእሉ ኢኹም። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ።`,
+        en: `Review your information. Your answers: ${itemSummaries}. To edit, say "Edit name" or "Change phone". If correct, say "Continue".`
+      });
     }
 
     const h1 = document.querySelector('#op-main h1, main h1, h1')?.textContent?.trim() || '';
@@ -703,45 +721,81 @@ export class RohaSDK {
       const question = h1 || desc;
       if (!question) return '';
       if (choices.length > 0) {
-        return isAm
-          ? `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። አማራጮቹ፡ ${choices.join('፣ ')} ናቸው። ከእነዚህ አንዱን ይምረጡ።`
-          : `Listen carefully. The question is: "${question}". Choices are: ${choices.join(', ')}. Please choose one.`;
+        return this.t({
+          am: `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። አማራጮቹ፡ ${choices.join('፣ ')} ናቸው። ከእነዚህ አንዱን ይምረጡ።`,
+          om: `Xiyyeeffadhaa. Gaaffiin: "${question}" dha. Filannoowwan: ${choices.join(', ')} dha. Mee tokko filadhaa.`,
+          ti: `ኣተኵሩ። ሕቶኡ፡ "${question}" እዩ። ኣማራጺታት፡ ${choices.join('፣ ')} እዮም። ሓደ ምረጹ።`,
+          en: `Listen carefully. The question is: "${question}". Choices are: ${choices.join(', ')}. Please choose one.`
+        });
       }
       if (fileInput) {
         if (hasFilePreview) {
-          return isAm
-            ? 'ፎቶ ተመርጧል። ለመቀጠል «ቀጣይ» ይበሉ፣ ወይም ለመቀየር «ፎቶ አንሳ» ይበሉ።'
-            : 'Photo selected. Say "Next" to continue, or "Take photo" to replace it.';
+          return this.t({
+            am: 'ፎቶ ተመርጧል። ለመቀጠል «ቀጣይ» ይበሉ፣ ወይም ለመቀየር «ፎቶ አንሳ» ይበሉ።',
+            om: 'Suuraan filatameera. Itti fufuuf "itti fufi" jedhaa, ykn jijjiiruuf "suuraa kaasi" jedhaa.',
+            ti: 'ፎቶ ተመሪጹ ኣሎ። ንምቕጻል «ቀጽል» በሉ፣ ወይ ንምቕያር «ፎቶ ኣልዕል» በሉ።',
+            en: 'Photo selected. Say "Next" to continue, or "Take photo" to replace it.'
+          });
         }
-        return isAm
-          ? `የመታወቂያ ወይም የሰነድ ፎቶ ያስፈልጋል። ፎቶ ለማንሳት «ፎቶ አንሳ» ወይም «ፋይል ምረጥ» ይበሉ።`
-          : `ID or document photo needed. Say "Take photo" or "Upload file" to choose.`;
+        return this.t({
+          am: `የመታወቂያ ወይም የሰነድ ፎቶ ያስፈልጋል። ፎቶ ለማንሳት «ፎቶ አንሳ» ወይም «ፋይል ምረጥ» ይበሉ።`,
+          om: `Suuraan waraqaa eenyummaa ykn sanadaa ni barbaachisa. Suuraa kaasuuf "suuraa kaasi" ykn "faayilii filadhu" jedhaa.`,
+          ti: `ናይ መታወቂያ ወይ ሰነድ ፎቶ የድሊ። ፎቶ ንምልዓል «ፎቶ ኣልዕል» ወይ «ፋይል ምረጽ» በሉ።`,
+          en: `ID or document photo needed. Say "Take photo" or "Upload file" to choose.`
+        });
       }
       if (textInput) {
-        return isAm
-          ? `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። መልስዎን በድምጽ ይንገሩኝ።`
-          : `Listen carefully. The question is: "${question}". You can tell me your answer by speaking.`;
+        return this.t({
+          am: `ትኩረት ያድርጉ። ጥያቄው፡ "${question}" ነው። መልስዎን በድምጽ ይንገሩኝ።`,
+          om: `Xiyyeeffadhaa. Gaaffiin: "${question}" dha. Deebii keessan sagaleen natti himaa.`,
+          ti: `ኣተኵሩ። ሕቶኡ፡ "${question}" እዩ። መልስኹም ብድምጺ ንገሩኒ።`,
+          en: `Listen carefully. The question is: "${question}". You can tell me your answer by speaking.`
+        });
       }
-      return isAm
-        ? `ጥያቄው፡ "${question}" ነው። ቀላሉን እንከተል።`
-        : `The question is: "${question}". Let me know if you need help.`;
+      return this.t({
+        am: `ጥያቄው፡ "${question}" ነው። ቀላሉን እንከተል።`,
+        om: `Gaaffiin: "${question}" dha. Salphaatti haa deebisnu.`,
+        ti: `ሕቶኡ፡ "${question}" እዩ። ብቐሊሉ ንኺድ።`,
+        en: `The question is: "${question}". Let me know if you need help.`
+      });
     }
 
     const parts: string[] = [];
     if (h1) parts.push(h1);
     if (desc && desc !== h1 && desc.length < 180) parts.push(desc);
     if (choices.length > 0) {
-      parts.push(isAm ? `አማራጮቹ፡ ${choices.join('፣ ')}።` : `Options: ${choices.join(', ')}.`);
+      parts.push(this.t({
+        am: `አማራጮቹ፡ ${choices.join('፣ ')}።`,
+        om: `Filannoowwan: ${choices.join(', ')}.`,
+        ti: `ኣማራጺታት፡ ${choices.join('፣ ')}።`,
+        en: `Options: ${choices.join(', ')}.`
+      }));
     } else if (fileInput) {
       if (hasFilePreview) {
-        parts.push(isAm ? 'ሰነድ ወይም ፎቶ ተመርጧል። ለመቀጠል «ቀጣይ» ይበሉ።' : 'Document photo selected. Say "Next" to continue.');
+        parts.push(this.t({
+          am: 'ሰነድ ወይም ፎቶ ተመርጧል። ለመቀጠል «ቀጣይ» ይበሉ።',
+          om: 'Sanadni ykn suuraan filatameera. Itti fufuuf "itti fufi" jedhaa.',
+          ti: 'ሰነድ ወይ ፎቶ ተመሪጹ ኣሎ። ንምቕጻል «ቀጽል» በሉ።',
+          en: 'Document photo selected. Say "Next" to continue.'
+        }));
       } else {
-        parts.push(isAm ? 'ፎቶ ለማንሳት ወይም ሰነድ ለመስቀል «ፎቶ አንሳ» ወይም «ፋይል ምረጥ» ይበሉ።' : 'To take a photo or upload, say "Take photo" or "Upload file".');
+        parts.push(this.t({
+          am: 'ፎቶ ለማንሳት ወይም ሰነድ ለመስቀል «ፎቶ አንሳ» ወይም «ፋይል ምረጥ» ይበሉ።',
+          om: 'Suuraa kaasuuf ykn sanada olkaa\'uuf "suuraa kaasi" ykn "faayilii filadhu" jedhaa.',
+          ti: 'ፎቶ ንምልዓል ወይ ሰነድ ንምስቓል «ፎቶ ኣልዕል» ወይ «ፋይል ምረጽ» በሉ።',
+          en: 'To take a photo or upload, say "Take photo" or "Upload file".'
+        }));
       }
     } else if (textInput) {
-      parts.push(isAm ? 'መልስዎን በድምጽ መናገር ወይም መጻፍ ይችላሉ።' : 'You can speak or type your answer.');
+      parts.push(this.t({
+        am: 'መልስዎን በድምጽ መናገር ወይም መጻፍ ይችላሉ።',
+        om: 'Deebii keessan sagaleen dubbachuu ykn barreessuu dandeessu.',
+        ti: 'መልስኹም ብድምጺ ክትዛረቡ ወይ ክትጽሕፉ ትኽእሉ ኢኹም።',
+        en: 'You can speak or type your answer.'
+      }));
     }
-    return parts.join(isAm ? '። ' : '. ');
+    const sep = (this.locale === 'om' || this.locale === 'en') ? '. ' : '። ';
+    return parts.join(sep);
   }
 
   /** Auto-read the current step briefly when the heading changes (new step). */
@@ -782,11 +836,13 @@ export class RohaSDK {
   }
 
   public speakAndFocusError(errorMsg: string): void {
-    const isAm = this.locale === 'am';
     const cleanErr = errorMsg.replace(/^[⚠•\s]+/, '').trim();
-    const alertMsg = isAm
-      ? `ስህተት ተከስቷል፦ ${cleanErr}። እባክዎ አስተካክለው እንደገና ይሞክሩ።`
-      : `There is an error: ${cleanErr}. Please correct it before continuing.`;
+    const alertMsg = this.t({
+      am: `ስህተት ተከስቷል፦ ${cleanErr}። እባክዎ አስተካክለው እንደገና ይሞክሩ።`,
+      om: `Dogoggorri uumameera: ${cleanErr}. Mee sirreessaa irra deebi'aa yaalaa.`,
+      ti: `ስሕተት ተረኺቡ ኣሎ፦ ${cleanErr}። በጃኹም ኣዐርዮም ደጊምኩም ፈትኑ።`,
+      en: `There is an error: ${cleanErr}. Please correct it before continuing.`,
+    });
     this.announce(alertMsg);
     this.readExecutor.speak(alertMsg, this.locale);
 
@@ -804,8 +860,6 @@ export class RohaSDK {
   }
 
   private advanceToNextStep(): void {
-    const isAm = this.locale === 'am';
-
     // 1. If an error is already visible on the screen, announce it and do not advance
     const existingError = this.getVisibleFormError();
     if (existingError) {
@@ -815,19 +869,25 @@ export class RohaSDK {
 
     // 2. If on the phone step, verify the phone number is valid and complete before submitting
     const phoneInput = document.querySelector<HTMLInputElement>(
-      '#op-main input[type="tel"], #op-main input[name="phone"], #op-main input#phone'
+      '#op-main input[type="tel"], #op-main input[name="phone"], #op-main input#phone, input[type="tel"]'
     );
-    if (phoneInput && phoneInput.offsetParent !== null) {
+    if (phoneInput) {
       const rawVal = phoneInput.value.trim().replace(/[\s\-()]/g, '');
-      const isCompletePhone = /^(?:0[79]\d{8}|\+251[79]\d{8}|251[79]\d{8}|[79]\d{8})$/.test(rawVal);
+      const isCompletePhone = /^(?:0[79]\d{8}|\+251[79]\d{8}|251[79]\d{8})$/.test(rawVal);
       if (!isCompletePhone) {
-        const msg = isAm
-          ? (rawVal.length === 0
-              ? 'እባክዎ መጀመሪያ ስልክ ቁጥርዎን ያስገቡ። ምሳሌ፦ 0912345678'
-              : `ስልክ ቁጥሩ አልተሟላም ወይም ትክክል አይደለም። 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ ወይም ያስተካክሉ።`)
-          : (rawVal.length === 0
-              ? 'Please enter your phone number first. Example: 0912345678'
-              : `The phone number is incomplete or invalid. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`);
+        const msg = rawVal.length === 0
+          ? this.t({
+              am: 'እባክዎ መጀመሪያ ስልክ ቁጥርዎን ያስገቡ። ምሳሌ፦ 0912345678',
+              om: 'Mee jalqaba lakkoofsa bilbila keessanii galchaa. Fakkeenyaaf: 0912345678',
+              ti: 'በጃኹም መጀመርታ ናይ ስልኪ ቍጽርኹም ኣእትዉ። ንኣብነት፦ 0912345678',
+              en: 'Please enter your phone number first. Example: 0912345678',
+            })
+          : this.t({
+              am: `ስልክ ቁጥሩ አልተሟላም ወይም ትክክል አይደለም። 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ ወይም ያስተካክሉ።`,
+              om: `Lakkoofsi bilbilaa guutuu miti ykn sirrii miti. Dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678). Mee dijitoota hafan natti himaa ykn sirreessaa.`,
+              ti: `ናይ ስልኪ ቍጽሪ ምሉእ ኣይኮነን ወይ ትኽክል ኣይኮነን። 10 ኣሃዛት ክህልዎ ኣለዎ (ንኣብነት፦ 0912345678)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ ወይ ኣዐርዩ።`,
+              en: `The phone number is incomplete or invalid. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`,
+            });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         try { phoneInput.focus(); } catch {}
@@ -836,13 +896,17 @@ export class RohaSDK {
     }
 
     // 3. If on a statement / consent step with an unchecked required checkbox, alert user
-    const requiredCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>(
-      '#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"][required]'
-    )).filter(cb => cb.offsetParent !== null && !cb.checked);
+    const isConsentScreen = document.querySelector('main[data-step-type="statement"], main[data-step-type="submit"], #op-main[data-step-type="statement"], #op-main[data-step-type="submit"]') !== null;
+    const requiredCheckboxes = isConsentScreen ? Array.from(document.querySelectorAll<HTMLInputElement>(
+      '#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]'
+    )).filter(cb => !cb.checked) : [];
     if (requiredCheckboxes.length > 0) {
-      const msg = isAm
-        ? 'እባክዎ ከመቀጠልዎ በፊት ስምምነትዎን ያረጋግጡ ወይም «ተስማምቻለሁ» ይበሉ።'
-        : 'Please confirm your consent or say "I agree" before proceeding.';
+      const msg = this.t({
+        am: 'እባክዎ ከመቀጠልዎ በፊት ስምምነትዎን ያረጋግጡ ወይም «ተስማምቻለሁ» ይበሉ።',
+        om: 'Mee utuu hin ceyin dura waliigaltee keessan mirkaneessaa ykn "walii nan gala" jedhaa.',
+        ti: 'በጃኹም ቅድሚ ምቕጻልኩም ስምምዕነትኩም ኣረጋግጹ ወይ «ተሰማሚዐ» በሉ።',
+        en: 'Please confirm your consent or say "I agree" before proceeding.',
+      });
       this.announce(msg);
       this.readExecutor.speak(msg, this.locale);
       try { requiredCheckboxes[0].focus(); } catch {}
@@ -875,7 +939,12 @@ export class RohaSDK {
       }
 
       if (newStepHeading !== currentStepHeading) {
-        const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
+        const msg = this.t({
+          am: 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።',
+          om: 'Gara sadarkaa itti aanuutti ce\'aa jirra.',
+          ti: 'ናብ ቀጻሊ ደረጃ ንኸይድ ኣለና።',
+          en: 'Moving to the next step.',
+        });
         this.announce(msg);
         this.rescan();
         this.autoReadStep(400);
@@ -884,10 +953,9 @@ export class RohaSDK {
   }
 
   private selectOptionAndAdvance(targetLabel: HTMLElement, input: HTMLInputElement, fallbackText = ''): boolean {
-    const isAm = this.locale === 'am';
     const isLangStep = input.name === 'language' ||
       document.querySelector('main[data-step-type="language"]') !== null ||
-      input.value === 'am' || input.value === 'en';
+      input.value === 'am' || input.value === 'en' || input.value === 'om' || input.value === 'ti';
 
     if (isLangStep) {
       const targetLang = input.value || 'am';
@@ -895,39 +963,10 @@ export class RohaSDK {
       if (topLangBtn) { try { topLangBtn.click(); } catch {} }
     }
 
-    if (input.type === 'checkbox') {
-      if (!input.checked) {
-        input.click();
-        if (!input.checked) {
-          try {
-            const proto = window.HTMLInputElement.prototype;
-            const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
-            if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
-            if (setChecked) {
-              setChecked.call(input, true);
-            } else {
-              input.checked = true;
-            }
-          } catch {}
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      }
-    } else {
+    if (!input.checked) {
       try {
-        const proto = window.HTMLInputElement.prototype;
-        const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
-        if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
-        if (setChecked) {
-          setChecked.call(input, false);
-          setChecked.call(input, true);
-        } else input.checked = true;
+        input.click();
       } catch {}
-
-      try { targetLabel.click(); } catch {}
-      try { input.click(); } catch {}
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     const labelSpan = targetLabel.querySelector('.op-option-label') || targetLabel;
@@ -936,10 +975,25 @@ export class RohaSDK {
     const cleanChosen = rawText.replace(/^[A-Za-z0-9ሀ-ፐ]\s*[\.\)፦\-:]\s*/u, '').trim() || fallbackText || input.value;
     // For spoken announcements, shorten parenthetical text: e.g. "ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)" -> "ሰነድ የለኝም"
     const spokenChosen = cleanChosen.replace(/\s*\(.*?\)\s*/g, ' ').replace(/\s+/g, ' ').trim() || cleanChosen;
-    const isConsent = input.type === 'checkbox' && (input.value === 'agree-share' || targetLabel.classList.contains('op-check') || cleanChosen.includes('ተስማምቻለሁ') || cleanChosen.includes('ይሰጥ'));
+    const isConsent = input.type === 'checkbox' && (
+      input.value === 'agree-share' ||
+      targetLabel.classList.contains('op-check') ||
+      cleanChosen.includes('ተስማምቻለሁ') || cleanChosen.includes('ይሰጥ') ||
+      cleanChosen.includes('walii') || cleanChosen.includes('ተሰማሚዐ')
+    );
     const msg = isConsent
-      ? (isAm ? 'ስምምነትዎ ተረጋግጧል።' : 'Consent confirmed.')
-      : (isAm ? `«${spokenChosen}» ተመርጧል።` : `"${spokenChosen}" selected.`);
+      ? this.t({
+          am: 'ስምምነትዎ ተረጋግጧል።',
+          om: 'Waliigalteen keessan mirkanaa\'eera.',
+          ti: 'ስምምዕነትኩም ተረጋጊጹ ኣሎ።',
+          en: 'Consent confirmed.',
+        })
+      : this.t({
+          am: `«${spokenChosen}» ተመርጧል።`,
+          om: `"${spokenChosen}" filatameera.`,
+          ti: `«${spokenChosen}» ተመሪጹ ኣሎ።`,
+          en: `"${spokenChosen}" selected.`,
+        });
 
     this.announce(msg);
     this.readExecutor.speak(msg, this.locale);
@@ -1006,7 +1060,6 @@ export class RohaSDK {
   }
 
   private fillTextInput(textInput: HTMLInputElement | HTMLTextAreaElement, val: string): boolean {
-    const isAm = this.locale === 'am';
     const isPhone = textInput.type === 'tel' ||
       textInput.name === 'phone' ||
       textInput.id === 'phone' ||
@@ -1058,17 +1111,26 @@ export class RohaSDK {
 
     let msg: string;
     if (isPhone && isPhoneIncomplete) {
-      msg = isAm
-        ? `«${finalVal}» የተሟላ ስልክ ቁጥር አይደለም። ስልክ ቁጥር 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`
-        : `"${finalVal}" is incomplete. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`;
+      msg = this.t({
+        am: `«${finalVal}» የተሟላ ስልክ ቁጥር አይደለም። ስልክ ቁጥር 10 አሃዝ መሆን አለበት (ለምሳሌ፦ 0912345678)። እባክዎ የቀሩትን አሃዞች ይንገሩኝ።`,
+        om: `"${finalVal}" lakkoofsa bilbilaa guutuu miti. Lakkoofsi bilbilaa dijitii 10 qabaachuu qaba (fakkeenyaaf 0912345678). Mee dijitoota hafan natti himaa.`,
+        ti: `«${finalVal}» ምሉእ ናይ ስልኪ ቍጽሪ ኣይኮነን። ናይ ስልኪ ቍጽሪ 10 ኣሃዛት ክህልዎ ኣለዎ (ንኣብነት፦ 0912345678)። በጃኹም ዝተረፉ ኣሃዛት ንገሩኒ።`,
+        en: `"${finalVal}" is incomplete. Ethiopian phone numbers must have 10 digits (e.g. 0912345678). Please tell me the rest of the digits.`,
+      });
     } else if (isPhone) {
-      msg = isAm
-        ? `ስልክ ቁጥር «${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`
-        : `Phone number "${finalVal}" is complete. If correct, say "Next" to continue.`;
+      msg = this.t({
+        am: `ስልክ ቁጥር «${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`,
+        om: `Lakkoofsi bilbilaa "${finalVal}" guutameera. Sirrii yoo ta'e "itti fufi" jedhaa ykn sirreessaa.`,
+        ti: `ናይ ስልኪ ቍጽሪ «${finalVal}» ተመሊኡ ኣሎ። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ ወይ ኣዐርይዎ።`,
+        en: `Phone number "${finalVal}" is complete. If correct, say "Next" to continue.`,
+      });
     } else {
-      msg = isAm
-        ? `«${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`
-        : `Entered "${finalVal}". If correct, say "Next" to continue.`;
+      msg = this.t({
+        am: `«${finalVal}» ተሞልቷል። ትክክል ከሆነ «ቀጣይ» ይበሉ ወይም ያርሙት።`,
+        om: `"${finalVal}" galmeeffameera. Sirrii yoo ta'e "itti fufi" jedhaa ykn sirreessaa.`,
+        ti: `«${finalVal}» ተመሊኡ ኣሎ። ቅኑዕ እንተኾይኑ «ቀጽል» በሉ ወይ ኣዐርይዎ።`,
+        en: `Entered "${finalVal}". If correct, say "Next" to continue.`,
+      });
     }
 
     this.announce(msg);
@@ -1088,28 +1150,30 @@ export class RohaSDK {
     const raw = utterance.trim();
     if (!raw) return false;
     const lower = raw.toLowerCase();
-    const isAm = this.locale === 'am' || /[\u1200-\u137F]/.test(raw);
 
     // 0. Consent & Agreement for statement/consent screens (e.g. referral agreement to share name/phone)
-    const isConsentPhrase = /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን|ይሰጥ|አዎ\s*(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ይሰጥ)?|እሺ\s*(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ይሰጥ)?|i\s*agree|agree|i\s*consent|consent|yes\s*(?:i\s*agree)?|walii\s*nan\s*gala|walii\s*galeera|ተሰማሚዐ)/iu.test(lower) ||
-      (/(?:^|\s|[፣፤፥።፡,.\?!])(?:አዎ|እሺ|yes|ok|okay|eyyee|እወ)(?:$|\s|[፣፤፥።፡,.\?!])/iu.test(lower) && Boolean(document.querySelector('#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]')));
+    const isConsentPhrase = /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ፈቃደኛ\s*ነኝ|ስምምነት|ስምምነቴን|ይሰጥ|ተሰማሚዐ|ተሰማሚዐ\s*ኣለኹ|ይወሃብ|ሕራይ|walii\s*nan\s*gala|walii\s*galeera|eeyyee|eeyyeen|tole|haa\s*kennamu|i\s*agree|agree|i\s*consent|consent|yes)/iu.test(lower) ||
+      (/(?:^|\s|[፣፤፥።፡,.\?!])(?:አዎ|እሺ|yes|ok|okay|eyyee|eeyyeen|እወ|ሕራይ)(?:$|\s|[፣፤፥።፡,.\?!])/iu.test(lower) && Boolean(document.querySelector('#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]')));
 
     if (isConsentPhrase) {
       const consentLabel = document.querySelector<HTMLElement>('#op-main label.op-check, #op-main .op-options label');
       const consentCheckbox = consentLabel?.querySelector<HTMLInputElement>('input[type="checkbox"]') ||
         document.querySelector<HTMLInputElement>('#op-main input[type="checkbox"]');
       if (consentCheckbox && consentLabel) {
-        return this.selectOptionAndAdvance(consentLabel, consentCheckbox, isAm ? 'ስምምነት' : 'Consent');
+        return this.selectOptionAndAdvance(consentLabel, consentCheckbox, this.t({ am: 'ስምምነት', om: 'Waliigaltee', ti: 'ስምምዕነት', en: 'Consent' }));
       }
     }
 
     // 0b. Refusal / Decline on consent screens
-    if (/(?:አልስማማም|አልፈልግም|አይሆንም|አልፈቅድም|disagree|decline|don'?t\s*agree)/iu.test(lower)) {
+    if (/(?:አልስማማም|አልፈልግም|አይሆንም|አልፈቅድም|ኣይሰማማዕን|ኣይደልን|ኣይፋልን|walii\s*hin\s*galu|hin\s*barbaadu|lakki|disagree|decline|don'?t\s*agree)/iu.test(lower)) {
       const consentCheckbox = document.querySelector<HTMLInputElement>('#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]');
       if (consentCheckbox) {
-        const msg = isAm
-          ? 'ስምምነት ካልሰጡ ወደ ኋላ ተመልሰን ሌላ አማራጭ መምረጥ እንችላለን። ወደ ኋላ እየተመለስን ነው።'
-          : 'If you do not agree, we can go back and choose another option. Going back.';
+        const msg = this.t({
+          am: 'ስምምነት ካልሰጡ ወደ ኋላ ተመልሰን ሌላ አማራጭ መምረጥ እንችላለን። ወደ ኋላ እየተመለስን ነው።',
+          om: 'Waliigaltee yoo hin kennine gara duubatti deebinee filannoo biraa filachuu dandeenya. Gara duubatti deebi\'aa jirra.',
+          ti: 'ስምምዕነት እንተዘይሂብኩም ንድሕሪት ተመሊስና ካልእ ኣማራጺ ክንመርጽ ንኽእል ኢና። ንድሕሪት ንምለስ ኣለና።',
+          en: 'If you do not agree, we can go back and choose another option. Going back.',
+        });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back');
@@ -1122,7 +1186,7 @@ export class RohaSDK {
     const reviewItems = this.getReviewItems();
     if (reviewItems.length > 0) {
       // 1. User asks to list or read all answered questions
-      if (/(?:ዘርዝር|አንብብ|አንብቢ|አንብቢልኝ|ዝርዝር|መልሶቼን|የመለስኩትን|ምን\s*መለስኩ|የመዘገብኩትን|ምን\s*መዘገብኩ|read\s*answers|list\s*answers|what\s*did\s*i\s*answer|my\s*answers|review\s*answers)/iu.test(lower)) {
+      if (/(?:ዘርዝር|አንብብ|አንብቢ|አንብቢልኝ|ዝርዝር|መልሶቼን|የመለስኩትን|ምን\s*መለስኩ|የመዘገብኩትን|ምን\s*መዘገብኩ|ዝመለስክዎ\s*ንገረኒ|እንታይ\s*መሊሰ|መልስታተይ|deebii\s*koo|tarreessi|deebiiwwan\s*koo|read\s*answers|list\s*answers|what\s*did\s*i\s*answer|my\s*answers|review\s*answers)/iu.test(lower)) {
         const summary = this.buildStepSummary('normal');
         this.announce(summary);
         this.readExecutor.speak(summary, this.locale);
@@ -1130,65 +1194,90 @@ export class RohaSDK {
       }
 
       // 2. Targeted inquiries about specific answers
-      if (/(?:ስሜ\s*(?:ማን|ምን)|ስሜ\s*ምን\s*ተብሏል|ስም\s*ምን\s*ነው|ስሜን\s*ንገረኝ|ስሜ\s*ማነው|what\s*is\s*my\s*name)/iu.test(lower)) {
-        const item = reviewItems.find(i => i.question.includes('ስም') || i.question.toLowerCase().includes('name'));
+      if (/(?:ስሜ\s*(?:ማን|ምን)|ስሜ\s*ምን\s*ተብሏል|ስም\s*ምን\s*ነው|ስሜን\s*ንገረኝ|ስሜ\s*ማነው|ስመይ\s*መን|ስመይ\s*መን\s*እዩ|ስመይ\s*ንገረኒ|maqaan\s*koo\s*eenyu|maqaa\s*koo|maqaan\s*koo\s*maali|what\s*is\s*my\s*name)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ስም') || i.question.includes('ስመይ') || i.question.toLowerCase().includes('name') || i.question.toLowerCase().includes('maqaa'));
         if (item) {
-          const msg = isAm ? `የተመዘገበው ስምዎ «${item.answer}» ነው።` : `Your registered name is "${item.answer}".`;
+          const msg = this.t({
+            am: `የተመዘገበው ስምዎ «${item.answer}» ነው።`,
+            om: `Maqaan galmaa'e "${item.answer}" dha.`,
+            ti: `ዝተመዝገበ ስምኩም «${item.answer}» እዩ።`,
+            en: `Your registered name is "${item.answer}".`,
+          });
           this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
         }
       }
-      if (/(?:ስልኬ\s*(?:ስንት|ምን)|ስልክ\s*ቁጥሬ|ስልኬ\s*ስንት\s*ነው|ስልኬን\s*ንገረኝ|what\s*is\s*my\s*phone)/iu.test(lower)) {
-        const item = reviewItems.find(i => i.question.includes('ስልክ') || i.question.toLowerCase().includes('phone'));
+      if (/(?:ስልኬ\s*(?:ስንት|ምን)|ስልክ\s*ቁጥሬ|ስልኬ\s*ስንት\s*ነው|ስልኬን\s*ንገረኝ|ናይ\s*ስልኪ\s*ቍጽረይ|ስልከይ\s*ክንደይ|ስልከይ\s*ንገረኒ|lakkoofsi\s*bilbila\s*koo|bilbila\s*koo|what\s*is\s*my\s*phone)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ስልክ') || i.question.includes('ስልኪ') || i.question.toLowerCase().includes('phone') || i.question.toLowerCase().includes('bilbila'));
         if (item) {
-          const msg = isAm ? `የተመዘገበው ስልክ ቁጥርዎ «${item.answer}» ነው።` : `Your registered phone number is "${item.answer}".`;
+          const msg = this.t({
+            am: `የተመዘገበው ስልክ ቁጥርዎ «${item.answer}» ነው።`,
+            om: `Lakkoofsi bilbilaa galmaa'e "${item.answer}" dha.`,
+            ti: `ዝተመዝገበ ናይ ስልኪ ቍጽርኹም «${item.answer}» እዩ።`,
+            en: `Your registered phone number is "${item.answer}".`,
+          });
           this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
         }
       }
-      if (/(?:ምን\s*ቋንቋ|ቋንቋዬ\s*ምንድን|ምን\s*ቋንቋ\s*መረጥኩ|what\s*language)/iu.test(lower)) {
-        const item = reviewItems.find(i => i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language'));
+      if (/(?:ምን\s*ቋንቋ|ቋንቋዬ\s*ምንድን|ምን\s*ቋንቋ\s*መረጥኩ|እንታይ\s*ቋንቋ|እንታይ\s*ቋንቋ\s*መሪጸ|afaaniin\s*filadhe|afaan\s*kam|what\s*language)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language') || i.question.toLowerCase().includes('afaan'));
         if (item) {
-          const msg = isAm ? `የመረጡት ቋንቋ «${item.answer}» ነው።` : `Your selected language is "${item.answer}".`;
+          const msg = this.t({
+            am: `የመረጡት ቋንቋ «${item.answer}» ነው።`,
+            om: `Afaan filattan "${item.answer}" dha.`,
+            ti: `ዝመረጽኩምዎ ቋንቋ «${item.answer}» እዩ።`,
+            en: `Your selected language is "${item.answer}".`,
+          });
           this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
         }
       }
-      if (/(?:ምን\s*(?:መታወቂያ|ሰነድ)|መታወቂያዬ\s*ምን|ምን\s*ሰነድ\s*መረጥኩ|what\s*id|what\s*document)/iu.test(lower)) {
-        const item = reviewItems.find(i => i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id'));
+      if (/(?:ምን\s*(?:መታወቂያ|ሰነድ)|መታወቂያዬ\s*ምን|ምን\s*ሰነድ\s*መረጥኩ|እንታይ\s*(?:መታወቂያ|ሰነድ)|መታወቂያይ\s*እንታይ|waraqaa\s*eenyummaa\s*kam|sanada\s*kam|what\s*id|what\s*document)/iu.test(lower)) {
+        const item = reviewItems.find(i => i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id') || i.question.toLowerCase().includes('waraqaa') || i.question.toLowerCase().includes('sanada'));
         if (item) {
-          const msg = isAm ? `የመረጡት የመታወቂያ አማራጭ «${item.answer}» ነው።` : `Your selected ID route is "${item.answer}".`;
+          const msg = this.t({
+            am: `የመረጡት የመታወቂያ አማራጭ «${item.answer}» ነው።`,
+            om: `Filannoon waraqaa eenyummaa "${item.answer}" dha.`,
+            ti: `ዝመረጽኩምዎ ናይ መታወቂያ ኣማራጺ «${item.answer}» እዩ።`,
+            en: `Your selected ID route is "${item.answer}".`,
+          });
           this.announce(msg); this.readExecutor.speak(msg, this.locale); return true;
         }
       }
 
       // 3. User requests to edit or change a question
-      const isEditRequest = /(?:ቀይር|አስተካክል|ላስተካክል|ልቀይር|አስተካክለው|ቀይረው|edit|change|modify|correct)/iu.test(lower);
+      const isEditRequest = /(?:ቀይር|አስተካክል|ላስተካክል|ልቀይር|አስተካክለው|ቀይረው|ኣዐሪ|ቀይሮ|jijjiiri|sirreessi|edit|change|modify|correct)/iu.test(lower);
       if (isEditRequest) {
         let targetItem = reviewItems.find(i => {
-          if (/(?:ስም|name)/iu.test(lower) && (i.question.includes('ስም') || i.question.toLowerCase().includes('name'))) return true;
-          if (/(?:ስልክ|phone)/iu.test(lower) && (i.question.includes('ስልክ') || i.question.toLowerCase().includes('phone'))) return true;
-          if (/(?:ቋንቋ|language|lang)/iu.test(lower) && (i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language'))) return true;
-          if (/(?:መታወቂያ|ሰነድ|ማንነት|id|document)/iu.test(lower) && (i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id'))) return true;
-          if (/(?:አጋር|ስምምነት|እገዛ|partner|referral)/iu.test(lower) && (i.question.includes('አጋር') || i.question.includes('ስምምነት') || i.question.toLowerCase().includes('partner'))) return true;
-          if (/(?:ቅጽ|ቅጹ|ምርጫ|አሠራር|accessibility|support)/iu.test(lower) && (i.question.includes('ቅጽ') || i.question.includes('ቅጹ'))) return true;
+          if (/(?:ስም|ስመይ|maqaa|name)/iu.test(lower) && (i.question.includes('ስም') || i.question.includes('ስመይ') || i.question.toLowerCase().includes('name') || i.question.toLowerCase().includes('maqaa'))) return true;
+          if (/(?:ስልክ|ስልኪ|bilbila|phone)/iu.test(lower) && (i.question.includes('ስልክ') || i.question.includes('ስልኪ') || i.question.toLowerCase().includes('phone') || i.question.toLowerCase().includes('bilbila'))) return true;
+          if (/(?:ቋንቋ|afaan|language|lang)/iu.test(lower) && (i.question.includes('ቋንቋ') || i.question.toLowerCase().includes('language') || i.question.toLowerCase().includes('afaan'))) return true;
+          if (/(?:መታወቂያ|ሰነድ|ማንነት|waraqaa|sanada|id|document)/iu.test(lower) && (i.question.includes('መታወቂያ') || i.question.includes('ማንነት') || i.question.toLowerCase().includes('id') || i.question.toLowerCase().includes('waraqaa') || i.question.toLowerCase().includes('sanada'))) return true;
+          if (/(?:አጋር|ስምምነት|እገዛ|ሓጋዚ|መሻርኽቲ|tumsa|gargaarsa|partner|referral)/iu.test(lower) && (i.question.includes('አጋር') || i.question.includes('ስምምነት') || i.question.toLowerCase().includes('partner') || i.question.toLowerCase().includes('tumsa'))) return true;
+          if (/(?:ቅጽ|ቅጹ|ምርጫ|አሠራር|unka|accessibility|support)/iu.test(lower) && (i.question.includes('ቅጽ') || i.question.includes('ቅጹ') || i.question.toLowerCase().includes('support') || i.question.toLowerCase().includes('unka'))) return true;
           return false;
         });
 
         // Check ordinals: first, second, 3rd, etc.
         if (!targetItem) {
-          if (/(?:የመጀመሪያ|አንደኛ|1st|first)/iu.test(lower)) targetItem = reviewItems[0];
-          else if (/(?:ሁለተኛ|2nd|second)/iu.test(lower)) targetItem = reviewItems[1];
-          else if (/(?:ሶስተኛ|ሦስተኛ|3rd|third)/iu.test(lower)) targetItem = reviewItems[2];
-          else if (/(?:አራተኛ|4th|fourth)/iu.test(lower)) targetItem = reviewItems[3];
-          else if (/(?:አምስተኛ|5th|fifth)/iu.test(lower)) targetItem = reviewItems[4];
+          if (/(?:የመጀመሪያ|አንደኛ|ቀዳማይ|ሓደ|jalqabaa|tokkoffaa|1st|first)/iu.test(lower)) targetItem = reviewItems[0];
+          else if (/(?:ሁለተኛ|ካልኣይ|ክልተ|lammaffaa|2nd|second)/iu.test(lower)) targetItem = reviewItems[1];
+          else if (/(?:ሶስተኛ|ሦስተኛ|ሳልሳይ|ሰለስተ|sadaffaa|3rd|third)/iu.test(lower)) targetItem = reviewItems[2];
+          else if (/(?:አራተኛ|ራብዓይ|ኣርባዕተ|afurffaa|4th|fourth)/iu.test(lower)) targetItem = reviewItems[3];
+          else if (/(?:አምስተኛ|ሓሙሻይ|ሓሙሽተ|shanaffaa|5th|fifth)/iu.test(lower)) targetItem = reviewItems[4];
         }
 
         if (targetItem && targetItem.editBtn) {
-          const msg = isAm ? `ስለ «${targetItem.question}» ለማስተካከል ወደ ጥያቄው እየሄድን ነው።` : `Navigating to edit "${targetItem.question}".`;
+          const msg = this.t({
+            am: `ስለ «${targetItem.question}» ለማስተካከል ወደ ጥያቄው እየሄድን ነው።`,
+            om: `Waa'ee "${targetItem.question}" sirreessuuf gara gaaffichaatti ce'aa jirra.`,
+            ti: `ብዛዕባ «${targetItem.question}» ንምዕራይ ናብቲ ሕቶ ንኸይድ ኣለና።`,
+            en: `Navigating to edit "${targetItem.question}".`,
+          });
           this.announce(msg);
           this.readExecutor.speak(msg, this.locale);
 
           // Check if user also gave a replacement value inline (e.g. "ስሜን ወደ ካሳሁን ቀይር")
-          const valueMatch = raw.match(/(?:ወደ\s+([^\s]+(?:\s+[^\s]+)?)\s+(?:ቀይር|አድርግ|አስተካክል)|change\s+(?:my\s+)?(?:name|phone)\s+to\s+([^\s]+(?:\s+[^\s]+)?))/iu);
-          const inlineVal = valueMatch ? (valueMatch[1] || valueMatch[2]) : null;
+          const valueMatch = raw.match(/(?:ወደ\s+([^\s]+(?:\s+[^\s]+)?)\s+(?:ቀይር|አድርግ|አስተካክል)|gara\s+([^\s]+(?:\s+[^\s]+)?)\s+jijjiiri|change\s+(?:my\s+)?(?:name|phone)\s+to\s+([^\s]+(?:\s+[^\s]+)?))/iu);
+          const inlineVal = valueMatch ? (valueMatch[1] || valueMatch[2] || valueMatch[3]) : null;
 
           targetItem.editBtn.click();
 
@@ -1206,9 +1295,12 @@ export class RohaSDK {
         }
 
         // General edit request without specific field
-        const msg = isAm
-          ? 'የትኛውን ጥያቄ ማስተካከል ይፈልጋሉ? «ስም ቀይር» ወይም «ስልክ አስተካክል» ማለት ይችላሉ።'
-          : 'Which question would you like to edit? You can say "Edit name" or "Change phone".';
+        const msg = this.t({
+          am: 'የትኛውን ጥያቄ ማስተካከል ይፈልጋሉ? «ስም ቀይር» ወይም «ስልክ አስተካክል» ማለት ይችላሉ።',
+          om: 'Gaaffii isa kam sirreessuu barbaaddu? "maqaa jijjiiri" ykn "bilbila jijjiiri" jechuu dandeessu.',
+          ti: 'ኣየናይ ሕቶ ከተዐርዩ ትደልዩ? «ስም ቀይር» ወይ «ስልኪ ቀይር» ክትብሉ ትኽእሉ ኢኹም።',
+          en: 'Which question would you like to edit? You can say "Edit name" or "Change phone".',
+        });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         return true;
@@ -1216,26 +1308,36 @@ export class RohaSDK {
     }
 
     // 1. Next step / Proceed
-    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)/iu.test(lower) ||
-        /(?:ቀጣይ\s*ደረጃ|next\s*step|ቀጣዩ|ቀጣይ)/iu.test(lower)) {
+    if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|ቀጻሊ|ቀጽል|ንቕድሚት|itti\s*fufi|itti\s*fufa|gara\s*fuulduraatti|fuulduratti|kan\s*itti\s*aanu|next|continue|forward|proceed)/iu.test(lower) ||
+        /(?:ቀጣይ\s*ደረጃ|ቀጻሊ\s*ደረጃ|sadarkaa\s*itti\s*aanu|next\s*step|ቀጣዩ|ቀጣይ|ቀጻሊ)/iu.test(lower)) {
       this.advanceToNextStep();
       return true;
     }
 
     // 1b. Stop / silence / pause
-    if (/^(?:አቁም|ዝም|ዝም\s*በይ|ዝም\s*በል|ቆይ|stop|pause|quiet|be\s*quiet|silence)\b/iu.test(lower)) {
+    if (/^(?:አቁም|ዝም|ዝም\s*በይ|ዝም\s*በል|ቆይ|ደው|ስቕ|cal'?isi|dhaabi|stop|pause|quiet|be\s*quiet|silence)\b/iu.test(lower)) {
       this.readExecutor.stop();
-      const msg = isAm ? 'ዝም ብያለሁ።' : 'Stopping.';
+      const msg = this.t({
+        am: 'ዝም ብያለሁ።',
+        om: 'Cal\'iseera.',
+        ti: 'ስቕ ኢለ ኣለኹ።',
+        en: 'Stopping.',
+      });
       this.announce(msg);
       return true;
     }
 
     // 2. Previous step / Back
-    if (/^(?:ተመለስ|ወደ\s*ኋላ|ቀዳሚ|back|previous|go\s*back)\b/iu.test(lower) ||
-        /(?:ያለፈው\s*ደረጃ|previous\s*step)/iu.test(lower)) {
+    if (/^(?:ተመለስ|ወደ\s*ኋላ|ቀዳሚ|ንድሕሪት|ዝሓለፈ|gara\s*duubatti|duubatti|deebi'?i|deebi'?aa|back|previous|go\s*back)\b/iu.test(lower) ||
+        /(?:ያለፈው\s*ደረጃ|ዝሓለፈ\s*ደረጃ|sadarkaa\s*duraanii|previous\s*step)/iu.test(lower)) {
       const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back, button[aria-label*="Back"], button[aria-label*="ተመለስ"]');
       if (backBtn) {
-        const msg = isAm ? 'ወደ ቀደመው ደረጃ ተመልሰናል።' : 'Going back to the previous step.';
+        const msg = this.t({
+          am: 'ወደ ቀደመው ደረጃ ተመልሰናል።',
+          om: 'Gara sadarkaa duraatti deebineerra.',
+          ti: 'ናብ ዝሓለፈ ደረጃ ተመሊስና ኣለና።',
+          en: 'Going back to the previous step.',
+        });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         setTimeout(() => backBtn.click(), 300);
@@ -1244,16 +1346,21 @@ export class RohaSDK {
     }
 
     // 3. Read aloud
-    if (/^(?:አንብብ|አንብቢ|አንብቢልኝ|ስማ|read|speak|listen)\b/iu.test(lower)) {
-      const msg = isAm ? 'ጥያቄውን ላንብብልዎት።' : 'Reading the question aloud.';
+    if (/^(?:አንብብ|አንብቢ|አንብቢልኝ|ስማ|ኣንብብ|ኣንብበለይ|ስማዕ|dubbisi|naaf\s*dubbisi|dhaggeeffadhu|sagalee|read|speak|listen)\b/iu.test(lower)) {
+      const msg = this.t({
+        am: 'ጥያቄውን ላንብብልዎት።',
+        om: 'Gaafficha isiniif nan dubbisa.',
+        ti: 'ሕቶኡ ከንብበልኩም እየ።',
+        en: 'Reading the question aloud.',
+      });
       this.announce(msg);
       this.readExecutor.readTarget('page.main', this.locale);
       return true;
     }
 
     // 3b. Simple/child-friendly explanation
-    if (/(?:ቀላል|ቀጥተኛ|ቀላሉን|አብራራ|ቀላል\s*ቃል|like\s*a\s*kid|simply|simple|explain\s*simply|easy\s*words|ቀላል\s*አብራራ)/iu.test(lower)) {
-      this.simpleMode.apply(true, this.rootElement || document.body, this.locale === 'am' ? 'am' : 'en');
+    if (/(?:ቀላል|ቀጥተኛ|ቀላሉን|አብራራ|ቀላል\s*ቃል|ቀሊል|ብቀሊሉ|ግለጸለይ|ኣረድኣኒ|salphaa|salphaatti|naaf\s*ibsi|ibsi|like\s*a\s*kid|simply|simple|explain\s*simply|easy\s*words)/iu.test(lower)) {
+      this.simpleMode.apply(true, this.rootElement || document.body, this.locale as any);
       const hostSimpleBtn = document.querySelector<HTMLButtonElement>('.op-toggles button[aria-pressed]');
       if (hostSimpleBtn && hostSimpleBtn.getAttribute('aria-pressed') !== 'true') {
         try { hostSimpleBtn.click(); } catch {}
@@ -1267,20 +1374,30 @@ export class RohaSDK {
     }
 
     // 4. Text scale enlarge
-    if (/(?:ትልቅ\s*ጽሑፍ|ጽሑፉን\s*አተልቅ|ጽሑፍ\s*አተልቅ|make\s*text\s*bigger|bigger\s*text|zoom)/iu.test(lower)) {
+    if (/(?:ትልቅ\s*ጽሑፍ|ጽሑፉን\s*አተልቅ|ጽሑፍ\s*አተልቅ|ዓቢ\s*ጽሑፍ|ጽሑፍ\s*ኣዕብዮ|barreeffama\s*guddosi|guddisi|barreeffama\s*guddaa|make\s*text\s*bigger|bigger\s*text|zoom)/iu.test(lower)) {
       const nextScale = this.textScale.getPercent() >= 150 ? 100 : 150;
       this.textScale.apply(nextScale as 100 | 150);
-      const msg = isAm ? 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።' : 'Text size has been increased.';
+      const msg = this.t({
+        am: 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።',
+        om: 'Hangi barreeffamaa guddateera.',
+        ti: 'መጠን ጽሑፍ ዓብዩ ኣሎ።',
+        en: 'Text size has been increased.',
+      });
       this.announce(msg);
       this.readExecutor.speak(msg, this.locale);
       return true;
     }
 
     // 5. High contrast
-    if (/(?:ከፍተኛ\s*ንፅፅር|ንፅፅር|high\s*contrast|dark\s*mode)/iu.test(lower)) {
+    if (/(?:ከፍተኛ\s*ንፅፅር|ንፅፅር|ላዕለዋይ\s*ንጽጽር|ንጽጽር|garaagarummaa\s*guddaa|haala\s*dukkanaa|high\s*contrast|dark\s*mode)/iu.test(lower)) {
       const nextTheme = this.contrast.getTheme() === 'high-contrast' ? 'default' : 'high-contrast';
       this.contrast.applyContrast(nextTheme);
-      const msg = isAm ? 'የቀለም ንፅፅር ተቀይሯል።' : 'Contrast mode toggled.';
+      const msg = this.t({
+        am: 'የቀለም ንፅፅር ተቀይሯል።',
+        om: 'Haalli halluu jijjiirameera.',
+        ti: 'ንጽጽር ሕብሪ ተቐዪሩ ኣሎ።',
+        en: 'Contrast mode toggled.',
+      });
       this.announce(msg);
       this.readExecutor.speak(msg, this.locale);
       return true;
@@ -1297,14 +1414,14 @@ export class RohaSDK {
       .replace(/^(?:i\s+want\s+to\s+|i\s+want\s+|i\s+prefer\s+to\s+|i\s+prefer\s+|i\s+choose\s+|i\s+select\s+|i\s+pick\s+|i\s+take\s+)/iu, '')
       .replace(/^(?:please\s+|let\s+me\s+choose\s+|let\s+me\s+select\s+|choose\s+|select\s+|pick\s+|take\s+)/iu, '')
       .replace(/^(?:the\s+)?(?:option\s+)?/iu, '')
-      .replace(/^(?:እኔ\s+)?(?:የምመርጠው\s+|የምፈልገው\s+|እመርጣለሁ\s+|እፈልጋለሁ\s+)?/iu, '')
-      .replace(/^(?:እባክሽን\s+|እባክህ\s+|እባክዎ\s+|እባክዎት\s+)?(?:ይምረጡ\s+|ይምረጡልኝ\s+|ምረጥ\s+|ምረጪ\s+|አድርግ\s+|አድርጊ\s+|አድርግልኝ\s+)?/iu, '')
-      .replace(/(?:የሚለውን|የሚለውን\s+አማራጭ|እመርጣለሁ|እፈልጋለሁ|ነው\s+የምመርጠው|ነው\s+የምፈልገው)$/iu, '')
+      .replace(/^(?:እኔ\s+)?(?:የምመርጠው\s+|የምፈልገው\s+|እመርጣለሁ\s+|እፈልጋለሁ\s+|filannoon\s*koo\s+|filadha\s+)?/iu, '')
+      .replace(/^(?:እባክሽን\s+|እባክህ\s+|እባክዎ\s+|እባክዎት\s+)?(?:ይምረጡ\s+|ይምረጡልኝ\s+|ምረጥ\s+|ምረጪ\s+|አድርግ\s+|አድርጊ\s+|አድርግልኝ\s+|filadhu\s+|filaa\s+)?/iu, '')
+      .replace(/(?:የሚለውን|የሚለውን\s+አማራጭ|እመርጣለሁ|እፈልጋለሁ|ነው\s+የምመርጠው|ነው\s+የምፈልገው|filadha|filachuu\s*barbaada)$/iu, '')
       .trim();
 
-    // 6a. "This option" / "This one" / "ይህን" / "ይሄን"
-    const isThis = /^(?:this\s*(?:one|option)?|that\s*(?:one|option)?|here|ይህ(?:ን|ንን)?|ይሄ(?:ን|ንን)?|ይኸው|ይህንኑ)$/iu.test(cleanUtt) ||
-      /(?:i\s+choose\s+this|i\s+pick\s+this|choose\s+this|select\s+this|ይህን\s*ምረጥ|ይሄን\s*ምረጥ)/iu.test(lower);
+    // 6a. "This option" / "This one" / "ይህን" / "ይሄን" / "kana"
+    const isThis = /^(?:this\s*(?:one|option)?|that\s*(?:one|option)?|here|ይህ(?:ን|ንን)?|ይሄ(?:ን|ንን)?|ይኸው|ይህንኑ|እዚ|እዚኣ|kana|kanuma)$/iu.test(cleanUtt) ||
+      /(?:i\s+choose\s+this|i\s+pick\s+this|choose\s+this|select\s+this|ይህን\s*ምረጥ|ይሄን\s*ምረጥ|kana\s*filadhu)/iu.test(lower);
     if (isThis && optionLabels.length > 0) {
       const checkedLabel = optionLabels.find(l => {
         const inp = l.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
@@ -1312,17 +1429,17 @@ export class RohaSDK {
       }) || optionLabels[0];
       const inp = checkedLabel?.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
       if (checkedLabel && inp) {
-        return this.selectOptionAndAdvance(checkedLabel, inp, isAm ? 'ይህ አማራጭ' : 'This option');
+        return this.selectOptionAndAdvance(checkedLabel, inp, this.t({ am: 'ይህ አማራጭ', om: 'Filannoo kana', ti: 'እዚ ኣማራጺ', en: 'This option' }));
       }
     }
 
     // 6b. Ordinal & Letter selection: first, second, A, B, 1, 2, etc.
-    const isFirst = /(?:የመጀመሪያ|አንደኛ|first|1st|^1$|^a$|^ሀ$|^አ$)/iu.test(cleanUtt) || /(?:option\s*(?:1|a)|አማራጭ\s*(?:1|አ|ሀ))/iu.test(lower);
-    const isSecond = /(?:ሁለተኛ|second|2nd|^2$|^b$|^ለ$)/iu.test(cleanUtt) || /(?:option\s*(?:2|b)|አማራጭ\s*(?:2|ለ))/iu.test(lower);
-    const isThird = /(?:ሶስተኛ|ሦስተኛ|third|3rd|^3$|^c$|^ሐ$)/iu.test(cleanUtt) || /(?:option\s*(?:3|c)|አማራጭ\s*(?:3|ሐ))/iu.test(lower);
-    const isFourth = /(?:አራተኛ|fourth|4th|^4$|^d$|^መ$)/iu.test(cleanUtt) || /(?:option\s*(?:4|d)|አማራጭ\s*(?:4|መ))/iu.test(lower);
-    const isFifth = /(?:አምስተኛ|fifth|5th|^5$|^e$|^ሠ$|^ረ$)/iu.test(cleanUtt) || /(?:option\s*(?:5|e)|አማራጭ\s*(?:5|ሠ|ረ))/iu.test(lower);
-    const isLast = /(?:የመጨረሻ|last)\b/iu.test(cleanUtt);
+    const isFirst = /(?:የመጀመሪያ|አንደኛ|ቀዳማይ|ሓደ|jalqabaa|tokkoffaa|first|1st|^1$|^a$|^ሀ$|^አ$)/iu.test(cleanUtt) || /(?:option\s*(?:1|a)|አማራጭ\s*(?:1|አ|ሀ))/iu.test(lower);
+    const isSecond = /(?:ሁለተኛ|ካልኣይ|ክልተ|lammaffaa|second|2nd|^2$|^b$|^ለ$)/iu.test(cleanUtt) || /(?:option\s*(?:2|b)|አማራጭ\s*(?:2|ለ))/iu.test(lower);
+    const isThird = /(?:ሶስተኛ|ሦስተኛ|ሳልሳይ|ሰለስተ|sadaffaa|third|3rd|^3$|^c$|^ሐ$)/iu.test(cleanUtt) || /(?:option\s*(?:3|c)|አማራጭ\s*(?:3|ሐ))/iu.test(lower);
+    const isFourth = /(?:አራተኛ|ራብዓይ|ኣርባዕተ|afurffaa|fourth|4th|^4$|^d$|^መ$)/iu.test(cleanUtt) || /(?:option\s*(?:4|d)|አማራጭ\s*(?:4|መ))/iu.test(lower);
+    const isFifth = /(?:አምስተኛ|ሓሙሻይ|ሓሙሽተ|shanaffaa|fifth|5th|^5$|^e$|^ሠ$|^ረ$)/iu.test(cleanUtt) || /(?:option\s*(?:5|e)|አማራጭ\s*(?:5|ሠ|ረ))/iu.test(lower);
+    const isLast = /(?:የመጨረሻ|ናይ\s*መወዳእታ|dhuma|last)\b/iu.test(cleanUtt);
 
     if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isFourth || isFifth || isLast)) {
       const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : isFourth ? 3 : isFifth ? 4 : optionLabels.length - 1;
@@ -1336,10 +1453,10 @@ export class RohaSDK {
     }
 
     // 6b-2. Priority check for Option 5 (refer / no ID / partner assistance)
-    if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|የብለይን|hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|tumsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(lower)) {
+    if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|ሰነድ\s*የብለይን|የብለይን|sanada\s*hin\s*qabu|hin\s*qabu|ragaa\s*hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|ሓጋዚ|መሻርኽቲ|tumsa|gargaarsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(lower)) {
       const referLabel = optionLabels.find(l => {
         const inp = l.querySelector<HTMLInputElement>('input');
-        return inp?.value === 'refer' || /የለኝም|አጋር|እገዛ|refer|partner/i.test(l.textContent || '');
+        return inp?.value === 'refer' || /የለኝም|አጋር|እገዛ|ሓጋዚ|መሻርኽቲ|tumsa|gargaarsa|refer|partner/i.test(l.textContent || '');
       });
       if (referLabel) {
         const inp = referLabel.querySelector<HTMLInputElement>('input');
@@ -1362,22 +1479,25 @@ export class RohaSDK {
 
       // Specific semantic recognition for Step 5 options
       const isFayda = (val === 'fayda' || cleanLabel.includes('ፋይዳ')) && /ፋይዳ|fayda/iu.test(lower);
-      const isKebele = (val === 'kebele' || cleanLabel.includes('ቀበሌ')) && /ቀበሌ|kebele/iu.test(lower);
-      const isRefugee = (val === 'refugee' || cleanLabel.includes('ስደተኛ')) && /ስደተኛ|refugee/iu.test(lower);
-      const isOther = (val === 'other' || cleanLabel.includes('ሌላ')) && /ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(lower) && !/(?:የለኝም|አጋር|እገዛ)/iu.test(lower);
-      const isRefer = (val === 'refer' || cleanLabel.includes('አጋር') || cleanLabel.includes('የለኝም')) &&
-        /(?:የለኝም|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(lower);
-      const isAgree = (val === 'agree-share' || cleanLabel.includes('ተስማምቻለሁ') || cleanLabel.includes('ይሰጥ')) &&
-        /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን|ይሰጥ|agree|consent)/iu.test(lower);
+      const isKebele = (val === 'kebele' || cleanLabel.includes('ቀበሌ') || cleanLabel.includes('ganda')) && /ቀበሌ|kebele|ganda/iu.test(lower);
+      const isRefugee = (val === 'refugee' || cleanLabel.includes('ስደተኛ') || cleanLabel.includes('baqataa')) && /ስደተኛ|refugee|baqataa/iu.test(lower);
+      const isOther = (val === 'other' || cleanLabel.includes('ሌላ') || cleanLabel.includes('ካልእ') || cleanLabel.includes('biroo')) && /ሌላ|ካልእ|biroo|other|another|ፓስፖርት|መንጃ/iu.test(lower) && !/(?:የለኝም|አጋር|እገዛ|hin\s*qabu)/iu.test(lower);
+      const isRefer = (val === 'refer' || cleanLabel.includes('አጋር') || cleanLabel.includes('የለኝም') || cleanLabel.includes('hin qabu') || cleanLabel.includes('የብለይን')) &&
+        /(?:ሰነድ\s*(?:የለኝም|የለም)|የለኝም|የለም|ሰነድ\s*የብለይን|የብለይን|sanada\s*hin\s*qabu|hin\s*qabu|ragaa\s*hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|ሓጋዚ|መሻርኽቲ|tumsa|gargaarsa|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(lower);
+      const isAgree = (val === 'agree-share' || cleanLabel.includes('ተስማምቻለሁ') || cleanLabel.includes('ይሰጥ') || cleanLabel.includes('walii') || cleanLabel.includes('ተሰማሚዐ')) &&
+        /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ፈቃደኛ\s*ነኝ|ስምምነት|ስምምነቴን|ይሰጥ|ተሰማሚዐ|ይወሃብ|ሕራይ|walii\s*nan\s*gala|walii\s*galeera|eeyyee|eeyyeen|tole|haa\s*kennamu|i\s*agree|agree|consent)/iu.test(lower);
 
       const isAmharicOption = /አማርኛ|amharic/i.test(labelText) || val === 'am';
       const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || val === 'en';
+      const isOromoOption = /oromoo|oromo|oromiffa|ኦሮምኛ|ኦሮሞ/i.test(labelText) || val === 'om';
+      const isTigrinyaOption = /ትግርኛ|ትግራይ|tigrinya|tigrigna/i.test(labelText) || val === 'ti';
       const mentionsAmharic = /አማርኛ|amharic/i.test(lower);
       const mentionsEnglish = /english|እንግሊዝኛ/i.test(lower);
+      const mentionsOromo = /oromoo|oromo|oromiffa|ኦሮምኛ|ኦሮሞ/i.test(lower);
+      const mentionsTigrinya = /ትግርኛ|ትግራይ|tigrinya|tigrigna/i.test(lower);
 
       // Extract significant words and strip Amharic prefixes (e.g. የፋይዳ -> ፋይዳ, የቀበሌ -> ቀበሌ)
-      // Ignore common stop words like ሰነድ and መታወቂያ that occur in all ID options
-      const stopWords = ['option', 'አማራጭ', 'label', 'ሰነድ', 'የሰነድ', 'መታወቂያ', 'የመታወቂያ', 'document', 'id'];
+      const stopWords = ['option', 'አማራጭ', 'label', 'ሰነድ', 'የሰነድ', 'መታወቂያ', 'የመታወቂያ', 'document', 'id', 'waraqaa', 'sanada'];
       const words = cleanLabel.split(/\s+/).filter(w => w.length >= 3 && !stopWords.includes(w));
       const wordMatch = words.some(w => {
         const root = w.replace(/^[የበለከወ]/, '');
@@ -1385,19 +1505,23 @@ export class RohaSDK {
       });
 
       if (directMatch || valMatch || isAgree || isRefer || isFayda || isKebele || isRefugee || isOther ||
-          wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
+          wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish) ||
+          (isOromoOption && mentionsOromo) || (isTigrinyaOption && mentionsTigrinya)) {
         return this.selectOptionAndAdvance(label, input);
       }
     }
 
     // 6d. File upload & Photo camera trigger (Step 6)
     const fileInput = document.querySelector<HTMLInputElement>('#op-main input[type="file"], input[type="file"]');
-    if (fileInput && fileInput.offsetParent !== null) {
-      if (/(?:ፎቶ|ካሜራ|ስቀል|ፋይል|ምረጥ|መታወቂያ|ሰነድ|photo|camera|upload|file|choose|take)/iu.test(lower) &&
-          !/(?:የለኝም|የለም|don'?t|no)/iu.test(lower)) {
-        const msg = isAm
-          ? 'የካሜራ ወይም የፋይል መምረጫው ተከፍቷል። ፎቶ ያንሱ ወይም ሰነድ ይምረጡ።'
-          : 'File and camera picker opened. Please take a photo or select your document.';
+    if (fileInput) {
+      if (/(?:ፎቶ|ካሜራ|ስቀል|ፋይል|ምረጥ|መታወቂያ|ሰነድ|suuraa|kaameraa|olkaa'aa|faayilii|photo|camera|upload|file|choose|take)/iu.test(lower) &&
+          !/(?:የለኝም|የለም|የብለይን|hin\s*qabu|don'?t|no)/iu.test(lower)) {
+        const msg = this.t({
+          am: 'የካሜራ ወይም የፋይል መምረጫው ተከፍቷል። ፎቶ ያንሱ ወይም ሰነድ ይምረጡ።',
+          om: 'Kaameraan ykn filannoon faayilii banameera. Suuraa kaasaa ykn sanada filadhaa.',
+          ti: 'ናይ ካሜራ ወይ ፋይል መምረጺ ተኸፊቱ ኣሎ። ፎቶ ኣልዕሉ ወይ ሰነድ ምረጹ።',
+          en: 'File and camera picker opened. Please take a photo or select your document.',
+        });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         fileInput.focus();
@@ -1405,10 +1529,13 @@ export class RohaSDK {
         return true;
       }
 
-      if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|no\s*document|no\s*id|don'?t\s*have/iu.test(lower)) {
-        const msg = isAm
-          ? 'ሰነድ ከሌለዎት ወደ ኋላ ተመልሰን የአጋር ድርጅት እገዛ መምረጥ እንችላለን። ወደ ኋላ እየተመለስን ነው።'
-          : 'If you do not have a document, we can go back and choose partner help. Going back.';
+      if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የብለይን|hin\s*qabu|sanada\s*hin\s*qabu|no\s*document|no\s*id|don'?t\s*have/iu.test(lower)) {
+        const msg = this.t({
+          am: 'ሰነድ ከሌለዎት ወደ ኋላ ተመልሰን የአጋር ድርጅት እገዛ መምረጥ እንችላለን። ወደ ኋላ እየተመለስን ነው።',
+          om: 'Sanada yoo hin qabaanne gara duubatti deebinee gargaarsa dhaabbata tumsaa filachuu dandeenya. Gara duubatti deebi\'aa jirra.',
+          ti: 'ሰነድ እንተዘይብልኩም ንድሕሪት ተመሊስና ናይ መሻርኽቲ ትካል ሓገዝ ክንመርጽ ንኽእል ኢና። ንድሕሪት ንምለስ ኣለና።',
+          en: 'If you do not have a document, we can go back and choose partner help. Going back.',
+        });
         this.announce(msg);
         this.readExecutor.speak(msg, this.locale);
         const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back');
@@ -1421,11 +1548,11 @@ export class RohaSDK {
     const textInput = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(
       '#op-main input.op-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), #op-main textarea.op-input, #op-main input:not([type="checkbox"]):not([type="radio"]):not([type="file"])'
     );
-    if (textInput && textInput.offsetParent !== null) {
-      const isExplicitDictation = /^(?:ስሜ\s+|my\s*name\s*is\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|ስልኬ\s*)/iu.test(raw);
+    if (textInput) {
+      const isExplicitDictation = /^(?:ስሜ\s+|my\s*name\s*is\s+|maqaan\s*koo\s+|maqaa\s*koo\s+|ani\s+|ስመይ\s+|ስመይ\s*ዝበሃል\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|ስልኬ\s*|bilbilli\s*koo\s*|ስልከይ\s*)/iu.test(raw);
       const cleanVal = raw
-        .replace(/^(?:my\s*name\s*is\s+|i\s*am\s+|call\s*me\s+|it\s*is\s+|answer\s*:?\s*|ስሜ\s+|ስሜ\s*የሚባለው\s+|የምባለው\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|የስልክ\s*ቁጥሬ\s*)/iu, '')
-        .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል)$/iu, '')
+        .replace(/^(?:my\s*name\s*is\s+|i\s*am\s+|call\s*me\s+|it\s*is\s+|answer\s*:?\s*|maqaan\s*koo\s+|maqaa\s*koo\s+|ani\s+|ስሜ\s+|ስሜ\s*የሚባለው\s+|የምባለው\s+|ስመይ\s+|ስመይ\s*ዝበሃል\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|የስልክ\s*ቁጥሬ\s*|bilbilli\s*koo\s*|ስልከይ\s*)/iu, '')
+        .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል|\s+እዩ|\s+እዮም|\s+dha)$/iu, '')
         .trim();
 
       // Accept if explicitly phrased, or if on a text-only input screen (no choices) and utterance has at least 1 char
@@ -1549,7 +1676,7 @@ export class RohaSDK {
       }
     });
     panel.querySelector('[data-roha-guide]')!.addEventListener('click', () => { this.rescan(); this.guide.start(); });
-    panel.querySelector('[data-roha-forward]')!.addEventListener('click', () => { this.rescan(); this.guide.forward(); });
+    panel.querySelector('[data-roha-forward]')!.addEventListener('click', () => { this.rescan(); this.advanceToNextStep(); });
     panel.querySelector('[data-roha-back]')!.addEventListener('click', () => this.guide.back());
     panel.querySelector('[data-roha-confirm]')!.addEventListener('click', () => { void this.guide.confirm(); command.focus(); });
     panel.querySelector('[data-roha-cancel]')!.addEventListener('click', () => { this.guide.cancel(); command.focus(); });

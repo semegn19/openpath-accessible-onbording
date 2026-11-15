@@ -24,7 +24,11 @@ export class VoiceManager {
   constructor(private callbacks: VoiceManagerCallbacks, locale = 'en') { this.setLocale(locale); }
 
   public setLocale(locale: string): void {
-    const next = locale.startsWith('am') ? 'am-ET' : 'en-US';
+    const l = locale.toLowerCase().slice(0, 2);
+    const next = l === 'am' ? 'am-ET'
+      : l === 'ti' ? 'ti-ET'
+      : l === 'om' ? 'om-ET'
+      : 'en-US';
     if (next === this.locale) return;
     this.locale = next;
     const resume = this.autoRestart && !this.isEchoMuted;

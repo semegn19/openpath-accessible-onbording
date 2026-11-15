@@ -416,7 +416,11 @@ async function handleRequest(req, res) {
   if (path === '/api/tts' && req.method === 'GET') {
     const text = (url.searchParams.get('text') || '').trim();
     const lang = (url.searchParams.get('lang') || 'am').trim().toLowerCase();
-    console.log('[TTS Request]', { lang, text: text.slice(0, 80) });
+    // Map language for optimal phonetic pronunciation
+    // Tigrinya uses Ge'ez script, phonetically shared with Amharic
+    // Afaan Oromoo uses Latin script (Qubee), phonetically mapped to East African Swahili phonemes
+    const ttsLang = lang === 'ti' ? 'am' : lang === 'om' ? 'sw' : lang;
+    console.log('[TTS Request]', { lang, ttsLang, text: text.slice(0, 80) });
     if (!text) return error(res, 400, 'text-required', 'Text parameter is required.');
     if (text.length > 2000) return error(res, 413, 'text-too-large', 'Text exceeds 2000 characters.');
 
@@ -440,7 +444,7 @@ async function handleRequest(req, res) {
       const audioBuffers = [];
       for (const chunk of chunks) {
         if (!chunk) continue;
-        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(ttsLang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
         const ttsRes = await fetch(ttsUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
           signal: AbortSignal.timeout(8000),

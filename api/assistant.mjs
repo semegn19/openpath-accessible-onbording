@@ -184,185 +184,331 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
   }
   function generateContextualFallback(ctx) {
     const utt = (ctx.utterance || '').toLowerCase();
-    const isAm = ctx.locale === 'am' || /[\u1200-\u137F]/.test(ctx.utterance);
+    const l = (ctx.locale || 'en').toLowerCase().slice(0, 2);
+    const isOm = l === 'om' || /(?:akkam|galatooma|eeyyee|lakki|maal|bilbila|maqaa|jijjiiri|itti\s*fufi|dubbisi|deebi|sanada)/i.test(utt);
+    const isTi = l === 'ti' || /(?:ሰላም|የቐንየለይ|እንታይ|ኣንብብ|ስመይ|ስልከይ|ቀጽል|ተመለስ|ተሰማሚዐ|መታወቂያይ)/iu.test(utt);
+    const isAm = l === 'am' || (!isOm && !isTi && /[\u1200-\u137F]/.test(utt));
+    const lang = isOm ? 'om' : isTi ? 'ti' : isAm ? 'am' : 'en';
+
+    function msg4({ am, om, ti, en }) {
+      if (lang === 'om') return om;
+      if (lang === 'ti') return ti;
+      if (lang === 'am') return am;
+      return en;
+    }
+
     const q = ctx.screenContext?.activeQuestion || '';
     const desc = ctx.screenContext?.description || '';
     const opts = (ctx.screenContext?.options || []).filter(Boolean);
-    const optsStr = opts.join(isAm ? '፣ ' : ', ');
+    const optsStr = opts.join(lang === 'om' || lang === 'en' ? ', ' : '፣ ');
 
     // Greeting
-    if (/ሰላም|እንደምን|ጤና|hi|hello|hey/iu.test(utt)) {
-      const msg = isAm
-        ? 'ሰላም! እኔ ሮሃ ነኝ። ቅጹን በቀላሉ እንዲሞሉ ልረዳዎት ዝግጁ ነኝ።'
-        : 'Hello! I am Roha, your onboarding assistant. I am here to help you complete this form easily.';
+    if (/ሰላም|እንደምን|ጤና|akkam|nagaa|fayyaa|hi|hello|hey/iu.test(utt)) {
+      const msg = msg4({
+        am: 'ሰላም! እኔ ሮሃ ነኝ። ቅጹን በቀላሉ እንዲሞሉ ልረዳዎት ዝግጁ ነኝ።',
+        om: 'Akkam! Ani Roohaa dha. Unka kana salphaatti akka guuttan isin gargaaruuf qophiidha.',
+        ti: 'ሰላም! ኣነ ሮሃ እየ። ነዚ ቅጥዒ ብቐሊሉ ንኽትመልእዎ ድሉው እየ።',
+        en: 'Hello! I am Roha, your onboarding assistant. I am here to help you complete this form easily.'
+      });
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
     // What is on screen / explain current step
-    if (/ምን|ጠይ|ፊት|ስክሪን|እርዳ|አብራራ|what|screen|question|help|explain|ምን\s*ማለት|ምን\s*ዓይነት/iu.test(utt)) {
-      const msg = isAm
-        ? (q ? `አሁን ያለው ጥያቄ፡ "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '። አማራጮቹ፡ ' + optsStr + '።' : '።'} ከዚህ ውስጥ አንዱን ይምረጡ።` : 'ቅጹን ለማስሟላት ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?')
-        : (q ? `The current question is: "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '. Options are: ' + optsStr + '.' : '.'} Please choose one.` : 'I am here to help you complete this step. What would you like to do?');
+    if (/ምን|ጠይ|ፊት|ስክሪን|እርዳ|አብራራ|እንታይ|ግለጸለይ|ኣረድኣኒ|maal|naaf\s*ibsi|ibsi|what|screen|question|help|explain/iu.test(utt)) {
+      const msg = msg4({
+        am: q ? `አሁን ያለው ጥያቄ፡ "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '። አማራጮቹ፡ ' + optsStr + '።' : '።'} ከዚህ ውስጥ አንዱን ይምረጡ።` : 'ቅጹን ለማስሟላት ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?',
+        om: q ? `Gaaffiin ammaa: "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '. Filannoowwan: ' + optsStr : ''}. Mee tokko filadhaa.` : 'Unka kana guutuuf isin gargaaruuf qophiidha. Maal gochuu barbaaddu?',
+        ti: q ? `ናይ ሕጂ ሕቶ፡ "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '። ኣማራጺታት፡ ' + optsStr + '።' : '።'} በጃኹም ሓደ ምረጹ።` : 'ነዚ ቅጥዒ ንምምላእ ድሉው እየ። እንታይ ክገብረልኩም ትደልዩ?',
+        en: q ? `The current question is: "${q}"${desc ? ' — ' + desc : ''}${optsStr ? '. Options are: ' + optsStr + '.' : '.'} Please choose one.` : 'I am here to help you complete this step. What would you like to do?'
+      });
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
     // Simple / child-friendly explanation
-    if (/ቀላል|ቀጥተኛ|ቀላሉ|simply|simple|easy|kid|child/iu.test(utt)) {
-      const msg = isAm
-        ? (q ? `ቀላሉን ቃል እንጠቀም። ጥያቄው፡ "${q}"${optsStr ? '። ምረጡ፡ ' + optsStr : ''}።` : 'ቀላሉን ቃል እንጠቀም። ምን ማድረግ ይፈልጋሉ?')
-        : (q ? `Let me explain simply. The question is: "${q}"${optsStr ? '. Your choices: ' + optsStr : ''}.` : 'Let me explain simply. What would you like to know?');
+    if (/ቀላል|ቀጥተኛ|ቀላሉ|ቀሊል|ብቀሊሉ|salphaa|salphaatti|simply|simple|easy|kid|child/iu.test(utt)) {
+      const msg = msg4({
+        am: q ? `ቀላሉን ቃል እንጠቀም። ጥያቄው፡ "${q}"${optsStr ? '። ምረጡ፡ ' + optsStr : ''}።` : 'ቀላሉን ቃል እንጠቀም። ምን ማድረግ ይፈልጋሉ?',
+        om: q ? `Jecha salphaa haa fayyadamnu. Gaaffiin: "${q}"${optsStr ? '. Filadhaa: ' + optsStr : ''}.` : 'Jecha salphaa haa fayyadamnu. Maal beekuu barbaaddu?',
+        ti: q ? `ቀሊል ቓላት ንተቀም። ሕቶኡ፡ "${q}"${optsStr ? '። ምረጹ፡ ' + optsStr : ''}።` : 'ቀሊል ቓላት ንተቀም። እንታይ ክትፈልጡ ትደልዩ?',
+        en: q ? `Let me explain simply. The question is: "${q}"${optsStr ? '. Your choices: ' + optsStr : ''}.` : 'Let me explain simply. What would you like to know?'
+      });
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
     // Read / speak
-    if (/አንብብ|ስማ|ድምጽ|read|listen|speak/iu.test(utt)) {
-      const msg = isAm ? 'ጥያቄውን ላንብብልዎት።' : 'Let me read the question for you.';
+    if (/አንብብ|ስማ|ድምጽ|ኣንብብ|ስማዕ|dubbisi|sagalee|read|listen|speak/iu.test(utt)) {
+      const msg = msg4({
+        am: 'ጥያቄውን ላንብብልዎት።',
+        om: 'Gaafficha isiniif nan dubbisa.',
+        ti: 'ሕቶኡ ከንብበልኩም እየ።',
+        en: 'Let me read the question for you.'
+      });
       return { intent: 'read', targetId: 'page.main', payload: {}, message: msg };
     }
 
     // Next / forward
-    if (/ቀጣይ|ወደፊት|ቀጥል|next|forward|continue|ሂድ|አልፍ/iu.test(utt)) {
+    if (/ቀጣይ|ወደፊት|ቀጥል|ቀጻሊ|ቀጽል|ንቕድሚት|itti\s*fufi|itti\s*fufa|fuulduratti|next|forward|continue|ሂድ|አልፍ/iu.test(utt)) {
       if (ctx.screenContext?.hasError) {
         const err = ctx.screenContext.errorMessage;
-        const msg = isAm ? `ስህተት ስላለ ማለፍ አይቻልም፦ ${err}። እባክዎ መጀመሪያ ያስተካክሉት።` : `Cannot continue due to an error: ${err}. Please correct it first.`;
+        const msg = msg4({
+          am: `ስህተት ስላለ ማለፍ አይቻልም፦ ${err}። እባክዎ መጀመሪያ ያስተካክሉት።`,
+          om: `Dogoggorri waan jiruuf darbuun hin danda'amu: ${err}. Mee jalqaba sirreessaa.`,
+          ti: `ስሕተት ስለዘሎ ምሕላፍ ኣይከኣልን፦ ${err}። በጃኹም መጀመርታ ኣዐርይዎ።`,
+          en: `Cannot continue due to an error: ${err}. Please correct it first.`
+        });
         return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
       }
-      const msg = isAm ? 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።' : 'Moving to the next step.';
+      const msg = msg4({
+        am: 'ወደ ቀጣዩ ደረጃ እየሄድን ነው።',
+        om: 'Gara sadarkaa itti aanuutti ce\'aa jirra.',
+        ti: 'ናብ ቀጻሊ ደረጃ ንኸይድ ኣለና።',
+        en: 'Moving to the next step.'
+      });
       return { intent: 'navigate', targetId: 'page.main', payload: { direction: 'forward' }, message: msg };
     }
 
     // Back / previous
-    if (/ተመለስ|ወደኋላ|back|previous/iu.test(utt)) {
-      const msg = isAm ? 'ወደ ቀደመው ደረጃ ተመልሰናል።' : 'Going back to the previous step.';
+    if (/ተመለስ|ወደኋላ|ንድሕሪት|ዝሓለፈ|duubatti|deebi'?i|back|previous/iu.test(utt)) {
+      const msg = msg4({
+        am: 'ወደ ቀደመው ደረጃ ተመልሰናል።',
+        om: 'Gara sadarkaa duraatti deebineerra.',
+        ti: 'ናብ ዝሓለፈ ደረጃ ተመሊስና ኣለና።',
+        en: 'Going back to the previous step.'
+      });
       return { intent: 'navigate', targetId: 'page.main', payload: { direction: 'back' }, message: msg };
     }
 
     // Text size
-    if (/ትልቅ|ጽሑፍ|አተልቅ|big|larger|zoom/iu.test(utt)) {
-      const msg = isAm ? 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።' : 'Text size has been increased.';
+    if (/ትልቅ|ጽሑፍ|አተልቅ|ዓቢ|ኣዕብዮ|guddisi|barreeffama|big|larger|zoom/iu.test(utt)) {
+      const msg = msg4({
+        am: 'የጽሑፉ መጠን እንዲተልቅ ተደርጓል።',
+        om: 'Hangi barreeffamaa guddateera.',
+        ti: 'መጠን ጽሑፍ ዓብዩ ኣሎ።',
+        en: 'Text size has been increased.'
+      });
       return { intent: 'text_scale', targetId: 'page.main', payload: { percent: 150 }, message: msg };
     }
 
     // What comes next
-    if (/ቀጣዩ\s*ምን|ቀጣይ\s*ምን|what.*next|what.*after|what.*come/iu.test(utt)) {
-      const msg = isAm
-        ? (q ? `አሁን ያለው ጥያቄ \"${q}\" ነው። ሲጨርሱ ወደ ቀጣዩ ደረጃ ይሸጋገራሉ።` : 'ቀጣዩን ደረጃ ለማወቅ ወደፊት ብሎ ማለፍ ያስፈልጋል።')
-        : (q ? `You are on "${q}". Once you answer, you will move to the next step.` : 'Complete this step to see what comes next.');
+    if (/ቀጣዩ\s*ምን|ቀጣይ\s*ምን|ቀጻሊ\s*እንታይ|maal.*itti.*aan|what.*next|what.*after/iu.test(utt)) {
+      const msg = msg4({
+        am: q ? `አሁን ያለው ጥያቄ "${q}" ነው። ሲጨርሱ ወደ ቀጣዩ ደረጃ ይሸጋገራሉ።` : 'ቀጣዩን ደረጃ ለማወቅ ወደፊት ብሎ ማለፍ ያስፈልጋል።',
+        om: q ? `Gaaffiin ammaa "${q}" dha. Yeroo xumurtan gara sadarkaa itti aanuutti ceutu.` : 'Sadarkaa itti aanu arguuf kana xumuraa.',
+        ti: q ? `ናይ ሕጂ ሕቶ "${q}" እዩ። ምስ ወዳእኩም ናብ ቀጻሊ ደረጃ ትሰጋገሩ።` : 'ናብ ቀጻሊ ንምኻድ ነዚ ወደእዎ።',
+        en: q ? `You are on "${q}". Once you answer, you will move to the next step.` : 'Complete this step to see what comes next.'
+      });
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
     // Review screen inquiries and edit commands
-    if (/(?:መልሶቼን\s*ንገረኝ|የመለስኩትን\s*ንገረኝ|ምን\s*መለስኩ|ዘርዝር|ዝርዝር|read\s*answers|list\s*answers|what\s*did\s*i\s*answer|my\s*answers)/iu.test(utt)) {
+    if (/(?:መልሶቼን\s*ንገረኝ|የመለስኩትን\s*ንገረኝ|ምን\s*መለስኩ|ዘርዝር|ዝርዝር|ዝመለስክዎ\s*ንገረኒ|እንታይ\s*መሊሰ|መልስታተይ|deebii\s*koo|tarreessi|read\s*answers|list\s*answers|what\s*did\s*i\s*answer|my\s*answers)/iu.test(utt)) {
       return {
         intent: 'read',
         targetId: 'page.main',
         payload: { readReview: true },
-        message: isAm ? 'የሰጧቸውን መልሶች ላንብብልዎት።' : 'Let me read your answers.'
+        message: msg4({
+          am: 'የሰጧቸውን መልሶች ላንብብልዎት።',
+          om: 'Deebiiwwan keessan isiniif nan dubbisa.',
+          ti: 'ዝሃብኩምዎም መልስታት ከንብበልኩም እየ።',
+          en: 'Let me read your answers.'
+        })
       };
     }
-    if (/(?:ስም\s*(?:ቀይር|አስተካክል)|ስሜን\s*(?:ቀይር|አስተካክል)|edit\s*name|change\s*name)/iu.test(utt)) {
+    if (/(?:ስም\s*(?:ቀይር|አስተካክል)|ስሜን\s*(?:ቀይር|አስተካክል)|ስመይ\s*(?:ቀይር|ኣዐሪ)|maqaa\s*(?:jijjiiri|sirreessi)|edit\s*name|change\s*name)/iu.test(utt)) {
       return {
         intent: 'navigate',
         targetId: 'name',
         payload: { editStep: 'name' },
-        message: isAm ? 'ስምዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your name.'
+        message: msg4({
+          am: 'ስምዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።',
+          om: 'Maqaa keessan sirreessuuf gara gaaffichaatti ce\'aa jirra.',
+          ti: 'ስምኩም ንምዕራይ ናብቲ ሕቶ ንኸይድ ኣለና።',
+          en: 'Going to edit your name.'
+        })
       };
     }
-    if (/(?:ስልክ\s*(?:ቀይር|አስተካክል)|ስልኬን\s*(?:ቀይር|አስተካክል)|edit\s*phone|change\s*phone)/iu.test(utt)) {
+    if (/(?:ስልክ\s*(?:ቀይር|አስተካክል)|ስልኬን\s*(?:ቀይር|አስተካክል)|ስልኪ\s*(?:ቀይር|ኣዐሪ)|bilbila\s*(?:jijjiiri|sirreessi)|edit\s*phone|change\s*phone)/iu.test(utt)) {
       return {
         intent: 'navigate',
         targetId: 'phone',
         payload: { editStep: 'phone' },
-        message: isAm ? 'ስልክ ቁጥርዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your phone number.'
+        message: msg4({
+          am: 'ስልክ ቁጥርዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።',
+          om: 'Lakkoofsa bilbila keessanii sirreessuuf gara gaaffichaatti ce\'aa jirra.',
+          ti: 'ናይ ስልኪ ቍጽርኹም ንምዕራይ ናብቲ ሕቶ ንኸይድ ኣለና።',
+          en: 'Going to edit your phone number.'
+        })
       };
     }
-    if (/(?:ቋንቋ\s*(?:ቀይር|አስተካክል)|edit\s*lang|change\s*lang)/iu.test(utt)) {
+    if (/(?:ቋንቋ\s*(?:ቀይር|አስተካክል)|afaan\s*jijjiiri|edit\s*lang|change\s*lang)/iu.test(utt)) {
       return {
         intent: 'navigate',
         targetId: 'language',
         payload: { editStep: 'language' },
-        message: isAm ? 'ቋንቋ ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your language.'
+        message: msg4({
+          am: 'ቋንቋ ለማስተካከል ወደ ጥያቄው እየሄድን ነው።',
+          om: 'Afaan sirreessuuf gara gaaffichaatti ce\'aa jirra.',
+          ti: 'ቋንቋ ንምዕራይ ናብቲ ሕቶ ንኸይድ ኣለና።',
+          en: 'Going to edit your language.'
+        })
       };
     }
-    if (/(?:መታወቂያ\s*(?:ቀይር|አስተካክል)|ሰነድ\s*(?:ቀይር|አስተካክል)|edit\s*id|change\s*id)/iu.test(utt)) {
+    if (/(?:መታወቂያ\s*(?:ቀይር|አስተካክል)|ሰነድ\s*(?:ቀይር|አስተካክል)|waraqaa\s*jijjiiri|edit\s*id|change\s*id)/iu.test(utt)) {
       return {
         intent: 'navigate',
         targetId: 'id-route',
         payload: { editStep: 'id-route' },
-        message: isAm ? 'የመታወቂያ አማራጭዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።' : 'Going to edit your ID route.'
+        message: msg4({
+          am: 'የመታወቂያ አማራጭዎን ለማስተካከል ወደ ጥያቄው እየሄድን ነው።',
+          om: 'Filannoo waraqaa sirreessuuf gara gaaffichaatti ce\'aa jirra.',
+          ti: 'ናይ መታወቂያ ኣማራጺኹም ንምዕራይ ናብቲ ሕቶ ንኸይድ ኣለና።',
+          en: 'Going to edit your ID route.'
+        })
       };
     }
 
     // Statement / Consent screen (e.g. referral agreement to share name/phone)
-    if (/(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን\s*ሰጥቻለሁ|ይሰጥ|አዎ\s*(?:ተስማምቻለሁ|እስማማለሁ|ይሰጥ)?|i\s*agree|agree|consent|walii\s*nan\s*gala|ተሰማሚዐ)/iu.test(utt)) {
+    if (/(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን\s*ሰጥቻለሁ|ይሰጥ|አዎ|ተሰማሚዐ|ይወሃብ|ሕራይ|walii\s*nan\s*gala|walii\s*galeera|eeyyee|eeyyeen|tole|haa\s*kennamu|i\s*agree|agree|consent)/iu.test(utt)) {
       return {
         intent: 'propose_answer',
         targetId: 'page.main',
         payload: { value: 'agree-share' },
-        message: isAm ? 'ስምምነትዎ ተረጋግጧል።' : 'Consent confirmed.'
+        message: msg4({
+          am: 'ስምምነትዎ ተረጋግጧል።',
+          om: 'Waliigalteen keessan mirkanaa\'eera.',
+          ti: 'ስምምዕነትኩም ተረጋጊጹ ኣሎ።',
+          en: 'Consent confirmed.'
+        })
       };
     }
 
     // Step 5: ID route options (Refer, Fayda, Kebele, Refugee, Other)
-    if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|የብለይን|hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|tumsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(utt)) {
-      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refer' }, message: isAm ? '«ሰነድ የለኝም» ተመርጧል።' : '"Refer me to a partner" selected.' };
+    if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|ሰነድ\s*የብለይን|የብለይን|sanada\s*hin\s*qabu|hin\s*qabu|ragaa\s*hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|ሓጋዚ|መሻርኽቲ|tumsa|gargaarsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(utt)) {
+      return {
+        intent: 'propose_answer',
+        targetId: 'page.main',
+        payload: { value: 'refer' },
+        message: msg4({
+          am: '«ሰነድ የለኝም» ተመርጧል።',
+          om: '"Sanada hin qabu" filatameera.',
+          ti: '«ሰነድ የብለይን» ተመሪጹ ኣሎ።',
+          en: '"Refer me to a partner" selected.'
+        })
+      };
     }
     if (/ፋይዳ|fayda/iu.test(utt)) {
-      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'fayda' }, message: isAm ? '«የፋይዳ መታወቂያ» ተመርጧል።' : '"Fayda ID" selected.' };
+      return {
+        intent: 'propose_answer',
+        targetId: 'page.main',
+        payload: { value: 'fayda' },
+        message: msg4({
+          am: '«የፋይዳ መታወቂያ» ተመርጧል።',
+          om: '"Waraqaa Fayidaa" filatameera.',
+          ti: '«ናይ ፋይዳ መታወቂያ» ተመሪጹ ኣሎ።',
+          en: '"Fayda ID" selected.'
+        })
+      };
     }
-    if (/ቀበሌ|kebele/iu.test(utt)) {
-      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'kebele' }, message: isAm ? '«የቀበሌ መታወቂያ» ተመርጧል።' : '"Kebele ID" selected.' };
+    if (/ቀበሌ|kebele|ganda/iu.test(utt)) {
+      return {
+        intent: 'propose_answer',
+        targetId: 'page.main',
+        payload: { value: 'kebele' },
+        message: msg4({
+          am: '«የቀበሌ መታወቂያ» ተመርጧል።',
+          om: '"Waraqaa Gandaa" filatameera.',
+          ti: '«ናይ ቀበሌ መታወቂያ» ተመሪጹ ኣሎ።',
+          en: '"Kebele ID" selected.'
+        })
+      };
     }
-    if (/ስደተኛ|refugee/iu.test(utt)) {
-      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refugee' }, message: isAm ? '«የስደተኛ መታወቂያ» ተመርጧል።' : '"Refugee ID" selected.' };
+    if (/ስደተኛ|refugee|baqataa/iu.test(utt)) {
+      return {
+        intent: 'propose_answer',
+        targetId: 'page.main',
+        payload: { value: 'refugee' },
+        message: msg4({
+          am: '«የስደተኛ መታወቂያ» ተመርጧል።',
+          om: '"Waraqaa Baqataa" filatameera.',
+          ti: '«ናይ ስደተኛ መታወቂያ» ተመሪጹ ኣሎ።',
+          en: '"Refugee ID" selected.'
+        })
+      };
     }
-    if (/ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(utt)) {
-      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'other' }, message: isAm ? '«ሌላ ሰነድ» ተመርጧል።' : '"Another document" selected.' };
+    if (/ሌላ|ካልእ|biroo|other|another|ፓስፖርት|መንጃ/iu.test(utt)) {
+      return {
+        intent: 'propose_answer',
+        targetId: 'page.main',
+        payload: { value: 'other' },
+        message: msg4({
+          am: '«ሌላ ሰነድ» ተመርጧል።',
+          om: '"Sanada biraa" filatameera.',
+          ti: '«ካልእ ሰነድ» ተመሪጹ ኣሎ።',
+          en: '"Another document" selected.'
+        })
+      };
     }
 
     // Step 6: File upload / Camera trigger
-    if (/ፎቶ|ካሜራ|ስቀል|ፋይል|photo|camera|upload|file/iu.test(utt)) {
-      const msg = isAm ? 'የካሜራ ወይም የፋይል መምረጫው ተከፍቷል። ፎቶ ያንሱ ወይም ሰነድ ይምረጡ።' : 'Camera and file picker opened. Please take a photo or select your document.';
+    if (/ፎቶ|ካሜራ|ስቀል|ፋይል|suuraa|kaameraa|olkaa'aa|photo|camera|upload|file/iu.test(utt)) {
+      const msg = msg4({
+        am: 'የካሜራ ወይም የፋይል መምረጫው ተከፍቷል። ፎቶ ያንሱ ወይም ሰነድ ይምረጡ።',
+        om: 'Kaameraan ykn filannoon faayilii banameera. Suuraa kaasaa ykn sanada filadhaa.',
+        ti: 'ናይ ካሜራ ወይ ፋይል መምረጺ ተኸፊቱ ኣሎ። ፎቶ ኣልዕሉ ወይ ሰነድ ምረጹ።',
+        en: 'Camera and file picker opened. Please take a photo or select your document.'
+      });
       return { intent: 'choose_file', targetId: 'page.main', payload: {}, message: msg };
     }
 
     // Direct answer dictation when on a text/phone input screen without multiple choices
     if (opts.length === 0 && q && utt.length >= 1) {
       const cleanAns = ctx.utterance.trim()
-        .replace(/^(?:my\s*name\s*is\s+|i\s*am\s+|call\s*me\s+|it\s*is\s+|answer\s*:?\s*|ስሜ\s+|ስሜ\s*የሚባለው\s+|የምባለው\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|የስልክ\s*ቁጥሬ\s*)/iu, '')
-        .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል)$/iu, '')
+        .replace(/^(?:my\s*name\s*is\s+|i\s*am\s+|call\s*me\s+|it\s*is\s+|answer\s*:?\s*|maqaan\s*koo\s+|maqaa\s*koo\s+|ani\s+|ስሜ\s+|ስሜ\s*የሚባለው\s+|የምባለው\s+|ስመይ\s+|ስመይ\s*ዝበሃል\s+|መልስ\s*:?\s*|ይህ\s*ነው\s*|ስም\s*:?\s*|ቁጥሬ\s*|ቁጥሬ\s*ነው\s*|የስልክ\s*ቁጥሬ\s*|bilbilli\s*koo\s*|ስልከይ\s*)/iu, '')
+        .replace(/(?:\s+ነው|\s+ናቸው|\s+ይባላል|\s+እዩ|\s+እዮም|\s+dha)$/iu, '')
         .trim();
       if (cleanAns) {
-        const msg = isAm ? `«${cleanAns}» አስገብቻለሁ።` : `Entered "${cleanAns}".`;
+        const msg = msg4({
+          am: `«${cleanAns}» አስገብቻለሁ።`,
+          om: `"${cleanAns}" galcheera.`,
+          ti: `«${cleanAns}» ኣእትየ ኣለኹ።`,
+          en: `Entered "${cleanAns}".`
+        });
         return { intent: 'propose_answer', targetId: 'page.main', payload: { value: cleanAns }, message: msg };
       }
     }
 
     // Generic fallback with context
-    const defaultMsg = isAm
-      ? (q ? `ጥያቄው "${q}" ነው።${optsStr ? ' አማራጮቹ፡ ' + optsStr + '።' : ''} ምን ማድረግ ይፈልጋሉ?` : 'እርስዎን ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?')
-      : (q ? `The question is "${q}".${optsStr ? ' Options: ' + optsStr + '.' : ''} How can I help you?` : 'I am here to help you. What would you like to do?');
+    const defaultMsg = msg4({
+      am: q ? `ጥያቄው "${q}" ነው።${optsStr ? ' አማራጮቹ፡ ' + optsStr + '።' : ''} ምን ማድረግ ይፈልጋሉ?` : 'እርስዎን ለመርዳት ዝግጁ ነኝ። ምን ማድረግ ይፈልጋሉ?',
+      om: q ? `Gaaffiin: "${q}" dha.${optsStr ? ' Filannoowwan: ' + optsStr + '.' : ''} Maal gochuu barbaaddu?` : 'Isin gargaaruuf qophiidha. Maal gochuu barbaaddu?',
+      ti: q ? `ሕቶኡ፡ "${q}" እዩ።${optsStr ? ' ኣማራጺታት፡ ' + optsStr + '።' : ''} እንታይ ክገብረልኩም ትደልዩ?` : 'ንምሕጋዝኩም ድሉው እየ። እንታይ ክትገብሩ ትደልዩ?',
+      en: q ? `The question is "${q}".${optsStr ? ' Options: ' + optsStr + '.' : ''} How can I help you?` : 'I am here to help you. What would you like to do?'
+    });
     return { intent: 'chat', targetId: 'page.main', payload: {}, message: defaultMsg };
   }
 
   async function interpret(config, ctx) {
     if (config.provider === 'disabled') throw failure(503, 'ai-disabled');
-    const isAm = ctx.locale === 'am' || /[\u1200-\u137F]/.test(ctx.utterance);
+    const l = (ctx.locale || 'en').toLowerCase().slice(0, 2);
+    const isOm = l === 'om' || /(?:akkam|galatooma|eeyyee|lakki|maal|bilbila|maqaa|jijjiiri|itti\s*fufi|dubbisi|deebi|sanada)/i.test(ctx.utterance);
+    const isTi = l === 'ti' || /(?:ሰላም|የቐንየለይ|እንታይ|ኣንብብ|ስመይ|ስልከይ|ቀጽል|ተመለስ|ተሰማሚዐ|መታወቂያይ)/iu.test(ctx.utterance);
+    const isAm = l === 'am' || (!isOm && !isTi && /[\u1200-\u137F]/.test(ctx.utterance));
+    const targetLanguageName = isOm ? 'Afaan Oromoo' : isTi ? 'Tigrinya' : isAm ? 'Amharic' : 'English';
     const sc = ctx.screenContext;
     const errorBlock = sc?.hasError
-      ? `\n\n=== ACTIVE ERROR ON SCREEN ===\n"${sc.errorMessage}"\nDo NOT navigate forward or say you are moving to the next step! Tell the user about this error and how to fix it.\n=== END ERROR ===\n`
+      ? `\n\n=== CRITICAL: ACTIVE ERROR ON SCREEN ===\nError message: "${sc.errorMessage}"\nDo NOT navigate forward or say you are moving to the next step! Tell the user in ${targetLanguageName} about this error and how to fix it.\n=== END ERROR ===\n`
       : '';
     const screenBlock = (sc?.activeQuestion
-      ? `\n\n=== CURRENT SCREEN (what the user sees right now) ===\nQuestion: "${sc.activeQuestion}"\nDescription: "${sc.description || ''}"\nOptions: ${JSON.stringify(sc.options || [])}\n=== END SCREEN ===\n\nIf the user asks what is on the screen, what to choose, what this means, or asks any question about this form step, answer it warmly and clearly using the screen info above.\n`
+      ? `\n\n=== CURRENT SCREEN (what the user sees right now) ===\nQuestion: "${sc.activeQuestion}"\nDescription: "${sc.description || ''}"\nOptions: ${JSON.stringify(sc.options || [])}\n=== END SCREEN ===\n\nIf the user asks what is on the screen, what to choose, what this means, or asks any question about this form step, answer it warmly and clearly in ${targetLanguageName} using the screen info above.\n`
       : '') + errorBlock;
-    const prompt = 'You are Roha (ሮሃ), a warm, smart, bilingual (Amharic/English) AI voice assistant for OpenPath onboarding. '
-      + 'You speak naturally like a helpful friend — not robotic. You respond in the same language the user speaks. '
-      + 'You can answer ANY question the user asks: about the form, about what a word means, about what comes next, about accessibility, or general questions. '
-      + 'If the user asks about something outside the form, give a short helpful answer, then gently guide them back.'
+    const prompt = 'You are Roha (ሮሃ), a warm, smart, multilingual (Amharic, Afaan Oromoo, Tigrinya, English) AI voice assistant for OpenPath onboarding. '
+      + 'You speak naturally like a helpful friend — not robotic. You respond in the same language the user speaks (' + targetLanguageName + '). '
+      + 'You can answer ANY question the user asks in ' + targetLanguageName + ': about the form, about what a word means, about what comes next, about accessibility, or general questions. '
+      + 'If the user asks about something outside the form, give a short helpful answer in ' + targetLanguageName + ', then gently guide them back.'
       + screenBlock
-      + 'User locale: ' + (ctx.locale || 'am') + '. '
+      + 'User locale: ' + (ctx.locale || 'en') + '. Target response language: ' + targetLanguageName + '. '
       + 'RESPONSE FORMAT: Return ONLY valid JSON with these fields: intent, targetId, payload, message. '
-      + 'In "message": write a warm, natural, conversational reply in ' + (isAm ? 'Amharic' : 'English') + '. Keep it concise (1-3 sentences). '
+      + 'In "message": write a warm, natural, conversational reply in ' + targetLanguageName + '. Keep it concise (1-3 sentences). '
       + 'For greetings, questions, clarifications, explanations — use intent "chat", targetId "page.main", payload {}. '
       + 'If the user provides an answer to the current field (e.g. gives their name, phone number, ID number, or text answer) or selects an option shown on the screen, use intent "propose_answer", targetId: "page.main", payload {"value": "<the_exact_answer_or_option>"}. '
       + 'For navigation: intent "navigate", payload {"direction":"forward"} or {"direction":"back"}. '
@@ -371,7 +517,7 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       + 'For simple mode: intent "simple_mode", payload {"enabled":true}. '
       + 'Available targets: ' + JSON.stringify(ctx.resources) + '. '
       + 'NEVER submit forms, fill unprompted answers, or invent fake targets. '
-      + 'ALWAYS include a "message" field with a helpful spoken reply.';
+      + 'ALWAYS include a "message" field with a helpful spoken reply in ' + targetLanguageName + '.';
     const headers = { 'Content-Type': 'application/json' };
     let url, body;
     if (config.provider === 'openai') {
