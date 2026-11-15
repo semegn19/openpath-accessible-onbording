@@ -249,7 +249,10 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
-    // Step 5: ID route options (Fayda, Kebele, Refugee, Other, Refer)
+    // Step 5: ID route options (Refer, Fayda, Kebele, Refugee, Other)
+    if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|የብለይን|hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|tumsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(utt)) {
+      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refer' }, message: isAm ? '«ሰነድ የለኝም» ተመርጧል።' : '"Refer me to a partner" selected.' };
+    }
     if (/ፋይዳ|fayda/iu.test(utt)) {
       return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'fayda' }, message: isAm ? '«የፋይዳ መታወቂያ» ተመርጧል።' : '"Fayda ID" selected.' };
     }
@@ -261,9 +264,6 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
     }
     if (/ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(utt)) {
       return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'other' }, message: isAm ? '«ሌላ ሰነድ» ተመርጧል።' : '"Another document" selected.' };
-    }
-    if (/(?:ሰነድ|መታወቂያ)\s*የለኝም|የለኝም|አጋር|እገዛ|እርዳታ|refer|partner|no\s*id|no\s*document/iu.test(utt)) {
-      return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refer' }, message: isAm ? '«በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ» ተመርጧል።' : '"Refer me to a partner" selected.' };
     }
 
     // Step 6: File upload / Camera trigger

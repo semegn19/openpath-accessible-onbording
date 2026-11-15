@@ -815,11 +815,15 @@ export class RohaSDK {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
 
-    const rawText = targetLabel.textContent?.trim() || '';
-    const cleanChosen = rawText.replace(/^[A-Zሀ-ፐ0-9\s]+(?=[A-Za-z\u1200-\u137F])/u, '').trim() || fallbackText || input.value;
+    const labelSpan = targetLabel.querySelector('.op-option-label') || targetLabel;
+    const rawText = (labelSpan.textContent || targetLabel.textContent || '').trim();
+    // Only strip single leading bullet markers like "1. ", "A) ", "ሀ. ", etc.
+    const cleanChosen = rawText.replace(/^[A-Za-z0-9ሀ-ፐ]\s*[\.\)፦\-:]\s*/u, '').trim() || fallbackText || input.value;
+    // For spoken announcements, shorten parenthetical text: e.g. "ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)" -> "ሰነድ የለኝም"
+    const spokenChosen = cleanChosen.replace(/\s*\(.*?\)\s*/g, ' ').replace(/\s+/g, ' ').trim() || cleanChosen;
     const msg = isAm
-      ? `«${cleanChosen}» ተመርጧል።`
-      : `"${cleanChosen}" selected.`;
+      ? `«${spokenChosen}» ተመርጧል።`
+      : `"${spokenChosen}" selected.`;
 
     this.announce(msg);
     this.readExecutor.speak(msg, this.locale);
@@ -848,6 +852,18 @@ export class RohaSDK {
       const target = optionLabels[num - 1];
       const inp = target.querySelector<HTMLInputElement>('input');
       if (inp) return this.selectOptionAndAdvance(target, inp);
+    }
+
+    // Specific check for refer / no document / partner help
+    if (/(?:ሰነድ\s*(?:የለኝም|የለም)|የለኝም|የለም|የብለይን|hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|tumsa|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(clean)) {
+      const referLabel = optionLabels.find(l => {
+        const inp = l.querySelector<HTMLInputElement>('input');
+        return inp?.value === 'refer' || /የለኝም|አጋር|እገዛ|refer|partner/i.test(l.textContent || '');
+      });
+      if (referLabel) {
+        const inp = referLabel.querySelector<HTMLInputElement>('input');
+        if (inp) return this.selectOptionAndAdvance(referLabel, inp);
+      }
     }
 
     for (const label of optionLabels) {
@@ -1057,16 +1073,29 @@ export class RohaSDK {
     const isSecond = /(?:ሁለተኛ|second|2nd|^2$|^b$|^ለ$)/iu.test(cleanUtt) || /(?:option\s*(?:2|b)|አማራጭ\s*(?:2|ለ))/iu.test(lower);
     const isThird = /(?:ሶስተኛ|ሦስተኛ|third|3rd|^3$|^c$|^ሐ$)/iu.test(cleanUtt) || /(?:option\s*(?:3|c)|አማራጭ\s*(?:3|ሐ))/iu.test(lower);
     const isFourth = /(?:አራተኛ|fourth|4th|^4$|^d$|^መ$)/iu.test(cleanUtt) || /(?:option\s*(?:4|d)|አማራጭ\s*(?:4|መ))/iu.test(lower);
+    const isFifth = /(?:አምስተኛ|fifth|5th|^5$|^e$|^ሠ$|^ረ$)/iu.test(cleanUtt) || /(?:option\s*(?:5|e)|አማራጭ\s*(?:5|ሠ|ረ))/iu.test(lower);
     const isLast = /(?:የመጨረሻ|last)\b/iu.test(cleanUtt);
 
-    if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isFourth || isLast)) {
-      const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : isFourth ? 3 : optionLabels.length - 1;
+    if (optionLabels.length > 0 && (isFirst || isSecond || isThird || isFourth || isFifth || isLast)) {
+      const idx = isFirst ? 0 : isSecond ? 1 : isThird ? 2 : isFourth ? 3 : isFifth ? 4 : optionLabels.length - 1;
       const targetLabel = optionLabels[idx];
       if (targetLabel) {
         const input = targetLabel.querySelector<HTMLInputElement>('input[type="radio"], input[type="checkbox"]');
         if (input) {
           return this.selectOptionAndAdvance(targetLabel, input);
         }
+      }
+    }
+
+    // 6b-2. Priority check for Option 5 (refer / no ID / partner assistance)
+    if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|የብለይን|hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|tumsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(lower)) {
+      const referLabel = optionLabels.find(l => {
+        const inp = l.querySelector<HTMLInputElement>('input');
+        return inp?.value === 'refer' || /የለኝም|አጋር|እገዛ|refer|partner/i.test(l.textContent || '');
+      });
+      if (referLabel) {
+        const inp = referLabel.querySelector<HTMLInputElement>('input');
+        if (inp) return this.selectOptionAndAdvance(referLabel, inp);
       }
     }
 
@@ -1087,9 +1116,9 @@ export class RohaSDK {
       const isFayda = (val === 'fayda' || cleanLabel.includes('ፋይዳ')) && /ፋይዳ|fayda/iu.test(lower);
       const isKebele = (val === 'kebele' || cleanLabel.includes('ቀበሌ')) && /ቀበሌ|kebele/iu.test(lower);
       const isRefugee = (val === 'refugee' || cleanLabel.includes('ስደተኛ')) && /ስደተኛ|refugee/iu.test(lower);
-      const isOther = (val === 'other' || cleanLabel.includes('ሌላ')) && /ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(lower);
+      const isOther = (val === 'other' || cleanLabel.includes('ሌላ')) && /ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(lower) && !/(?:የለኝም|አጋር|እገዛ)/iu.test(lower);
       const isRefer = (val === 'refer' || cleanLabel.includes('አጋር') || cleanLabel.includes('የለኝም')) &&
-        /(?:የለኝም|አጋር|እገዛ|እርዳታ|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(lower);
+        /(?:የለኝም|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(lower);
 
       const isAmharicOption = /አማርኛ|amharic/i.test(labelText) || val === 'am';
       const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || val === 'en';
@@ -1097,13 +1126,15 @@ export class RohaSDK {
       const mentionsEnglish = /english|እንግሊዝኛ/i.test(lower);
 
       // Extract significant words and strip Amharic prefixes (e.g. የፋይዳ -> ፋይዳ, የቀበሌ -> ቀበሌ)
-      const words = cleanLabel.split(/\s+/).filter(w => w.length >= 3 && !['option', 'አማራጭ', 'label'].includes(w));
+      // Ignore common stop words like ሰነድ and መታወቂያ that occur in all ID options
+      const stopWords = ['option', 'አማራጭ', 'label', 'ሰነድ', 'የሰነድ', 'መታወቂያ', 'የመታወቂያ', 'document', 'id'];
+      const words = cleanLabel.split(/\s+/).filter(w => w.length >= 3 && !stopWords.includes(w));
       const wordMatch = words.some(w => {
         const root = w.replace(/^[የበለከወ]/, '');
-        return lower.includes(w) || (root.length >= 3 && lower.includes(root));
+        return lower.includes(w) || (root.length >= 3 && !stopWords.includes(root) && lower.includes(root));
       });
 
-      if (directMatch || valMatch || isFayda || isKebele || isRefugee || isOther || isRefer ||
+      if (directMatch || valMatch || isRefer || isFayda || isKebele || isRefugee || isOther ||
           wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
         return this.selectOptionAndAdvance(label, input);
       }
