@@ -289,6 +289,223 @@
       }
     },
     {
+      "id": "id-route",
+      "type": "radio",
+      "legend": {
+        "am": "ማንነትዎን እንዴት እናውቃለን?",
+        "en": "How can we confirm who you are?",
+        "om": "Eenyummaa keessan akkamitti mirkaneessina?",
+        "ti": "መንነትኩም ብኸመይ ነረጋግጽ?"
+      },
+      "simple": {
+        "am": "መታወቂያ አለዎት?",
+        "en": "Do you have an ID?",
+        "om": "Waraqaa eenyummaa qabduu?",
+        "ti": "መታወቒ ኣሎኩምዶ?"
+      },
+      "hint": {
+        "am": "ማንነትዎን ለማረጋገጥ የሚመርጡትን ሰነድ ይምረጡ።",
+        "en": "Choose a document to confirm who you are.",
+        "om": "Eenyummaa keessan mirkaneessuuf sanada filadhaa.",
+        "ti": "መንነትኩም ንምርግጋጽ ሰነድ ምረጹ።"
+      },
+      "why": {
+        "am": "ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል።",
+        "en": "This helps confirm who you are.",
+        "om": "Eenyummaa keessan mirkaneessuuf gargaara.",
+        "ti": "መንነትኩም ንምርግጋጽ ይሕግዝ።"
+      },
+      "icon": "id",
+      "required": true,
+      "voice": true,
+      "readAloud": true,
+      "pii": "none",
+      "localOnly": false,
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "fayda",
+          "label": {
+            "am": "የፋይዳ መታወቂያ",
+            "en": "Fayda ID",
+            "om": "Waraqaa Faayidaa",
+            "ti": "ናይ ፋይዳ መታወቒ"
+          },
+          "icon": "card"
+        },
+        {
+          "value": "refugee",
+          "label": {
+            "am": "የስደተኛ መታወቂያ",
+            "en": "Refugee ID",
+            "om": "Waraqaa baqattummaa",
+            "ti": "ናይ ስደተኛ መታወቒ"
+          },
+          "icon": "card"
+        },
+        {
+          "value": "kebele",
+          "label": {
+            "am": "የቀበሌ መታወቂያ",
+            "en": "Kebele ID",
+            "om": "Waraqaa Gandaa",
+            "ti": "ናይ ቀበሌ መታወቒ"
+          },
+          "icon": "card"
+        },
+        {
+          "value": "other",
+          "label": {
+            "am": "ሌላ ሰነድ",
+            "en": "Another document",
+            "om": "Sanada biraa",
+            "ti": "ካልእ ሰነድ"
+          },
+          "icon": "doc"
+        },
+        {
+          "value": "refer",
+          "label": {
+            "am": "ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)",
+            "en": "I do not have a document (Refer me to a partner)",
+            "om": "Sanada hin qabu (Dhaabbata tumsaatti na dabarsaa)",
+            "ti": "ሰነድ የብለይን (ናብ መሻርኽቲ ትካል ስደዱኒ)"
+          },
+          "icon": "handshake",
+          "simple": {
+            "am": "የአጋር እገዛ",
+            "en": "Partner help",
+            "om": "Gargaarsa tumsaa",
+            "ti": "ሓገዝ መሻርኽቲ"
+          }
+        }
+      ],
+      "simpleHint": {
+        "am": "ማንነትዎን ለማረጋገጥ አንዱን ይምረጡ።",
+        "en": "Choose one to confirm who you are.",
+        "om": "Eenyummaa keessan mirkaneessuuf tokko filadhaa.",
+        "ti": "መንነትኩም ንምርግጋጽ ሓደ ምረጹ።"
+      }
+    },
+    {
+      "id": "id-document-image",
+      "type": "file",
+      "label": {
+        "am": "የመታወቂያ ወይም የሰነድዎን ፎቶ ያንሱ ወይም ይስቀሉ",
+        "en": "Take or upload a photo of your ID or document",
+        "om": "Suuraa waraqaa eenyummaa ykn sanada keessanii kaasaa ykn fe'aa",
+        "ti": "ናይ መታወቒ ወይ ናይ ሰነድኩም ስእሊ ኣልዕሉ ወይ ስደዱ"
+      },
+      "simple": {
+        "am": "የመታወቂያ ወይም የሰነድ ፎቶ",
+        "en": "ID or document photo",
+        "om": "Suuraa waraqaa ykn sanadaa",
+        "ti": "ናይ መታወቒ ወይ ሰነድ ስእሊ"
+      },
+      "hint": {
+        "am": "ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ።",
+        "en": "Take or upload a clear photo. If you do not have any document, go back and choose 'Refer me to a partner'.",
+        "om": "Suuraa ifa ta'e kaasaa ykn fe'aa. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa.",
+        "ti": "ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ።"
+      },
+      "why": {
+        "am": "ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል።",
+        "en": "This helps confirm who you are without waiting.",
+        "om": "Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara.",
+        "ti": "እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ።"
+      },
+      "icon": "camera",
+      "accept": "image/*",
+      "required": false,
+      "voice": false,
+      "readAloud": true,
+      "pii": "sensitive",
+      "localOnly": false,
+      "showIf": {
+        "step": "id-route",
+        "in": [
+          "fayda",
+          "kebele",
+          "refugee",
+          "other"
+        ]
+      },
+      "simpleHint": {
+        "am": "ግልጽ ፎቶ ስቀሉ።",
+        "en": "Upload a clear photo.",
+        "om": "Suuraa ifa ta'e fe'aa.",
+        "ti": "ንጹር ስእሊ ስደዱ።"
+      }
+    },
+    {
+      "id": "referral",
+      "type": "statement",
+      "showIf": {
+        "step": "id-route",
+        "in": [
+          "refer"
+        ]
+      },
+      "label": {
+        "am": "ከአጋር ድርጅት ጋር መገናኘት",
+        "en": "Connecting with a partner organisation",
+        "om": "Dhaabbata tumsaa wajjin walqunnamsiisuu",
+        "ti": "ምስ መሻርኽቲ ትካል ምርኻብ"
+      },
+      "simple": {
+        "am": "የአጋር እርዳታ",
+        "en": "Partner help",
+        "om": "Gargaarsa tumsaa",
+        "ti": "ሓገዝ መሻርኽቲ"
+      },
+      "icon": "handshake",
+      "required": true,
+      "voice": false,
+      "readAloud": true,
+      "pii": "personal",
+      "localOnly": false,
+      "body": {
+        "am": "ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ።",
+        "en": "An assistant from a partner organisation will call your phone to finish sign-up. We only share your name and phone number. Say \"no\" on the call if you change your mind.",
+        "om": "Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu.",
+        "ti": "ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም።"
+      },
+      "validation": [
+        {
+          "rule": "required"
+        }
+      ],
+      "options": [
+        {
+          "value": "agree-share",
+          "label": {
+            "am": "ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።",
+            "en": "I agree to share my name and phone number with a partner organisation.",
+            "om": "Maqaan koo fi bilbilli koo dhaabbata tumsaatti akka kennamu walii nan gala.",
+            "ti": "ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
+          },
+          "required": true,
+          "simple": {
+            "am": "አዎ፣ ስሜና ስልኬ ይሰጥ",
+            "en": "Yes, share my name and phone number",
+            "om": "Maqaa fi bilbilli koo haa kennamu",
+            "ti": "እወ፣ ስመይን ስልከይን ይወሃብ"
+          }
+        }
+      ],
+      "sharing": {
+        "recipient": "partner",
+        "fields": [
+          "job-name",
+          "job-phone"
+        ]
+      }
+    },
+    {
       "id": "years-experience",
       "type": "number",
       "label": {
@@ -886,5 +1103,15 @@
     "en": "Take your time. No rush.",
     "om": "Suuta jedhaa guutaa. Jarjarri hin jiru.",
     "ti": "ብዘይ ህጹጽነት ቀስ ኢልኩም ምልእዎ።"
+  },
+  "partner": {
+    "id": "referral-partner",
+    "displayName": {
+      "am": "አጋር ድርጅት",
+      "en": "a partner organisation",
+      "om": "Dhaabbata tumsaa",
+      "ti": "መሻርኽቲ ትካል"
+    },
+    "status": "unconfirmed"
   }
 }

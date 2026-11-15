@@ -29,15 +29,6 @@ export const ACCOMMODATION_OPTIONS: AccommodationOption[] = accStep?.options ?? 
 
 const JOBS_LIST: LocalizedJob[] = (jobsData as unknown as { jobs: LocalizedJob[] }).jobs ?? [];
 
-const ACC_ICONS: Record<string, string> = {
-  'step-free': '🏢',
-  'remote': '💻',
-  'flexible': '⏱️',
-  'screen-reader': '🔊',
-  'sign-language': '🤟',
-  'adapted-desk': '🪑',
-};
-
 interface JobFilterProps {
   lang: Lang;
   selectedJob: LocalizedJob | null;
@@ -109,7 +100,6 @@ export function JobAccommodationFilter({
             aria-expanded={open}
             aria-controls="op-job-filter-panel"
           >
-            <span className="op-job-filter-icon" aria-hidden="true">🔍</span>
             <span>{c('jobFilter.toggle', lang)}</span>
             <span className="op-job-filter-badge">{matchedJobs.length}</span>
           </button>
@@ -136,7 +126,6 @@ export function JobAccommodationFilter({
 
           {/* Privacy Guarantee Banner: No Disability Disclosure */}
           <div className="op-job-filter-privacy-card" role="note">
-            <span className="op-privacy-shield" aria-hidden="true">🛡️</span>
             <p className="op-privacy-text">{c('jobFilter.privacy', lang)}</p>
           </div>
 
@@ -146,7 +135,6 @@ export function JobAccommodationFilter({
             <div className="op-job-filter-chips">
               {ACCOMMODATION_OPTIONS.map((opt) => {
                 const isChecked = selectedAccs.includes(opt.value);
-                const icon = ACC_ICONS[opt.value] || '✓';
                 const label = opt.label[lang] || opt.label.en;
                 return (
                   <label
@@ -159,7 +147,6 @@ export function JobAccommodationFilter({
                       checked={isChecked}
                       onChange={() => toggleAcc(opt.value)}
                     />
-                    <span className="op-chip-icon" aria-hidden="true">{icon}</span>
                     <span className="op-chip-label">{label}</span>
                   </label>
                 );
@@ -215,7 +202,6 @@ export function JobAccommodationFilter({
                         {job.accommodations.map((accVal) => {
                           const opt = ACCOMMODATION_OPTIONS.find((o) => o.value === accVal);
                           const isMatched = selectedAccs.includes(accVal);
-                          const icon = ACC_ICONS[accVal] || '✓';
                           const accName = opt ? opt.label[lang] || opt.label.en : accVal;
                           return (
                             <span
@@ -223,7 +209,6 @@ export function JobAccommodationFilter({
                               className={`op-acc-badge ${isMatched ? 'op-acc-matched' : ''}`}
                               title={accName}
                             >
-                              <span aria-hidden="true">{icon}</span>
                               <span>{accName}</span>
                             </span>
                           );
