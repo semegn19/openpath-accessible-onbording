@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Lang, Schema } from './types';
 import { c } from './copy';
+import { t } from './i18n';
 import { ReadAloudButton } from './speech';
 import jobsData from './schemas/jobs.json';
 import employerSchema from './schemas/employer-accommodations-v1.json';
@@ -44,7 +45,7 @@ export function SelectedJobBanner({
       <div className="op-selected-job-info">
         <span className="op-selected-job-tag">{c('jobFilter.applyingFor', lang)}</span>
         <strong className="op-selected-job-title">
-          {selectedJob ? (selectedJob.title[lang] || selectedJob.title.en) : c('jobFilter.title', lang)}
+          {selectedJob ? t(selectedJob.title as any, lang) : c('jobFilter.title', lang)}
         </strong>
         {selectedJob && <span className="op-selected-job-company">@{selectedJob.company}</span>}
       </div>
@@ -117,7 +118,7 @@ export function JobListingPage({
         <div className="op-job-filter-chips">
           {ACCOMMODATION_OPTIONS.map((opt) => {
             const isChecked = selectedAccs.includes(opt.value);
-            const label = opt.label[lang] || opt.label.en;
+            const label = t(opt.label as any, lang);
             return (
               <label
                 key={opt.value}
@@ -174,23 +175,23 @@ export function JobListingPage({
             <article key={job.id} className="op-job-card">
               <div className="op-job-card-main">
                 <h2 className="op-job-title">
-                  {job.title[lang] || job.title.en}
+                  {t(job.title as any, lang)}
                 </h2>
                 <div className="op-job-meta">
                   <span className="op-job-company">{job.company}</span>
                   <span className="op-job-bullet" aria-hidden="true">·</span>
                   <span className="op-job-location">
-                    {job.location[lang] || job.location.en}
+                    {t(job.location as any, lang)}
                   </span>
                 </div>
                 <p className="op-job-desc">
-                  {job.description[lang] || job.description.en}
+                  {t(job.description as any, lang)}
                 </p>
                 <div className="op-job-accommodations" aria-label="Offered accommodations">
                   {job.accommodations.map((accVal) => {
                     const opt = ACCOMMODATION_OPTIONS.find((o) => o.value === accVal);
                     const isMatched = selectedAccs.includes(accVal);
-                    const accName = opt ? opt.label[lang] || opt.label.en : accVal;
+                    const accName = opt ? t(opt.label as any, lang) : accVal;
                     return (
                       <span
                         key={accVal}

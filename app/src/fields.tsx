@@ -298,29 +298,42 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           )}
           {hint && <p id={hintId} className="op-hint">{hint}</p>}
           <div className="op-options">
-            {(step.options ?? []).map((o) => {
-              const arr = Array.isArray(value) ? (value as string[]) : [];
-              const single = step.type === 'radio' || step.type === 'language';
-              const checked = single ? value === o.value : arr.includes(o.value);
-              return (
-                <label key={o.value} className="op-option">
-                  <input
-                    type={step.type === 'checkbox' ? 'checkbox' : 'radio'}
-                    name={step.id}
-                    value={o.value}
-                    checked={checked}
-                    onChange={() => (step.type === 'checkbox' ? toggleInArray(o.value, o.exclusive, exclusiveValue) : onChange(o.value))}
-                    aria-describedby={describedBy || undefined}
-                    aria-invalid={error ? true : undefined}
-                    aria-errormessage={error ? errorId : undefined}
-                  />
-                  <span className="op-option-label" lang={o.lang ?? undefined}>
-                    {o.icon && <Icon name={o.icon} />}
-                    {optionText(o, lang, simple)}
-                  </span>
-                </label>
-              );
-            })}
+            {(() => {
+              const baseOpts = step.options ?? [];
+              const opts = step.type === 'language' && !baseOpts.some((o) => o.value === 'so')
+                ? [
+                    ...baseOpts,
+                    {
+                      value: 'so',
+                      label: { en: 'Soomaali' },
+                      icon: 'letter-so',
+                    },
+                  ]
+                : baseOpts;
+              return opts.map((o) => {
+                const arr = Array.isArray(value) ? (value as string[]) : [];
+                const single = step.type === 'radio' || step.type === 'language';
+                const checked = single ? value === o.value : arr.includes(o.value);
+                return (
+                  <label key={o.value} className="op-option">
+                    <input
+                      type={step.type === 'checkbox' ? 'checkbox' : 'radio'}
+                      name={step.id}
+                      value={o.value}
+                      checked={checked}
+                      onChange={() => (step.type === 'checkbox' ? toggleInArray(o.value, o.exclusive, exclusiveValue) : onChange(o.value))}
+                      aria-describedby={describedBy || undefined}
+                      aria-invalid={error ? true : undefined}
+                      aria-errormessage={error ? errorId : undefined}
+                    />
+                    <span className="op-option-label" lang={o.lang ?? undefined}>
+                      {o.icon && <Icon name={o.icon} />}
+                      {optionText(o, lang, simple)}
+                    </span>
+                  </label>
+                );
+              });
+            })()}
           </div>
         </fieldset>
       ) : (

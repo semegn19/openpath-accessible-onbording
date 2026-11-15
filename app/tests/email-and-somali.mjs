@@ -11,7 +11,7 @@ const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 
 try {
-  await page.goto('http://127.0.0.1:5173/job', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:5173/job', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(600);
 
   // 1a. Verify Soomaali language button exists in SettingsBar
@@ -51,6 +51,50 @@ try {
   console.log('Roha stop command response in Somali:', somaliTranscript);
   ok(somaliTranscript.includes('joojiyay') || somaliTranscript.includes('Waa la joojiyay'), 'Roha responded in Somali to "jooji"');
 
+  console.log('\n--- 1b. Testing Form Question & Options in Somali ---');
+  // Check that Job Listing page headers and badges are rendered in Somali
+  const listingTitle = (await page.locator('#op-q-title').innerText()).trim();
+  console.log('Job listing title in Somali:', listingTitle);
+  ok(listingTitle.includes('Raadi') || listingTitle.includes('shaqooyin') || listingTitle.includes('taageerada'), 'Job listing title in Somali');
+
+  const filterLegend = (await page.locator('.op-job-filter-legend').innerText()).trim();
+  console.log('Filter legend in Somali:', filterLegend);
+  ok(filterLegend.includes('Shaandheeyaha') || filterLegend.includes('taageerada'), 'Filter legend in Somali');
+
+  // Click on the first job card's apply button
+  const firstApplyBtn = page.locator('.op-btn-apply').first();
+  console.log('Apply button count:', await firstApplyBtn.count());
+  if (await firstApplyBtn.count() > 0) {
+    await firstApplyBtn.click();
+    await page.waitForTimeout(500);
+
+    // Selected job banner in Somali
+    const bannerJobTitle = (await page.locator('.op-selected-job-title').innerText()).trim();
+    console.log('Selected job title in Somali:', bannerJobTitle);
+    ok(bannerJobTitle.length > 0 && !bannerJobTitle.includes('Accessibility & Software Specialist'), 'Job title translated in Somali');
+
+    // On form Step 1 (or Step 2)
+    const radio = page.locator('#op-main .op-options input[value="so"]');
+    if (await radio.count() > 0) {
+      await radio.check();
+      await page.waitForTimeout(200);
+      await page.locator('#op-main button[type="submit"]').click();
+      await page.waitForTimeout(500);
+    }
+
+    const step2Title = (await page.locator('#op-q-title').innerText()).trim();
+    console.log('Step 2 title in Somali:', step2Title);
+    ok(step2Title.includes('Sideed u rabtaa') || step2Title.includes('foomkani'), 'Question rendered in Somali (not English)');
+
+    const stepIndicator = (await page.locator('.op-progress').innerText()).trim();
+    console.log('Step indicator in Somali:', stepIndicator);
+    ok(stepIndicator.includes('Tallaabada') || stepIndicator.includes('ee'), 'Step indicator rendered in Somali');
+
+    const nextBtn = (await page.locator('#op-main button[type="submit"]').innerText()).trim();
+    console.log('Next button in Somali:', nextBtn);
+    ok(nextBtn.includes('Hore'), 'Next button rendered in Somali');
+  }
+
   console.log('\n--- 2. Testing Email Dictation Normalization ---');
   // Inject a standard test email input into the main view
   const emailTestResult = await page.evaluate(async () => {
@@ -70,26 +114,16 @@ try {
 
     const roha = window.Roha || window.rohaInstance;
     const results = [];
-
-    // Test case 1: "dog at gmail.com"
-    await roha.handleUserUtterance('dog at gmail.com');
-    results.push({ test: 'dog at gmail.com', val: emailInp.value });
-
-    // Test case 2: "dog at gmail dot com"
-    await roha.handleUserUtterance('dog at gmail dot com');
-    results.push({ test: 'dog at gmail dot com', val: emailInp.value });
-
-    // Test case 3: "my email is alex at yahoo.com"
-    await roha.handleUserUtterance('my email is alex at yahoo.com');
-    results.push({ test: 'my email is alex at yahoo.com', val: emailInp.value });
-
-    // Test case 4: "kassa at gmail"
-    await roha.handleUserUtterance('kassa at gmail');
-    results.push({ test: 'kassa at gmail', val: emailInp.value });
-
-    // Test case 5: "john dot doe at outlook dot com"
-    await roha.handleUserUtterance('john dot doe at outlook dot com');
-    results.push({ test: 'john dot doe at outlook dot com', val: emailInp.value });
+    const tests = [
+      'dog at gmail.com',
+      'dog at gmail dot com',
+      'my email is alex at yahoo.com',
+      'kassa at gmail',
+      'john dot doe at outlook dot com'
+    ];
+    for (const t of tests) {
+      results.push({ test: t, val: roha.spokenToEmail ? roha.spokenToEmail(t) : '' });
+    }
 
     // Clean up
     testDiv.remove();

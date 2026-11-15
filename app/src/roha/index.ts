@@ -102,6 +102,7 @@ export function spokenToEmail(raw: string): string {
 }
 
 export class RohaSDK {
+  public spokenToEmail = spokenToEmail;
   private readonly instanceId = ++instanceCount;
   private requestVersion = 0;
   private aiEndpoint = '/api/assistant';

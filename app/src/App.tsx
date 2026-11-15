@@ -117,7 +117,7 @@ function Shell({ schema }: { schema: Schema }) {
     if (!isEmbed) return;
     const handler = (e: MessageEvent) => {
       if (e.data && e.data.source === 'openpath-host' && e.data.v === 1) {
-        if (e.data.type === 'set-lang' && ['am', 'en', 'om', 'ti'].includes(e.data.lang)) {
+        if (e.data.type === 'set-lang' && ['am', 'en', 'om', 'ti', 'so'].includes(e.data.lang)) {
           setSettings((s) => ({ ...s, lang: e.data.lang }));
         } else if (e.data.type === 'set-settings' && e.data.settings) {
           setSettings((s) => ({ ...s, ...e.data.settings }));
@@ -424,7 +424,7 @@ function Shell({ schema }: { schema: Schema }) {
   const handleChange = (s: Step, v: unknown) => {
     f.setValue(s.id, v);
 
-    if (s.type === 'language' && (v === 'am' || v === 'en' || v === 'om' || v === 'ti')) {
+    if (s.type === 'language' && (v === 'am' || v === 'en' || v === 'om' || v === 'ti' || v === 'so')) {
       const nextLang = v as Lang;
       setSettings((prev) => ({ ...prev, lang: nextLang }));
       // A language change re-renders every string; say so, in the new language.
@@ -695,7 +695,7 @@ function Shell({ schema }: { schema: Schema }) {
                   if (!payload) return;
                   if (selectedJob) {
                     (payload as Record<string, unknown>).selectedJobId = selectedJob.id;
-                    (payload as Record<string, unknown>).selectedJobTitle = selectedJob.title[lang] || selectedJob.title.en;
+                    (payload as Record<string, unknown>).selectedJobTitle = t(selectedJob.title as any, lang);
                   }
 
                   // 1. Write it down. 2. Then try to send it. Never the other way round.

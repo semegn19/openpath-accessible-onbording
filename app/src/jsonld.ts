@@ -10,6 +10,7 @@
  * Guarantees zero PII (contact phone numbers or personal data) in the output.
  */
 import type { Schema, Lang } from './types';
+import { t } from './i18n';
 
 function addDays(isoDateStr: string, days = 90): string {
   const d = new Date(isoDateStr || Date.now());
@@ -30,14 +31,14 @@ export function buildJobPostingJsonLd(
   const rawRole = typeof answers.role === 'string' ? answers.role.trim() : '';
   const rawCompany = typeof answers.company === 'string' ? answers.company.trim() : '';
 
-  const fallbackTitle = schema.title?.[lang] || schema.title?.en || 'Job Opportunity';
+  const fallbackTitle = t(schema.title, lang, 'Job Opportunity');
   const role = rawRole || fallbackTitle;
   const company = rawCompany || 'Inclusive Employer';
 
   const categoryKey = typeof answers['job-category'] === 'string' ? answers['job-category'] : '';
   const catStep = schema.steps.find((s) => s.id === 'job-category');
   const catOption = catStep?.options?.find((o) => o.value === categoryKey);
-  const categoryLabel = catOption?.label?.[lang] || catOption?.label?.en || '';
+  const categoryLabel = t(catOption?.label, lang, '');
 
   const pickedAccommodations = Array.isArray(answers.accommodations)
     ? (answers.accommodations as string[])
@@ -47,7 +48,7 @@ export function buildJobPostingJsonLd(
   const benefits = pickedAccommodations
     .map((k) => {
       const opt = accStep?.options?.find((o) => o.value === k);
-      return opt?.label?.[lang] || opt?.label?.en;
+      return t(opt?.label, lang);
     })
     .filter((b): b is string => Boolean(b));
 
