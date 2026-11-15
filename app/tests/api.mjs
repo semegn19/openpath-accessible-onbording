@@ -8,9 +8,10 @@ import { fileURLToPath } from 'node:url';
 const PORT = 8099;
 const DATA = mkdtempSync(join(tmpdir(), 'openpath-api-'));
 const SCHEMA = fileURLToPath(new URL('../../schema', import.meta.url));
+const SERVER_MJS = fileURLToPath(new URL('../../api/server.mjs', import.meta.url));
 const B = `http://127.0.0.1:${PORT}/api`;
 
-const srv = spawn('node', ['../api/server.mjs'], {
+const srv = spawn('node', [SERVER_MJS], {
   env: { ...process.env, PORT: String(PORT), DATA_DIR: DATA, SCHEMA_DIR: SCHEMA, RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -34,8 +35,8 @@ for (let i = 0; i < 60; i++) {
 const VALID = {
   formId: 'savanna-onboard-v1',
   // the answer keys are step ids, exactly as the form sends them (`submit` holds the consent box)
-  answers: { language: 'am', assistance: 'no-thanks', name: 'ሳራ ተስፋዬ', phone: '0912345678',
-             'id-route': 'fayda', 'id-value': '3910028475', submit: ['consent-programme'] },
+  answers: { language: 'am', name: 'ሳራ ተስፋዬ', phone: '0912345678',
+             'id-route': 'fayda', 'id-document-image': 'mock-id-photo-data', submit: ['consent-programme'] },
 };
 
 /* --- 1. health & forms --- */
@@ -106,7 +107,7 @@ let id;
 {
   const KEY = Buffer.from('k'.repeat(32)).toString('base64');
   const DATA2 = mkdtempSync(join(tmpdir(), 'openpath-enc-'));
-  const srv3 = spawn('node', ['../api/server.mjs'], {
+  const srv3 = spawn('node', [SERVER_MJS], {
     env: { ...process.env, PORT: '8096', DATA_DIR: DATA2, SCHEMA_DIR: SCHEMA, DATA_KEY: KEY, TRUST_PROXY: '0' },
     stdio: 'ignore',
   });
@@ -119,19 +120,19 @@ let id;
   ok(res.status === 201, 'submission accepted with DATA_KEY set', encId);
 
   const onDisk = readFileSync(join(DATA2, 'submissions.jsonl'), 'utf8');
-  ok(!onDisk.includes('ሳራ') && !onDisk.includes('3910028475') && !onDisk.includes('+251912345678'),
-     'name, phone and ID number are NOT readable on disk');
+  ok(!onDisk.includes('ሳራ') && !onDisk.includes('mock-id-photo-data') && !onDisk.includes('+251912345678'),
+     'name, phone and document photo are NOT readable on disk');
   ok(onDisk.includes('"enc":1'), 'they are stored as AES-256-GCM boxes');
 
   const back = await (await fetch(`http://127.0.0.1:8096/api/submissions/${encId}`)).json();
-  ok(back.answers?.name === 'ሳራ ተስፋዬ' && back.answers?.['id-value'] === '3910028475',
+  ok(back.answers?.name === 'ሳራ ተስፋዬ' && back.answers?.['id-document-image'] === 'mock-id-photo-data',
      'and the API still returns them in the clear to a caller holding the id');
   srv3.kill('SIGKILL');
 }
 
 /* --- 6. rate limit --- */
 {
-  const srv2 = spawn('node', ['../api/server.mjs'], {
+  const srv2 = spawn('node', [SERVER_MJS], {
     env: { ...process.env, PORT: '8098', DATA_DIR: DATA, SCHEMA_DIR: SCHEMA, RATE_LIMIT_PER_MIN: '3', TRUST_PROXY: '0' },
     stdio: 'ignore',
   });
@@ -149,10 +150,10 @@ let id;
 {
   const spec = await (await fetch(`${B}/openapi.yaml`)).text();
   ok(spec.startsWith('openapi: 3.1.0'), 'GET /openapi.yaml is served');
-  for (const p of ['/health:', '/forms:', '/forms/{formId}:', '/submissions:', '/submissions/{id}:', '/openapi.yaml:']) {
+  for (const p of ['/health:', '/forms:', '/forms/{formId}:', '/forms/{formId}/jsonld:', '/submissions:', '/submissions/{id}:', '/submissions/{id}/jsonld:', '/openapi.yaml:']) {
     ok(spec.includes(`  ${p}`), `spec documents ${p.replace(':', '')}`);
   }
-  const implemented = ['/health', '/forms', '/forms/{formId}', '/submissions', '/submissions/{id}'];
+  const implemented = ['/health', '/forms', '/forms/{formId}', '/forms/{formId}/jsonld', '/submissions', '/submissions/{id}', '/submissions/{id}/jsonld'];
   const undocumented = implemented.filter((p) => !spec.includes(`  ${p}:`));
   ok(undocumented.length === 0, 'no endpoint is missing from the spec', undocumented.join(',') || 'parity');
 }

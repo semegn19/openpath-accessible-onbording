@@ -70,11 +70,8 @@ await p.goto(ORIGIN + '/job', { waitUntil: 'networkidle' });
 await p.goBack(); await p.waitForTimeout(300);
 ok((await p.locator('.op-brand').innerText()).trim() === onboardTitle, 'browser back', await p.evaluate(() => location.pathname));
 
-/* ---------- nobody is asked the same question twice ----------
-   Step 3 asks "Would you like a person to help you?"; the referral step used to follow it with
-   "share your name and phone number so a partner organisation can call you" — the same yes/no, a
-   second time, about the same call. It is now conditional on NOT having said yes already. */
-const walk = async (helpIndex) => {
+/* ---------- branching: fayda & kebele ask for photo, refer asks for partner consent ---------- */
+const walk = async (routeIndex) => {
   await p.goto(ORIGIN + '/onboard', { waitUntil: 'load' });
   await p.evaluate(() => localStorage.clear());
   await p.reload({ waitUntil: 'load' });
@@ -82,13 +79,11 @@ const walk = async (helpIndex) => {
   await p.locator('.op-option input').first().check({ timeout: 2000 });
   await next(); await p.waitForTimeout(120);                       // language
   await next(); await p.waitForTimeout(120);                       // preferences
-  await p.locator('.op-option input').nth(helpIndex).check({ timeout: 2000 });
-  await next(); await p.waitForTimeout(150);                       // help?
   for (const v of ['ሳራ በቀለ', '0912345678']) {
     await p.locator('.op-input').first().fill(v, { timeout: 2000 });
-    await next(); await p.waitForTimeout(150);
+    await next(); await p.waitForTimeout(150);                     // name, phone
   }
-  await p.locator('.op-option input').nth(4).check({ timeout: 2000 });   // "I have no ID"
+  await p.locator('.op-option input').nth(routeIndex).check({ timeout: 2000 });   // 0: fayda, 2: kebele, 4: refer
   await next(); await p.waitForTimeout(250);
   return {
     type: await p.locator('.op-root').getAttribute('data-step-type'),
@@ -96,15 +91,15 @@ const walk = async (helpIndex) => {
     progress: (await p.locator('.op-progress').innerText()).replace(/\s+/g, ' '),
   };
 };
-const saidYes = await walk(0);
-ok(saidYes.type !== 'statement',
-   'having already said "yes, call me", the call is not offered a second time', `${saidYes.type}: ${saidYes.heading}`);
-const saidNo = await walk(1);
-ok(saidNo.type === 'statement',
-   'having said "no", someone with no ID is still offered the call once', `${saidNo.type}: ${saidNo.heading}`);
-const total = (s) => Number(s.match(/ከ (\d+)|of (\d+)/)?.slice(1).find(Boolean) ?? 0);
-ok(total(saidNo.progress) === total(saidYes.progress) + 1,
-   'the skipped step is gone from the total, not just hidden', `${saidYes.progress} vs ${saidNo.progress}`);
+const pickedFayda = await walk(0);
+ok(pickedFayda.type === 'file',
+   'choosing Fayda asks for photo upload (file)', `${pickedFayda.type}: ${pickedFayda.heading}`);
+const pickedKebele = await walk(2);
+ok(pickedKebele.type === 'file',
+   'choosing Kebele ID asks for photo upload (file)', `${pickedKebele.type}: ${pickedKebele.heading}`);
+const pickedPartner = await walk(4);
+ok(pickedPartner.type === 'statement',
+   'choosing partner referral shows consent statement', `${pickedPartner.type}: ${pickedPartner.heading}`);
 
 await b.close();
 console.log(`\n${fail ? 'FAIL' : 'PASS'} — ${fail} problem(s)`);

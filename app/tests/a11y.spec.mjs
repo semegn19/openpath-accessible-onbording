@@ -47,20 +47,14 @@ await page.waitForTimeout(150);
 const bigOn = await page.evaluate(() => document.querySelector('.op-shell')?.getAttribute('data-big'));
 console.log('  prefs→settings wiring (data-big):', bigOn);
 await prefs.getByRole('checkbox').nth(1).uncheck();
+await page.waitForTimeout(200);
 await audit('2b prefs selected');
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 3 assistance (this one IS sent) ===');
+console.log('\n=== 3 name ===');
 console.log('  h1:', (await h1()).trim());
-await audit('3 assistance');
-await page.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
-await next();
-await page.waitForTimeout(200);
-
-console.log('\n=== 4 name ===');
-console.log('  h1:', (await h1()).trim());
-await audit('4 name');
+await audit('3 name');
 
 // error path: press Next with the required field empty
 await next();
@@ -68,66 +62,65 @@ await page.waitForTimeout(250);
 const summaryVisible = await page.locator('.op-error-summary').isVisible().catch(() => false);
 const focusedAfterError = await page.evaluate(() => document.activeElement?.className || document.activeElement?.tagName);
 console.log('  empty name → summary visible:', summaryVisible, '| focus on:', focusedAfterError);
-await audit('4b error state');
+await audit('3b error state');
 
 await page.locator('input[type="text"]').first().fill('ሳራ በቀለ ታደሰ');
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 5 phone ===');
+console.log('\n=== 4 phone ===');
 console.log('  h1:', (await h1()).trim());
-await audit('5 phone');
+await audit('4 phone');
 await page.locator('input[type="tel"]').fill('0912345678');
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 6 identity route (six options, incl. no document) ===');
+console.log('\n=== 5 identity route (four options) ===');
 console.log('  h1:', (await h1()).trim());
 const routeOptions = await page.locator('.op-fieldset input[type="radio"]').count();
 console.log('  routes offered:', routeOptions);
-await audit('6 id-route');
-await page.getByRole('radio', { name: /የፋይዳ|Fayda/ }).check();
+await audit('5 id-route');
+await page.getByRole('radio', { name: /የቀበሌ|Kebele/ }).check();
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 7 id number (conditional) ===');
+console.log('\n=== 6 id document photo (conditional, file upload) ===');
 console.log('  h1:', (await h1()).trim());
-await audit('7 id value');
-await page.locator('input[type="text"]').first().fill('3910028475');
+const micOnFile = await page.getByRole('button', { name: /በድምጽ መስጠት|Speak your answer/ }).count();
+const readOnFile = await page.getByRole('button', { name: /ያዳምጡ|አንብብልኝ|Read the question/ }).count();
+console.log('  voice button on file (must be 0):', micOnFile, '| read-aloud (must be 1):', readOnFile);
+if (micOnFile !== 0) failures++;
+if (readOnFile !== 1) failures++;
+await audit('6 file upload');
 
-// go back and switch route: the ID number must not survive into the payload
+// go back and switch route to refer: tests conditional switch to partner referral
 await page.getByRole('button', { name: /ተመለስ|Back/ }).click();
 await page.waitForTimeout(200);
-await page.getByRole('radio', { name: /ምንም መታወቂያ|do not have any/ }).check();
+await page.getByRole('radio', { name: /አጋር|partner/i }).check();
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 8 referral (consent, no microphone) ===');
+console.log('\n=== 6b partner referral statement (conditional) ===');
 console.log('  h1:', (await h1()).trim());
-const micOnConsent = await page.getByRole('button', { name: /በድምጽ መስጠት|Speak your answer/ }).count();
-const readOnConsent = await page.getByRole('button', { name: /ያዳምጡ|አንብብልኝ|Read the question/ }).count();
-console.log('  voice button on consent (must be 0):', micOnConsent, '| read-aloud (must be 1):', readOnConsent);
-if (micOnConsent !== 0) failures++;
-if (readOnConsent !== 1) failures++;
-await audit('8 referral');
-await page.getByRole('checkbox', { name: /ተስማምቻለሁ|agree/i }).first().check();
+await audit('6b partner referral');
+await page.getByRole('checkbox').first().check();
 await next();
 await page.waitForTimeout(200);
 
-console.log('\n=== 9 review ===');
+console.log('\n=== 7 review ===');
 console.log('  h1:', (await h1()).trim());
 const reviewRows = await page.locator('.op-review-row').count();
 const showsIdNumber = (await page.locator('.op-review').innerText().catch(() => '')).includes('3910028475');
 console.log('  review rows:', reviewRows, '| stale ID number shown (must be false):', showsIdNumber);
 if (showsIdNumber) failures++;
-await audit('9 review');
+await audit('7 review');
 
 await page.setViewportSize({ width: 320, height: 640 });
 await page.waitForTimeout(150);
 const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
 console.log('\n  320px reflow → horizontal scroll:', overflow);
 if (overflow) failures++;
-await audit('9b review @320px');
+await audit('7b review @320px');
 
 // 200% zoom — the gate names it explicitly, so it is measured, not assumed. A 1280×800
 // laptop zoomed to 200% lays out at 640×400 CSS pixels; anything that fits here fits there.
@@ -147,7 +140,7 @@ const zoom = await page.evaluate(() => {
 console.log('\n  200% zoom (640×400) → horizontal scroll:', zoom.hScroll, '| h1 visible:', zoom.h1Visible, '| h1 size:', zoom.fontPx);
 if (zoom.clipped.length) console.log('  clipped:', zoom.clipped.join(' | '));
 if (zoom.hScroll || !zoom.h1Visible || zoom.clipped.length) failures++;
-await audit('9c review @200% zoom');
+await audit('7c review @200% zoom');
 
 // Text spacing (SC 1.4.12): the exact overrides from the Understanding document. If the layout
 // survives these, it survives any user stylesheet that does the same thing.
@@ -175,7 +168,7 @@ const spacing = await page.evaluate(() => {
 console.log('\n  1.4.12 text spacing → horizontal scroll:', spacing.hScroll, '| clipped:', spacing.clipped.length);
 if (spacing.clipped.length) console.log('   ', spacing.clipped.slice(0, 5).join(' | '));
 if (spacing.hScroll || spacing.clipped.length) failures++;
-await audit('9d review @WCAG text spacing');
+await audit('7d review @WCAG text spacing');
 // switch the overrides off again instead of reloading, so the walk keeps its place
 await page.evaluate(() => {
   for (const st of document.querySelectorAll('style')) {
@@ -186,22 +179,23 @@ await page.waitForTimeout(150);
 
 await next();
 await page.waitForTimeout(200);
-console.log('\n=== 10 submit (consent) ===');
+console.log('\n=== 8 submit (consent) ===');
 console.log('  h1:', (await h1()).trim());
-await audit('10 submit');
+await audit('8 submit');
 await page.getByRole('checkbox', { name: /ተስማምቻለሁ|agree/i }).first().check();
 await page.getByRole('button', { name: /ምዝገባውን ጨርስ|Finish/ }).click();
 await page.waitForTimeout(400);
-console.log('\n=== 11 done ===');
+console.log('\n=== 9 done ===');
 console.log('  h1:', (await h1()).trim());
-await audit('11 success');
+await audit('9 success');
 
 const payload = await page.evaluate(() => document.querySelector('.op-payload')?.textContent ?? '');
 const leaksPrefs = payload.includes('accessibility-prefs') || payload.includes('"support"');
-const hasAssistance = payload.includes('assistance');
+const hasName = payload.includes('name');
+const hasPhone = payload.includes('phone');
 console.log('  payload has accessibility choices (must be false):', leaksPrefs);
-console.log('  payload has assistance (must be true):', hasAssistance);
-if (leaksPrefs || !hasAssistance) failures++;
+console.log('  payload has name and phone (must be true):', hasName && hasPhone);
+if (leaksPrefs || !hasName || !hasPhone) failures++;
 
 // the offline banner is new UI, so it is audited like the rest. No reload: the dev server is
 // still reachable, we only flip the flag the banner reads.

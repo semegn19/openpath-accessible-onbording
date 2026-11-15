@@ -1,7 +1,8 @@
 // Serves dist/ exactly the way app/nginx.conf does — try_files fallback plus the real
-// security headers — so the production bundle can be tested without Docker.
+// security headers and gzip compression — so the production bundle can be tested without Docker.
 //   node tests/nginx-sim.mjs 8081
 import http from 'node:http';
+import zlib from 'node:zlib';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';

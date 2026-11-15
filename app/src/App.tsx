@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Lang, Schema, Step } from './types';
-import { t, tpl } from './i18n';
+import { t, tpl, errorText } from './i18n';
 import { useForm, useCancelSpeechOnKey } from './useForm';
-import { Field, questionText, hintText, bodyText, optionText } from './fields';
+import { Field, questionText, hintText, whyText, bodyText, optionText } from './fields';
 import { ErrorSummary, ReviewScreen, SettingsBar, reviewText } from './screens';
 import { ReadAloudButton, speak } from './speech';
-import { stopAudio } from './audio';
+import { playQuestionAudio, stopAudio } from './audio';
 import { Icon } from './icons';
+import { syncJsonLdScript } from './jsonld';
 
 import { useSlug, type Slug } from './router';
 import { flush, type SendState } from './api';
 import * as outbox from './outbox';
 
 import { c } from './copy';
+import { JobListingPage, SelectedJobBanner, type LocalizedJob, JOBS_LIST } from './JobFilter';
 import onboard from './schemas/savanna-onboard-v1.json';
 import job from './schemas/savanna-job-v1.json';
 import employer from './schemas/employer-accommodations-v1.json';
@@ -31,14 +33,108 @@ export default function App() {
   return <Shell key={page.schema.id} schema={page.schema} />;
 }
 
+function postToParent(type: string, payload: Record<string, unknown> = {}) {
+  if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+    window.parent.postMessage({ source: 'openpath', v: 1, type, ...payload }, '*');
+  }
+}
+
 function Shell({ schema }: { schema: Schema }) {
   const f = useForm(schema);
   const { settings, setSettings, step, steps, index, values, errors, errorList } = f;
   const lang = settings.lang;
+  const isEmbed = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('embed') === '1' || window.parent !== window);
+  const isJobSchema = schema.id === 'savanna-job-v1';
+  const [selectedJob, setSelectedJob] = useState<LocalizedJob | null>(() => {
+    if (typeof window !== 'undefined') {
+      const jobId = new URLSearchParams(window.location.search).get('jobId');
+      if (jobId) return JOBS_LIST.find((j) => j.id === jobId) || null;
+    }
+    return null;
+  });
+  const [jobView, setJobView] = useState<'listing' | 'form'>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('apply') === '1' || p.get('jobId')) return 'form';
+    }
+    return 'listing';
+  });
+
+  useEffect(() => {
+    const onPopState = () => {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('apply') === '1') {
+        setJobView('form');
+        const jobId = p.get('jobId');
+        if (jobId) setSelectedJob(JOBS_LIST.find((j) => j.id === jobId) || null);
+      } else if (isJobSchema) {
+        setJobView('listing');
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [isJobSchema]);
+
+  // In embed mode, take initial language from ?lang= query param if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lp = params.get('lang');
+    if (lp === 'am' || lp === 'en' || lp === 'om' || lp === 'ti') {
+      setSettings((s) => (s.lang === lp ? s : { ...s, lang: lp }));
+    }
+  }, [setSettings]);
+
+  // Integration Level 1 postMessage bridge
+  useEffect(() => {
+    if (!isEmbed) return;
+    postToParent('ready', { formId: schema.id, lang });
+  }, [isEmbed, schema.id, lang]);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    postToParent('step', { formId: schema.id, stepId: step?.id, index, total: steps.length });
+  }, [isEmbed, schema.id, step?.id, index, steps.length]);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    const notifyHeight = () => {
+      const shell = document.querySelector('.op-shell');
+      const height = Math.ceil(shell ? shell.getBoundingClientRect().height : document.body.scrollHeight);
+      postToParent('resize', { height: Math.max(500, height) });
+    };
+    notifyHeight();
+    const ro = new ResizeObserver(notifyHeight);
+    const shell = document.querySelector('.op-shell');
+    if (shell) ro.observe(shell);
+    window.addEventListener('resize', notifyHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', notifyHeight);
+    };
+  }, [isEmbed, step?.id, index, settings, values, f.submitted]);
+
+  useEffect(() => {
+    if (!isEmbed) return;
+    const handler = (e: MessageEvent) => {
+      if (e.data && e.data.source === 'openpath-host' && e.data.v === 1) {
+        if (e.data.type === 'set-lang' && ['am', 'en', 'om', 'ti'].includes(e.data.lang)) {
+          setSettings((s) => ({ ...s, lang: e.data.lang }));
+        } else if (e.data.type === 'set-settings' && e.data.settings) {
+          setSettings((s) => ({ ...s, ...e.data.settings }));
+        }
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [isEmbed, setSettings]);
 
   useEffect(() => {
     document.title = `${t(schema.title, lang)} — OpenPath`;
   }, [schema.title, lang]);
+
+  useEffect(() => {
+    return syncJsonLdScript(schema, f.values, lang);
+  }, [schema, f.values, lang]);
 
   // Keep scroll-padding in sync with the sticky bar, so a focused control is never hidden
   // underneath it (WCAG 2.2 SC 2.4.11). Measured, not guessed: the bar changes height with
@@ -123,6 +219,58 @@ function Shell({ schema }: { schema: Schema }) {
 
   // Say the connection state once, politely. Not on every render, not every 5 seconds.
   const announcedNet = useRef<boolean | null>(null);
+  const [smsSent, setSmsSent] = useState(false);
+  const lastSmsPhone = useRef<string>('');
+
+  // Restore from URL query token if ?resume=<token>
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const resumeToken = params.get('resume');
+    if (!resumeToken) return;
+    fetch(`/api/checkpoints/${encodeURIComponent(resumeToken)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok && data.checkpoint) {
+          const cp = data.checkpoint;
+          f.restoreCheckpoint(cp.answers, cp.currentStep);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // When connection drops on an unfinished form with a phone number, send SMS resume link
+  useEffect(() => {
+    if (online) {
+      setSmsSent(false);
+      return;
+    }
+    const phone = f.values.phone as string | undefined;
+    if (!phone || f.submitted) return;
+    setSmsSent(true);
+    if (lastSmsPhone.current === phone) return;
+    lastSmsPhone.current = phone;
+    const payload = JSON.stringify({
+      phone,
+      answers: f.values,
+      currentStep: f.index,
+      stepId: step?.id,
+      formId: schema.id,
+      lang,
+      origin: window.location.origin,
+    });
+    try {
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        navigator.sendBeacon('/api/sms/send-resume', payload);
+      }
+    } catch { /* ignore */ }
+    fetch('/api/sms/send-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+    }).catch(() => {});
+  }, [online, f.values.phone, f.submitted, f.index, step?.id, schema.id, lang]);
+
   useEffect(() => {
     if (announcedNet.current === online) return;
     announcedNet.current = online;
@@ -167,7 +315,14 @@ function Shell({ schema }: { schema: Schema }) {
 
   const [attempts, setAttempts] = useState(0);
   useEffect(() => {
-    if (errorList.length) summary.current?.focus();
+    if (errorList.length) {
+      summary.current?.focus();
+      const msg = t(schema.ui?.errorSummary, lang) + ' — ' +
+        errorList.map((e) => `${questionText(e.step, lang, false)}: ${errorText(schema.errors, lang, e.rule)}`).join('. ');
+      setAnnounce('');
+      const tid = setTimeout(() => setAnnounce(msg), 50);
+      return () => clearTimeout(tid);
+    }
   }, [errorList.length, errors, attempts]);
 
   // A conditional answer can add a question later (7 → 8 steps). The progress text
@@ -183,6 +338,7 @@ function Shell({ schema }: { schema: Schema }) {
     setAnnounce(
       tpl(t(schema.ui?.stepOf, lang), {
         n: index + 1,
+        step: index + 1,
         total: stepCount,
       }) + (' — ' + c('announce.newQuestion', lang)),
     );
@@ -194,8 +350,32 @@ function Shell({ schema }: { schema: Schema }) {
 
   const stepId = step?.id;
   useEffect(() => {
-    if (!settings.readAloud || !step) return;
-    speak(readAloudText(step), lang);
+    if (!settings.readAloud || !step) {
+      stopAudio();
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const played = await playQuestionAudio({
+        stepId: step.id,
+        formId: schema.id,
+        lang,
+        simple: settings.simple,
+        text: readAloudText(step),
+        audioProp: step.audio,
+      });
+      if (cancelled) {
+        stopAudio();
+        return;
+      }
+      if (!played) {
+        speak(readAloudText(step), lang);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      stopAudio();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId, settings.readAloud, lang, settings.simple]);
 
@@ -244,10 +424,11 @@ function Shell({ schema }: { schema: Schema }) {
   const handleChange = (s: Step, v: unknown) => {
     f.setValue(s.id, v);
 
-    if (s.type === 'language' && (v === 'am' || v === 'en')) {
-      setSettings((prev) => ({ ...prev, lang: v }));
+    if (s.type === 'language' && (v === 'am' || v === 'en' || v === 'om' || v === 'ti')) {
+      const nextLang = v as Lang;
+      setSettings((prev) => ({ ...prev, lang: nextLang }));
       // A language change re-renders every string; say so, in the new language.
-      setAnnounce(c('announce.langChanged', lang));
+      setAnnounce(c('announce.langChanged', nextLang));
     }
 
     // Any step whose options declare what they change about the page — not one hardcoded id,
@@ -266,7 +447,7 @@ function Shell({ schema }: { schema: Schema }) {
       if (exclusive && picked.includes(exclusive) && picked.length === 1) {
         setAnnounce(c('announce.choicesCleared', lang));
       } else if (on.length) {
-        setAnnounce(on.join(lang === 'am' ? '፣ ' : ', ') + '.');
+        setAnnounce(on.join(lang === 'am' || lang === 'ti' ? '፣ ' : ', ') + '.');
       }
     }
   };
@@ -278,54 +459,62 @@ function Shell({ schema }: { schema: Schema }) {
           <p className="op-brand">{t(schema.title, lang)}</p>
         </div>
         <main className="op-root op-done">
-          <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
-            <Icon name={send.state === 'sent' ? 'check' : send.state === 'sending' ? 'clock' : 'alert'} />
-            {send.state === 'sent'
-              ? (c('status.complete', lang))
-              : send.state === 'sending'
-                ? (c('status.sending', lang))
-                : send.state === 'rejected'
-                  ? (c('status.rejected', lang))
-                  : (c('status.saved', lang))}
-          </h1>
+          {(() => {
+            const isPartner = f.submitted && (f.submitted as Record<string, unknown>)['id-route'] === 'refer';
+            return (
+              <>
+                <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
+                  <Icon name={send.state === 'sent' ? 'check' : send.state === 'sending' ? 'clock' : 'alert'} />
+                  {send.state === 'sent'
+                    ? (isPartner ? c('status.pendingPartner', lang) : c('status.complete', lang))
+                    : send.state === 'sending'
+                      ? (c('status.sending', lang))
+                      : send.state === 'rejected'
+                        ? (c('status.rejected', lang))
+                        : (c('status.saved', lang))}
+                </h1>
 
-          <p role="status" aria-live="polite" className="op-receipt">
-            {send.state === 'sent' && (
-              <>
-                <span>{c('receipt.reference', lang)}</span>
-                {/* on its own line: an id broken mid-token reads like a rendering bug */}
-                <span className="op-mono op-ref">{send.id}</span>
-                <span className="op-hint">{c('receipt.keep', lang)}</span>
+                <p role="status" aria-live="polite" className="op-receipt">
+                  {send.state === 'sent' && (
+                    <>
+                      <span>{c('receipt.reference', lang)}</span>
+                      {/* on its own line: an id broken mid-token reads like a rendering bug */}
+                      <span className="op-mono op-ref">{send.id}</span>
+                      <span className="op-hint">{c('receipt.keep', lang)}</span>
+                      {isPartner && <span className="op-hint">{c('receipt.pendingPartnerHelp', lang)}</span>}
+                    </>
+                  )}
+                  {send.state === 'sending' && (c('status.wait', lang))}
+                  {send.state === 'queued' && (
+                    <>
+                      {send.reason === 'full'
+                        ? c('send.storageFull', lang)
+                        : c('send.unreachable', lang)}
+                    </>
+                  )}
+                  {send.state === 'rejected' && (
+                    <>
+                      {c('send.rejected', lang)}
+                      <span className="op-hint">{send.detail}</span>
+                    </>
+                  )}
+                </p>
+                {/* The reference number is the one thing the learner has to carry away. Somebody who
+                    used read-aloud through the whole form must not hit a silent wall at the last step. */}
+                <ReadAloudButton
+                  text={
+                    (send.state === 'sent'
+                      ? tpl(isPartner ? c('announce.pendingPartner', lang) : c('announce.complete', lang), { ref: send.id.split('').join(' ') })
+                      : send.state === 'sending'
+                        ? c('announce.sending', lang)
+                        : c('send.queued', lang))
+                  }
+                  lang={lang}
+                  schema={schema}
+                />
               </>
-            )}
-            {send.state === 'sending' && (c('status.wait', lang))}
-            {send.state === 'queued' && (
-              <>
-                {send.reason === 'full'
-                  ? c('send.storageFull', lang)
-                  : c('send.unreachable', lang)}
-              </>
-            )}
-            {send.state === 'rejected' && (
-              <>
-                {c('send.rejected', lang)}
-                <span className="op-hint">{send.detail}</span>
-              </>
-            )}
-          </p>
-          {/* The reference number is the one thing the learner has to carry away. Somebody who
-              used read-aloud through the whole form must not hit a silent wall at the last step. */}
-          <ReadAloudButton
-            text={
-              (send.state === 'sent'
-                ? tpl(c('announce.complete', lang), { ref: send.id.split('').join(' ') })
-                : send.state === 'sending'
-                  ? c('announce.sending', lang)
-                  : c('send.queued', lang))
-            }
-            lang={lang}
-            schema={schema}
-          />
+            );
+          })()}
 
           {send.state === 'sent' && <p>{c('status.thanks', lang)}</p>}
 
@@ -379,19 +568,23 @@ function Shell({ schema }: { schema: Schema }) {
     // The intro used to be left out of this. It is the one paragraph that tells a person they
     // can get help and that there is no time limit — nothing that only appears on the first
     // screen should be the one thing that is never spoken.
-    const parts = [questionText(st, lang, settings.simple)];
+    // Structured contract: 1. Question title -> 2. Intro (if first step) -> 3. Why & Hint & Body
+    // -> 4. Optional marker -> 5. Choices/Options. Nothing left out across any question type.
+    const parts: string[] = [questionText(st, lang, settings.simple)];
     if (index === 0 && schema.intro) parts.push(t(introText(), lang));
-    parts.push(hintText(st, lang, settings.simple));
+    if (st.why) parts.push(whyText(st, lang, settings.simple));
+    if (st.hint) parts.push(hintText(st, lang, settings.simple));
     if (st.body) parts.push(bodyText(st, lang, settings.simple));
-    if (st.type === 'statement' || st.type === 'submit' || st.type === 'language') {
-      for (const o of st.options ?? []) parts.push(optionText(o, lang, settings.simple));
+    if (st.optional) parts.push(t(schema.ui?.optional, lang));
+    if (st.options && st.options.length > 0) {
+      for (const o of st.options) parts.push(optionText(o, lang, settings.simple));
     }
     return parts.filter(Boolean).join(' ');
   };
-  const progress = tpl(t(schema.ui?.stepOf, lang), { n: index + 1, total: steps.length });
+  const progress = tpl(t(schema.ui?.stepOf, lang), { n: index + 1, step: index + 1, total: steps.length });
 
   return (
-    <div className="op-shell" data-big={settings.big || undefined}>
+    <div className="op-shell" data-big={settings.big || undefined} data-embed={isEmbed || undefined}>
       <a className="op-skip" href="#op-main">
         {c('nav.skip', lang)}
       </a>
@@ -411,13 +604,21 @@ function Shell({ schema }: { schema: Schema }) {
       <p className="op-sr" role="status" aria-live="polite">{announce}</p>
 
       {/* data-step-type lets a test assert on what a screen IS, not on guessing from its text */}
-      <main className="op-root" id="op-main" tabIndex={-1} data-step-type={step?.type ?? 'done'}>
+      <main
+        className="op-root"
+        id="op-main"
+        tabIndex={-1}
+        data-step-type={isJobSchema && jobView === 'listing' ? 'statement' : (step?.type ?? 'done')}
+      >
         {!online && !f.submitted && (
           <div className="op-net">
             <Icon name="alert" />
             <p>
               <strong>{c('offline.title', lang)}</strong>{' '}
               {c('offline.body', lang)}
+              {smsSent && (
+                <span> {c('offline.smsSent', lang)}</span>
+              )}
             </p>
           </div>
         )}
@@ -443,88 +644,141 @@ function Shell({ schema }: { schema: Schema }) {
           </div>
         )}
 
-        <ErrorSummary ref={summary} items={errorList} lang={lang} schema={schema} onJump={f.goTo} />
-
-        <p className="op-progress">{progress}</p>
-
-        <form
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            setAttempts((n) => n + 1);
-            if (isSubmit) {
-              const payload = f.submit();
-              if (!payload) return;
-
-              // 1. Write it down. 2. Then try to send it. Never the other way round.
-              const entry = outbox.enqueue(schema.id, payload);
-              if (!entry) {
-                // The device refused to store it (quota, private mode). Do not clear the draft,
-                // do not say "saved". Say what is true: it is on screen, keep this page.
-                setSend({ state: 'queued', ref: '', attempts: 0, reason: 'full' });
-                return;
+        {isJobSchema && jobView === 'listing' ? (
+          <JobListingPage
+            lang={lang}
+            schema={schema}
+            onSelectJobAndApply={(job) => {
+              setSelectedJob(job);
+              setJobView('form');
+              if (typeof window !== 'undefined' && window.history?.pushState) {
+                window.history.pushState(null, '', `/job?apply=1&jobId=${job.id}`);
               }
-              f.clearDraft();                       // the outbox holds these answers now
-              setSend({ state: 'sending' });
-              void flush([entry]).then((r) => {
-                const mine = r.sent.find((q) => q.ref === entry.ref);
-                const left = r.still.find((q) => q.ref === entry.ref);
-                if (mine) {
-                  setSend({ state: 'sent', id: mine.id, receivedAt: mine.receivedAt, stripped: mine.stripped });
-                  setReceipt(outbox.lastReceipt(schema.id) ?? null);
-                } else if (left) {
-                  setSend({ state: 'queued', ref: entry.ref, attempts: left.attempts,
-                            reason: left.lastError === 'rejected' ? 'unreachable' : 'offline' });
-                }
-              });
-            } else f.next();
-          }}
-        >
-          <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
-            {step.icon && !isReview && !isSubmit && <Icon name={step.icon} />}
-            {isReview ? t(step.label, lang) : questionText(step, lang, settings.simple)}
-          </h1>
-
-          {index === 0 && schema.intro && <p className="op-intro">{t(introText(), lang)}</p>}
-
-          {isReview ? (
-            <>
-              <ReadAloudButton
-                text={reviewText(
-                  steps, values, lang, settings.simple,
-                  c('review.intro', lang),
-                  c('review.nextHint', lang),
-                )}
+            }}
+          />
+        ) : (
+          <>
+            {isJobSchema && (
+              <SelectedJobBanner
                 lang={lang}
-                schema={schema}
+                selectedJob={selectedJob}
+                onBackToListings={() => {
+                  setJobView('listing');
+                  if (typeof window !== 'undefined' && window.history?.pushState) {
+                    window.history.pushState(null, '', '/job');
+                  }
+                }}
               />
-              <ReviewScreen steps={steps} values={values} lang={lang} simple={settings.simple} schema={schema} onEdit={f.goTo} />
-            </>
-          ) : (
-            <>
-              {showReadAloud && (
-                <ReadAloudButton text={readAloudText(step)} lang={lang} schema={schema} />
-              )}
-              <Field
-                headingId="op-q-title"
-                step={step} schema={schema} lang={lang} simple={settings.simple}
-                value={appliedValue(step)} errorRule={errors[step.id]}
-                onChange={(v) => handleChange(step, v)}
-              />
-            </>
-          )}
-
-          <div className="op-nav">
-            {index > 0 && (
-              <button type="button" className="op-btn op-btn-back" onClick={f.back}>
-                <span aria-hidden="true">← </span>{t(schema.ui?.back, lang)}
-              </button>
             )}
-            <button type="submit" className="op-btn op-btn-primary">
-              {isSubmit ? t(step.submitLabel, lang) : t(schema.ui?.next, lang)}
-            </button>
-          </div>
-        </form>
+
+            <ErrorSummary
+              ref={summary}
+              items={errorList}
+              lang={lang}
+              schema={schema}
+              onJump={(id) => {
+                f.goTo(id);
+                const el = document.getElementById(id) || document.querySelector<HTMLElement>(`[name="${id}"]`);
+                el?.focus();
+              }}
+            />
+
+            <p className="op-progress">{progress}</p>
+
+            <form
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault();
+                setAttempts((n) => n + 1);
+                if (isSubmit) {
+                  const payload = f.submit();
+                  if (!payload) return;
+                  if (selectedJob) {
+                    (payload as Record<string, unknown>).selectedJobId = selectedJob.id;
+                    (payload as Record<string, unknown>).selectedJobTitle = selectedJob.title[lang] || selectedJob.title.en;
+                  }
+
+                  // 1. Write it down. 2. Then try to send it. Never the other way round.
+                  const entry = outbox.enqueue(schema.id, payload);
+                  if (!entry) {
+                    // The device refused to store it (quota, private mode). Do not clear the draft,
+                    // do not say "saved". Say what is true: it is on screen, keep this page.
+                    setSend({ state: 'queued', ref: '', attempts: 0, reason: 'full' });
+                    return;
+                  }
+                  f.clearDraft();                       // the outbox holds these answers now
+                  setSend({ state: 'sending' });
+                  void flush([entry]).then((r) => {
+                    const mine = r.sent.find((q) => q.ref === entry.ref);
+                    const left = r.still.find((q) => q.ref === entry.ref);
+                    if (mine) {
+                      setSend({ state: 'sent', id: mine.id, receivedAt: mine.receivedAt, stripped: mine.stripped });
+                      setReceipt(outbox.lastReceipt(schema.id) ?? null);
+                      postToParent('submitted', { id: mine.id, reference: entry.ref, formId: schema.id });
+                    } else if (left) {
+                      setSend({ state: 'queued', ref: entry.ref, attempts: left.attempts,
+                                reason: left.lastError === 'rejected' ? 'unreachable' : 'offline' });
+                      postToParent('queued', { reference: entry.ref, reason: left.lastError, formId: schema.id });
+                    }
+                  });
+                } else f.next();
+              }}
+            >
+              <h1 ref={h1} tabIndex={-1} className="op-h1" id="op-q-title">
+                {step.icon && !isReview && !isSubmit && <Icon name={step.icon} />}
+                {isReview ? t(step.label, lang) : questionText(step, lang, settings.simple)}
+              </h1>
+
+              {index === 0 && schema.intro && <p className="op-intro">{t(introText(), lang)}</p>}
+
+              {isReview ? (
+                <>
+                  <ReadAloudButton
+                    step={step}
+                    simple={settings.simple}
+                    text={reviewText(
+                      steps, values, lang, settings.simple,
+                      c('review.intro', lang),
+                      c('review.nextHint', lang),
+                    )}
+                    lang={lang}
+                    schema={schema}
+                  />
+                  <ReviewScreen steps={steps} values={values} lang={lang} simple={settings.simple} schema={schema} onEdit={f.goTo} />
+                </>
+              ) : (
+                <>
+                  {showReadAloud && (
+                    <ReadAloudButton
+                      step={step}
+                      simple={settings.simple}
+                      text={readAloudText(step)}
+                      lang={lang}
+                      schema={schema}
+                    />
+                  )}
+                  <Field
+                    headingId="op-q-title"
+                    step={step} schema={schema} lang={lang} simple={settings.simple}
+                    value={appliedValue(step)} errorRule={errors[step.id]}
+                    onChange={(v) => handleChange(step, v)}
+                  />
+                </>
+              )}
+
+              <div className="op-nav">
+                {index > 0 && (
+                  <button type="button" className="op-btn op-btn-back" onClick={f.back}>
+                    <span aria-hidden="true">← </span>{t(schema.ui?.back, lang)}
+                  </button>
+                )}
+                <button type="submit" className="op-btn op-btn-primary">
+                  {isSubmit ? t(step.submitLabel, lang) : t(schema.ui?.next, lang)}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </main>
     </div>
   );

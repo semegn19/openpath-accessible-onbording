@@ -22,6 +22,12 @@ const installSpeechStub = () => {
     configurable: true,
     value: class { constructor(t) { this.text = t; } },
   });
+  // Force Web Speech fallback in this test so the synthesized text can be verified
+  window.Audio = class {
+    play() { return Promise.reject(new Error('web-speech-test')); }
+    pause() {}
+    addEventListener(evt, cb) { if (evt === 'error') cb(); }
+  };
 };
 await p.addInitScript(installSpeechStub);
 const ok = (cond, label, extra = '') => { if (!cond) fail++; console.log(`${cond ? '✓' : '✗'} ${label}${extra ? ' → ' + extra : ''}`); };
@@ -58,7 +64,7 @@ const spoken = (await p.evaluate(() => window.__spoken)).join(' ');
 ok(/ቋንቋ/.test(spoken), 'read-aloud says the question', spoken.slice(0, 40));
 ok(/አስቀድመው|First choose/.test(spoken),
    'read-aloud also says the default intro', spoken.slice(0, 90));
-ok(/አማርኛ/.test(spoken) && /English/.test(spoken), 'read-aloud reads both language options');
+ok(/አማርኛ/.test(spoken) && /English|እንግሊዝኛ/.test(spoken), 'read-aloud reads both language options');
 
 /* ---------- simple words: the same screen, said in fewer words ---------- */
 const heading = () => p.locator('#op-q-title').innerText();
@@ -133,12 +139,10 @@ await p.evaluate(() => { window.__stt.failLangs = ['am-ET'].slice(0, 0); window.
 await goto(p, BASE);
 const live = p.locator('[role="status"][aria-live="polite"]').first();
 
-// language → accessibility preferences → assistance → name, then speak the phone number
+// language → accessibility preferences → name, then speak the phone number
 await p.getByRole('radio', { name: /አማርኛ/ }).check();
 await next(p); await p.waitForTimeout(150);
 await next(p); await p.waitForTimeout(150);                       // prefs: none
-await p.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill/ }).check();
-await next(p); await p.waitForTimeout(150);
 await p.locator('input[type="text"]').first().fill('ሳራ ተስፋዬ');
 await next(p); await p.waitForTimeout(200);
 
@@ -159,8 +163,8 @@ await next(p); await p.waitForTimeout(300);
 const h1 = (await p.locator('h1').first().innerText()).trim();
 ok(!/ስልክ/.test(h1), 'valid phone number passes validation', `now: ${h1}`);
 
-// conditional reveal: choosing "refer me" adds a question → announce the new total
-await p.getByRole('radio', { name: /ምንም መታወቂያ|do not have any/ }).check();
+// conditional reveal: choosing an ID type adds a question → announce the new total
+await p.getByRole('radio', { name: /የቀበሌ|Kebele/ }).check();
 await p.waitForTimeout(300);
 const said = await live.innerText();
 const progress = await p.locator('.op-progress').innerText();

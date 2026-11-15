@@ -4,11 +4,21 @@ info:
   version: 1.3.0
   summary: Accessible onboarding forms for Savanna — submit, retrieve, and fetch the form definition.
   description: |
-    Level 2 of the Digital Bridge adoptability ladder: a documented REST API in front of the
-    same JSON schemas the accessible form renders from.
+    Level 2 and Level 3 of the Digital Bridge adoptability ladder: a documented REST API
+    and Schema.org/JobPosting JSON-LD standard in front of the same JSON schemas the accessible form renders from.
 
     Forms work without AI. Optional AI settings require administrator authentication.
     Assistant and administrator endpoints are documented below.
+
+    **Endpoints and spec file.** Zero dependencies, optional multi-provider speech-to-text (Addis AI, Gemini, Ollama, OpenAI-compatible), and no vendor lock-in.
+    Includes schema.org/JobPosting JSON-LD generation for employer accommodation forms (Level 3 standard).
+
+    ### Accessibility & Assistive Technology Contract
+    All forms rendered from the schemas served by this API comply with WCAG 2.2 AA standards:
+    - **Keyboard Operable (SC 2.1.1)**: Every input, choice option, button, and navigation control is fully reachable and operable via keyboard (`Tab`, `Shift+Tab`, `Space`, `Enter`).
+    - **Target Size (SC 2.5.8)**: All interactive targets (including raw radio and checkbox inputs, choice cards, and action buttons) meet or exceed 24×24 CSS pixels (with 48–52px touch targets for primary actions).
+    - **ARIA Semantics & Error Association (SC 3.3.1, 4.1.2)**: Inputs associate instructions via `aria-describedby` and validation errors via `aria-invalid='true'` and `aria-errormessage`.
+    - **Predictable Focus & Announcements**: Steps manage focus to the primary `<h1>` heading without trapping; screen readers receive step updates and save status via polite `aria-live` regions.
 
     ### Privacy contract
     Accommodation and disability data (the `support` step, anything marked `localOnly`) is
@@ -34,6 +44,9 @@ tags:
   - name: meta
   - name: forms
   - name: submissions
+  - name: transcribe
+  - name: checkpoints
+  - name: sms
 paths:
   /health:
     get:
@@ -48,10 +61,13 @@ paths:
               schema: { $ref: '#/components/schemas/Health' }
               example:
                 ok: true
-                version: 1.1.0
+                version: 1.3.0
                 forms: [savanna-onboard-v1, savanna-job-v1, employer-accommodations-v1]
                 submissions: 128
                 uptimeSec: 3600
+                transcription: configured
+                transcriptionLanguages: [am, om, ti, en]
+                aiProviders: [addis-ai, gemini]
 
   /forms:
     get:
@@ -70,6 +86,42 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/FormSummary' }
                     required: [forms]
+
+  /jobs:
+    get:
+      tags: [jobs]
+      operationId: listJobs
+      summary: List available jobs with their workplace accommodation commitments
+      description: |
+        Career gateway endpoint supporting the private "support I need" job filter.
+        Returns job postings with employer-committed accommodations (e.g. remote work,
+        step-free entrance, screen-reader software). Filter matching happens client-side;
+        zero disability data is collected or transmitted.
+      responses:
+        '200':
+          description: Active job postings and accommodation commitments.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  jobs:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, title, company, category, accommodations]
+                      properties:
+                        id: { type: string }
+                        title: { type: object }
+                        company: { type: string }
+                        category: { type: string }
+                        accommodations:
+                          type: array
+                          items: { type: string }
+                        location: { type: object }
+                        description: { type: object }
 
   /forms/{formId}:
     get:
@@ -97,6 +149,39 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /forms/{formId}/jsonld:
+    get:
+      tags: [forms]
+      operationId: getFormJsonLd
+      summary: Schema.org JSON-LD representation (Level 3 standard)
+      description: |
+        Generates schema.org structured data (e.g. JobPosting) for schemas declaring standard generation.
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema: { type: string }
+          examples:
+            employer: { value: employer-accommodations-v1 }
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, enum: [en, am, om, ti], default: en }
+          description: Language for titles and summaries
+      responses:
+        '200':
+          description: Schema.org JSON-LD document.
+          content:
+            application/ld+json:
+              schema: { type: object, additionalProperties: true }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Form does not generate schema.org structured data.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
   /submissions:
     post:
       tags: [submissions]
@@ -122,7 +207,6 @@ paths:
                   answers:
                     language: am
                     accessibility-prefs: [large-text]
-                    assistance: call-me
                     name: ሳራ ተስፋዬ
                     phone: '0912345678'
                     id-route: fayda
@@ -204,6 +288,214 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Submission' }
         '404':
+          $ref: '#/components/responses/NotFound'
+
+  /submissions/{id}/jsonld:
+    get:
+      tags: [submissions]
+      operationId: getSubmissionJsonLd
+      summary: Schema.org JobPosting JSON-LD for an employer accommodation submission
+      description: |
+        Generates a standard schema.org/JobPosting JSON-LD document from an employer submission.
+        Includes company, role title, category, accommodations, telecommute status.
+        Zero personal data (contact phone numbers or applicant information) is included.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^sub_[A-Za-z0-9_-]{16}$' }
+          example: sub_9mQ2xT7bK1vR4pLz
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, enum: [en, am, om, ti], default: en }
+          description: Language for descriptions and labels
+      responses:
+        '200':
+          description: Schema.org JobPosting JSON-LD document.
+          content:
+            application/ld+json:
+              schema: { type: object, additionalProperties: true }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Submission form does not generate schema.org structured data.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /transcribe:
+    get:
+      tags: [transcribe]
+      operationId: getTranscribeConfig
+      summary: Speech-to-text configuration and active engine inspection
+      parameters:
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, default: am }
+          description: Language code to check active provider for (e.g. am, om, ti, en)
+      responses:
+        '200':
+          description: Current ASR configuration, active provider, and supported languages.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranscribeConfig' }
+    post:
+      tags: [transcribe]
+      operationId: transcribeAudio
+      summary: Transcribe audio recording to text
+      description: |
+        Accepts raw audio binary (audio/webm, audio/ogg, audio/wav, audio/mp4, audio/mp3)
+        up to 2 MB. Dispatches to the resolved AI speech engine (Addis AI, Google Gemini,
+        Ollama, or OpenAI-compatible) and returns the transcribed text.
+      parameters:
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, default: am }
+          description: Spoken language code (am, om, ti, en)
+        - name: provider
+          in: query
+          required: false
+          schema: { type: string }
+          description: Explicit provider override (e.g. addis-ai, gemini, ollama, openai-compatible, mock)
+      requestBody:
+        required: true
+        content:
+          audio/webm:
+            schema: { type: string, format: binary }
+          audio/ogg:
+            schema: { type: string, format: binary }
+          audio/wav:
+            schema: { type: string, format: binary }
+          audio/mp4:
+            schema: { type: string, format: binary }
+          audio/mp3:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Successful transcription.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranscribeResponse' }
+        '400':
+          description: No audio in the request body.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '413':
+          description: Audio exceeds maximum size (2 MB).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '415':
+          description: Unsupported media type (must be audio/*).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: No speech recognized or language not supported by engine.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '502':
+          description: Upstream speech engine error.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503':
+          description: Speech-to-text not configured on this server.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /transcribe/config:
+    get:
+      tags: [transcribe]
+      operationId: getTranscribeConfigDetailed
+      summary: Inspect speech-to-text engines, active provider, and language support
+      parameters:
+        - name: lang
+          in: query
+          required: false
+          schema: { type: string, default: am }
+          description: Language code to inspect active provider for
+      responses:
+        '200':
+          description: Speech-to-text provider details.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranscribeConfig' }
+
+  /checkpoints:
+    post:
+      tags: [checkpoints]
+      operationId: createCheckpoint
+      summary: Save form progress checkpoint
+      description: |
+        Saves partial answers and current step index, returning a 7-day resume token and resume URL.
+        Enables seamless recovery after connection loss or device restart.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckpointRequest' }
+      responses:
+        '200':
+          description: Checkpoint saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckpointResponse' }
+        '400':
+          $ref: '#/components/responses/NotFound'
+
+  /checkpoints/{token}:
+    get:
+      tags: [checkpoints]
+      operationId: getCheckpoint
+      summary: Retrieve saved form progress by token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+          description: Unique checkpoint resumption token
+      responses:
+        '200':
+          description: Saved checkpoint data.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Checkpoint' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: Checkpoint expired (older than 7 days).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /sms/send-resume:
+    post:
+      tags: [sms]
+      operationId: sendSmsResume
+      summary: Send resume link via SMS
+      description: |
+        Sends a localized SMS message containing the form resume link to the applicant's Ethiopian
+        mobile phone (Ethio Telecom or Safaricom). In test/simulation mode, returns simulated receipt
+        without sending real SMS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SmsResumeRequest' }
+      responses:
+        '200':
+          description: SMS sent or simulated successfully.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SmsResumeResponse' }
+        '400':
           $ref: '#/components/responses/NotFound'
 
   /openapi.yaml:
@@ -344,6 +636,14 @@ components:
           items: { type: string }
         submissions: { type: integer, minimum: 0 }
         uptimeSec: { type: integer, minimum: 0 }
+        transcription: { type: string, enum: [configured, none] }
+        transcriptionLanguages:
+          type: array
+          items: { type: string }
+        aiProviders:
+          type: array
+          items: { type: string }
+        encryption: { type: string, enum: [aes-256-gcm, none] }
 
     FormSummary:
       type: object
@@ -420,6 +720,99 @@ components:
               - type: string
               - type: array
                 items: { type: string }
+
+    TranscribeConfig:
+      type: object
+      required: [configured, supportedLanguages, providers]
+      properties:
+        configured: { type: boolean }
+        activeProvider: { type: string, nullable: true }
+        activeProviderName: { type: string, nullable: true }
+        supportedLanguages:
+          type: array
+          items: { type: string }
+        providers:
+          type: array
+          items:
+            type: object
+            required: [id, name, configured, supportedLanguages]
+            properties:
+              id: { type: string }
+              name: { type: string }
+              configured: { type: boolean }
+              supportedLanguages:
+                type: array
+                items: { type: string }
+
+    TranscribeResponse:
+      type: object
+      required: [text, engine]
+      properties:
+        text: { type: string, description: Transcribed text output }
+        engine: { type: string, description: Engine identifier that processed the audio }
+        lang: { type: string, description: Language code of transcription }
+        model: { type: string, description: Specific AI model used (e.g. gemini-3.5-flash) }
+
+    CheckpointRequest:
+      type: object
+      required: [formId, answers]
+      properties:
+        token: { type: string, description: Optional existing token to update }
+        formId: { type: string }
+        phone: { type: string }
+        answers: { type: object }
+        currentStep: { type: integer, minimum: 0 }
+        stepId: { type: string }
+        origin: { type: string }
+
+    CheckpointResponse:
+      type: object
+      required: [ok, token, resumeUrl, checkpoint]
+      properties:
+        ok: { type: boolean }
+        token: { type: string }
+        resumeUrl: { type: string }
+        checkpoint: { $ref: '#/components/schemas/Checkpoint' }
+
+    Checkpoint:
+      type: object
+      required: [token, formId, answers, currentStep, savedAt, expiresAt]
+      properties:
+        token: { type: string }
+        formId: { type: string }
+        phone: { type: string }
+        answers: { type: object }
+        currentStep: { type: integer }
+        stepId: { type: string }
+        savedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+
+    SmsResumeRequest:
+      type: object
+      properties:
+        token: { type: string }
+        phone: { type: string }
+        formId: { type: string }
+        answers: { type: object }
+        currentStep: { type: integer }
+        stepId: { type: string }
+        lang: { type: string, enum: [am, om, ti, en], default: am }
+        origin: { type: string }
+        simulate: { type: boolean }
+
+    SmsResumeResponse:
+      type: object
+      required: [ok, token, resumeUrl, sms]
+      properties:
+        ok: { type: boolean }
+        token: { type: string }
+        resumeUrl: { type: string }
+        sms:
+          type: object
+          properties:
+            provider: { type: string }
+            status: { type: string }
+            simulated: { type: boolean }
 
     Error:
       type: object

@@ -173,6 +173,14 @@ export function useForm(schema: Schema) {
     setIndex(0);
   }, [schema.id]);
 
+  const restoreCheckpoint = useCallback((restoredValues: Values, stepIdx?: number) => {
+    setValues(restoredValues);
+    setRestored(true);
+    if (typeof stepIdx === 'number' && stepIdx >= 0) {
+      setIndex(stepIdx);
+    }
+  }, []);
+
   const errorList = useMemo(
     () =>
       Object.entries(errors)
@@ -184,7 +192,7 @@ export function useForm(schema: Schema) {
   return {
     values, setValue, errors, errorList, step, steps, index: safeIndex,
     next, back, goTo, submit, submitted, restored, setRestored, discardDraft,
-    clearDraft, adoptSubmitted,
+    clearDraft, adoptSubmitted, restoreCheckpoint,
     settings, setSettings,
   };
 }

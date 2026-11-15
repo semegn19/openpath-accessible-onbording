@@ -14,7 +14,8 @@ api/data/
 # conflicts in a generated file something a human has to resolve.
 app/src/schemas/
 
-# Local deployment secrets; commit only .env.example.
+# Local deployment secrets and credentials; commit only .env.example.
 .env
 .env.local
 .env.production
+*.env

@@ -49,6 +49,7 @@ for (const slug of FORMS) {
         el.dispatchEvent(new Event('input', { bubbles: true }));
       };
       for (const el of root.querySelectorAll('input, textarea')) {
+        if (el.type === 'file') continue;
         if (el.type === 'radio') { if (!root.querySelector('input[type=radio]:checked')) el.click(); continue; }
         if (el.type === 'checkbox') { el.click(); continue; }
         if (el.value) continue;
