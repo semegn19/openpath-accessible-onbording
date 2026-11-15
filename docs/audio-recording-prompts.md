@@ -17,11 +17,11 @@ name.am.mp3 : "ስምዎን ይጻፉ ይህ ስም በትምህርት መዝገ
 
 phone.am.mp3 : "ስልክ ቁጥርዎን ይጻፉ የምዝገባ መልእክት በዚህ ስልክ እንልካለን። ምሳሌ፦ 0912 345 678"
 
-id-route.am.mp3 : "ማንነትዎን እንዴት እናውቃለን? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ የሚመርጡትን ሰነድ ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ"
+id-route.am.mp3 : "ማንነትዎን እንዴት እናውቃለን? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ የሚመርጡትን ሰነድ ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)"
 
-id-value.am.mp3 : "የፋይዳ ቁጥር ይህ ቁጥር ከፋይዳ መታወቂያዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁ ይህን ይዝለሉ። ባይሞሉም ይቻላል"
+id-document-image.am.mp3 : "የመታወቂያ ወይም የሰነድዎን ፎቶ ያንሱ ወይም ይስቀሉ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ግልጽ ፎቶ ያንሱ ወይም ይስቀሉ። አሁን ካልቻሉ ሰነዱን በአካል ይዘው መቅረብ ይችላሉ። ሰነድ ከሌለዎት ግን ወደ ኋላ ተመልሰው 'በአጋር ድርጅት በኩል' የሚለውን ይምረጡ። ባይሞሉም ይቻላል"
 
-id-document-image.am.mp3 : "የመታወቂያዎን ፎቶ ያንሱ ወይም ይስቀሉ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ፎቶው በስልክዎ ላይ በራስ-ሰር ተጨምቆ ይቀመጣል። ካልፈለጉ መዝለል ይችላሉ። ባይሞሉም ይቻላል"
+referral.am.mp3 : "ከአጋር ድርጅት ጋር መገናኘት ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ። ስሜና ስልክ ቁጥሬ ለአጋር ድርጅት እንዲሰጥ ተስማምቻለሁ።"
 
 onboard_submit.am.mp3 : "ማረጋገጫ መረጃዬ ለትምህርት ፕሮግራሙ እንዲውል ተስማምቻለሁ።"
 
@@ -35,11 +35,11 @@ name.am.simple.mp3 : "ስም ይህ ስም በትምህርት መዝገብዎ �
 
 phone.am.simple.mp3 : "ስልክ የምዝገባ መልእክት በዚህ ስልክ እንልካለን። ምሳሌ፦ 0912 345 678"
 
-!need no id first id-route.am.simple.mp3 : "መታወቂያ አለዎት? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ አንዱን ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ"
+id-route.am.simple.mp3 : "መታወቂያ አለዎት? ይህ ማንነትዎን ለማረጋገጥ ይጠቅማል። ማንነትዎን ለማረጋገጥ አንዱን ይምረጡ። የፋይዳ መታወቂያ የስደተኛ መታወቂያ የቀበሌ መታወቂያ ሌላ ሰነድ የአጋር እገዛ"
 
-id-value.am.simple.mp3 : "የፋይዳ ቁጥር ይህ ቁጥር ከፋይዳ መታወቂያዎ ጋር እንዲገጥም ነው። ቁጥሩን ካላወቁት መዝለል ይችላሉ። ባይሞሉም ይቻላል"
+id-document-image.am.simple.mp3 : "የመታወቂያ ወይም የሰነድ ፎቶ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ፎቶ ካላችሁ ስቀሉ፣ ወይም በአካል ይዘው ይምጡ። ባይሞሉም ይቻላል"
 
-id-document-image.am.simple.mp3 : "የመታወቂያ ፎቶ ይህ የእርስዎን ማንነት ለማረጋገጥ ይረዳል። ፎቶ ካላችሁ ስቀሉ፣ ወይም ዝለሉት። ባይሞሉም ይቻላል"
+referral.am.simple.mp3 : "የአጋር እርዳታ ምዝገባዎን ለማጠናቀቅ የአጋር ድርጅት ረዳት በስልክ ቁጥርዎ ይደውልልዎታል። ስምዎን እና ስልክ ቁጥርዎን ብቻ እናካፍላለን። ሐሳብዎን ከቀየሩ በስልክ ጥሪው ላይ \"አይሆንም\" ማለት ይችላሉ። አዎ፣ ስሜና ስልኬ ይሰጥ"
 
 onboard_submit.am.simple.mp3 : "ለመጨረስ ዝግጁ ነዎት? መረጃዬ ለትምህርቴ እንዲውል ተስማምቻለሁ።"
 
@@ -53,11 +53,11 @@ name.om.mp3 : "Maqaa keessan barreessaa Maqaan kun galmee barumsaa keessan irrat
 
 phone.om.mp3 : "Lakkoofsa bilbilaa keessan barreessaa Ergaa galmee keessanii bilbila kanatti ergina. Fakkeenyaaf: 0912 345 678"
 
-id-route.om.mp3 : "Eenyummaa keessan akkamitti mirkaneessina? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf sanada filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa"
+id-route.om.mp3 : "Eenyummaa keessan akkamitti mirkaneessina? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf sanada filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa Sanada hin qabu (Dhaabbata tumsaatti na dabarsaa)"
 
-id-value.om.mp3 : "Lakkoofsa Faayidaa Lakkoofsa kanaan sanada Faayidaa keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne, bira darbaa. Dirqama miti"
+id-document-image.om.mp3 : "Suuraa waraqaa eenyummaa ykn sanada keessanii kaasaa ykn fe'aa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa ifa ta'e kaasaa ykn fe'aa. Amma yoo hin dandeenye sanadicha qaamaan fiduu dandeessu. Sanada yoo hin qabaanne garuu duubatti deebi'aatii 'Dhaabbata tumsaa' kan jedhu filadhaa. Dirqama miti"
 
-id-document-image.om.mp3 : "Suuraa waraqaa eenyummaa keessanii kaasaa ykn fe'aa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraan bilbila keessanirratti ofumaan salphata. Yoo hin barbaanne bira darbuu dandeessu. Dirqama miti"
+referral.om.mp3 : "Dhaabbata tumsaa wajjin walqunnamsiisuu Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaan koo fi bilbilli koo dhaabbata tumsaatti akka kennamu walii nan gala."
 
 onboard_submit.om.mp3 : "Mirkaneessa Odeeffannoon koo sagantaa barumsaatiif akka oolu walii nan gala."
 
@@ -71,11 +71,11 @@ name.om.simple.mp3 : "Maqaa Maqaan kun galmee barumsaa keessan irratti mul'ata. 
 
 phone.om.simple.mp3 : "Bilbila Ergaa galmee keessanii bilbila kanatti ergina. Fakkeenyaaf: 0912 345 678"
 
-id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf tokko filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa"
+id-route.om.simple.mp3 : "Waraqaa eenyummaa qabduu? Eenyummaa keessan mirkaneessuuf gargaara. Eenyummaa keessan mirkaneessuuf tokko filadhaa. Waraqaa Faayidaa Waraqaa baqattummaa Waraqaa Gandaa Sanada biraa Gargaarsa tumsaa"
 
-id-value.om.simple.mp3 : "Lakkoofsa Faayidaa Lakkoofsa kanaan sanada Faayidaa keessan walitti madaalsifna. Lakkoofsicha yoo hin beekne bira darbuu dandeessu. Dirqama miti"
+id-document-image.om.simple.mp3 : "Suuraa waraqaa ykn sanadaa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa fe'aa, ykn qaamaan fidaa. Dirqama miti"
 
-id-document-image.om.simple.mp3 : "Suuraa waraqaa Kun utuu hin turin eenyummaa keessan mirkaneessuuf gargaara. Suuraa yoo qabaattan fe'aa, ykn bira darbaa. Dirqama miti"
+referral.om.simple.mp3 : "Gargaarsa tumsaa Galmee xumuruuf gargaaraan dhaabbata tumsaa tokko isiniif bilbila. Maqaa fi bilbila keessan qofa kennina. Yoo yaada jijjiirrattan bilbilaarratti 'hin barbaadu' jechuu dandeessu. Maqaa fi bilbilli koo haa kennamu"
 
 onboard_submit.om.simple.mp3 : "Xumuruuf qophiidhaa? Odeeffannoon koo haa galu"
 
@@ -89,11 +89,11 @@ name.ti.mp3 : "ስምኩም ጽሓፉ እዚ ስም ኣብ ናይ ትምህር�
 
 phone.ti.mp3 : "ናይ ስልኪ ቍጽርኹም ጽሓፉ ናይ ምዝገባ መልእኽቲ በዚ ስልኪ ክንሰድድ ኢና። ንኣብነት፦ 0912 345 678"
 
-id-route.ti.mp3 : "መንነትኩም ብኸመይ ነረጋግጽ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሰነድ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ"
+id-route.ti.mp3 : "መንነትኩም ብኸመይ ነረጋግጽ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሰነድ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ ሰነድ የብለይን (ናብ መሻርኽቲ ትካል ስደዱኒ)"
 
-id-value.ti.mp3 : "ናይ ፋይዳ ቍጽሪ እዚ ቍጽሪ ምስ ናይ ፋይዳ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ሕለፍዎ። ግዴታ ኣይኮነን"
+id-document-image.ti.mp3 : "ናይ መታወቒ ወይ ናይ ሰነድኩም ስእሊ ኣልዕሉ ወይ ስደዱ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ንጹር ስእሊ ኣልዕሉ ወይ ስደዱ። ሕጂ እንተዘይክኢልኩም ነቲ ሰነድ ብኣካል ሒዝኩም ክትመጹ ትኽእሉ ኢኹም። ሰነድ እንተዘይብልኩም ግን ንድሕሪት ተመሊስኩም 'ብመሻርኽቲ ትካል' ዝብል ምረጹ። ግዴታ ኣይኮነን"
 
-id-document-image.ti.mp3 : "ናይ መታወቒኹም ስእሊ ኣልዕሉ ወይ ስደዱ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። እቲ ስእሊ ኣብ ስልክኹም ብባዕሉ ይቕነስ። እንተዘይደሊኹም ክትሓልፍዎ ትኽእሉ ኢኹም። ግዴታ ኣይኮነን"
+referral.ti.mp3 : "ምስ መሻርኽቲ ትካል ምርኻብ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። ስመይን ናይ ስልኪ ቍጽረይን ንመሻርኽቲ ትካል ክወሃብ ተሰማሚዐ ኣለኹ።"
 
 onboard_submit.ti.mp3 : "መረጋገጺ ሓበሬታይ ነቲ ናይ ትምህርቲ ፕሮግራም ክውዕል ተሰማሚዐ ኣለኹ።"
 
@@ -107,11 +107,11 @@ name.ti.simple.mp3 : "ስም እዚ ስም ኣብ ናይ ትምህርቲ መዝ�
 
 phone.ti.simple.mp3 : "ናይ ርክብ ስልኪ ናይ ምዝገባ መልእኽቲ በዚ ስልኪ ክንሰድድ ኢና። ንኣብነት፦ 0912 345 678"
 
-id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሓደ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ"
+id-route.ti.simple.mp3 : "መታወቒ ኣሎኩምዶ? መንነትኩም ንምርግጋጽ ይሕግዝ። መንነትኩም ንምርግጋጽ ሓደ ምረጹ። ናይ ፋይዳ መታወቒ ናይ ስደተኛ መታወቒ ናይ ቀበሌ መታወቒ ካልእ ሰነድ ሓገዝ መሻርኽቲ"
 
-id-value.ti.simple.mp3 : "ናይ ፋይዳ ቍጽሪ እዚ ቍጽሪ ምስ ናይ ፋይዳ ሰነድኩም ንኸነዛምዶ እዩ። ነዚ ቍጽሪ እንተዘይፈሊጥኩምዎ ክትሓልፍዎ ትኽእሉ ኢኹም። ግዴታ ኣይኮነን"
+id-document-image.ti.simple.mp3 : "ናይ መታወቒ ወይ ሰነድ ስእሊ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ስእሊ ስደዱ፣ ወይ ብኣካል ሒዝኩም ምጹ። ግዴታ ኣይኮነን"
 
-id-document-image.ti.simple.mp3 : "ናይ መታወቒ ስእሊ እዚ እንተዘይተጸበኹም መንነትኩም ንምርግጋጽ ይሕግዝ። ስእሊ እንተለኩም ስደዱ፣ ወይ ሕለፍዎ። ግዴታ ኣይኮነን"
+referral.ti.simple.mp3 : "ሓገዝ መሻርኽቲ ምዝገባኹም ንምዝዛም ሓደ ሓጋዚ መሻርኽቲ ትካል ክድውለልኩም እዩ። ስምኩምን ስልክኹምን ጥራይ ነካፍል። ሓሳብኩም እንተቐይርኩም ኣብ ስልኪ \"ኣይደልን\" ክትብሉ ትኽእሉ ኢኹም። እወ፣ ስመይን ስልከይን ይወሃብ"
 
 onboard_submit.ti.simple.mp3 : "ክትውድኡ ድሉዋት ዲኹም? ሓበሬታይ ንትምህርተይ ክውዕል ተሰማሚዐ ኣለኹ።"
 
