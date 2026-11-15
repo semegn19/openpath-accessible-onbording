@@ -4,7 +4,7 @@
 FROM node:20-alpine
 
 WORKDIR /api
-COPY api/server.mjs api/openapi.yaml ./
+COPY api/ ./
 
 # The API validates against the same schema files the form renders from.
 COPY schema/ /schema/

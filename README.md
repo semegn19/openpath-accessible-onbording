@@ -16,10 +16,10 @@ docker compose up -d --build
 
 | | |
 |---|---|
-| ✅ Built and tested | 3 form pages · Amharic + English · voice input on every field · REST API + OpenAPI 3.1 · Docker Compose |
-| ✅ Automated evidence | 17 axe audits at zero serious/critical · 41 API assertions · 22 offline assertions · 21 page checks · zero third-party requests · 0 schema errors |
-| ⚠️ Needs a human | NVDA / TalkBack / keyboard-only runs **with the co-designer** — not yet done, see [Limitations](#limitations) |
-| ❌ Not built | Level 1 script-tag embed · Level 3 standards (LTI 1.3, JobPosting, Open Badges) · admin UI · data retention policy |
+| ✅ Built and tested | 3 form pages · 4 languages (Amharic, Afaan Oromoo, Tigrinya, English) · Multi-provider AI speech-to-text (Addis AI, Gemini, Ollama, OpenAI) · All 3 Integration Levels (L1 Script-tag embed, L2 REST + OpenAPI 3.1, L3 schema.org JSON-LD) · SMS resumption links · Docker Compose |
+| ✅ Automated evidence | 17 axe audits at zero serious/critical · 43 API assertions · 10 embed assertions · 37 JSON-LD assertions · 18 AI adapter assertions · 28 voice assertions · 22 offline assertions · zero third-party requests · 0 schema errors |
+| ⚠️ Needs a human | Live co-designer sessions (NVDA, TalkBack, keyboard-only, 200% zoom, sound off) on judging day — see [Limitations](#limitations) |
+| 📋 Post-hackathon | LTI 1.3 LMS deep linking · admin analytics UI · long-term data retention policy |
 
 Everything claimed below has a command you can run to check it.
 
@@ -267,18 +267,55 @@ location / { try_files $uri /index.html; }
 
 ---
 
-## The API (Level 2)
+## Integration Levels (Adoptability Ladder)
 
-Base: `/api`. Full spec: **`api/openapi.yaml`** (OpenAPI 3.1, clean under `openapi-spec-validator`), also served live at `GET /api/openapi.yaml`.
+The hackathon brief requires the onboarding module to support integration via:
+1. **Level 1: Drop-in Script Tag (`embed.js`)**
+2. **Level 2: REST API with an OpenAPI 3.1 specification**
+3. **Level 3: An open industry standard (`schema.org/JobPosting` JSON-LD)**
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/health` | liveness, forms, submission count, `transcription` + `encryption` state |
-| `POST /api/transcribe` | audio in, text out. Off unless `ASR_URL` is set. **Audio is never stored** |
-| `GET /api/forms` | which forms this deployment accepts |
-| `GET /api/forms/{id}` | the full form definition — the renderer's input |
-| `POST /api/submissions` | validate, store, return an id |
-| `GET /api/submissions/{id}` | read one back |
+All three levels are built, documented, and asserted in automated test suites.
+
+### Level 1 — Drop-in Script Tag Embed
+
+Any external host page (e.g. Savanna portal, university LMS, or government service) can embed OpenPath using **one script tag**:
+
+```html
+<!-- 1. Provide an optional container -->
+<div id="openpath-signup"></div>
+
+<!-- 2. One script tag to load and render -->
+<script src="https://openpath.example.et/embed.js"
+        data-form="onboard"
+        data-lang="am"
+        data-target="#openpath-signup"
+        data-title="የተማሪ ምዝገባ ቅጽ">
+</script>
+```
+
+- **Live Demo Page**: Open [`/embed-demo.html`](http://localhost:8080/embed-demo.html) in your browser to test the script tag integration live with real-time postMessage event logging and interactive controls.
+- **Contract & Spec**: Full specification is documented in [`docs/embed-contract.md`](docs/embed-contract.md).
+- **Zero Inner Scrollbars**: Dynamic bidirectional `postMessage` protocol automatically resizes the iframe to match content height.
+- **Microphone Delegation**: Sets `allow="microphone"` permissions policy so voice input works seamlessly across iframe boundaries.
+- **Automated Evidence**: Tested in `app/tests/embed.mjs` against a host page on a separate port with Playwright and axe-core (10 assertions, 0 violations).
+
+### Level 2 — REST API & OpenAPI 3.1
+
+A zero-dependency Node.js service (`api/server.mjs`) backed by append-only crash-safe JSONL storage, with optional AES-256-GCM encryption at rest (`DATA_KEY`). Full interactive spec at [`/api/openapi.yaml`](http://localhost:8080/api/openapi.yaml).
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/health` | `GET` | Liveness, forms count, submission count, encryption & ASR status |
+| `/api/forms` | `GET` | List available form definitions |
+| `/api/forms/{id}` | `GET` | Full schema definition for client-side rendering |
+| `/api/submissions` | `POST` | Validate and store submission, return receipt ID |
+| `/api/submissions/{id}` | `GET` | Read back submission by unguessable ID |
+| `/api/checkpoints` | `POST` | Save 7-day progress checkpoint, return resume token and URL |
+| `/api/checkpoints/{token}` | `GET` | Retrieve saved answers to resume filling |
+| `/api/sms/send-resume` | `POST` | Dispatch resume link via SMS (Ethio Telecom / Safaricom) |
+| `/api/transcribe` | `POST` / `GET` | Multi-provider speech-to-text (Addis AI, Gemini, Ollama, OpenAI) |
+| `/api/transcribe/config` | `GET` | Inspect active ASR providers and supported languages |
+| `/api/openapi.yaml` | `GET` | OpenAPI 3.1 specification document |
 
 ```console
 $ curl -s -X POST localhost:8080/api/submissions -H 'Content-Type: application/json' -d '{
@@ -289,13 +326,20 @@ $ curl -s -X POST localhost:8080/api/submissions -H 'Content-Type: application/j
 {"id":"sub_9mQ2xT7bK1vR4pLz","receivedAt":"2026-11-15T09:41:02.114Z","stripped":[]}
 ```
 
-**The server re-validates everything** against the same JSON the form renders from, and returns the *same rule names* the UI already translates:
+- **Server-Side Validation**: The server re-validates every field against schema rules (`phone-et`, `required`, etc.), returning translated error rule names.
+- **Privacy Guarantee**: Fields marked `localOnly` (`accessibility-prefs`) are automatically stripped before writing to disk and returned in `stripped[]`.
+- **Automated Evidence**: Tested in `app/tests/api.mjs` (43 assertions) and `app/tests/transcribe.mjs` (11 assertions).
 
-```json
-{"error":{"code":"invalid","fields":[{"field":"phone","rule":"phone-et"}]}}
-```
+### Level 3 — Standards-Based Integration (`schema.org/JobPosting` JSON-LD)
 
-Rate limit 30/min per IP · bodies capped at 32 KB · `Cache-Control: no-store` · CORS open so the form can be embedded.
+OpenPath implements the **W3C / Schema.org standard** for structured job data, allowing search engines, job aggregators, and assistive platforms to discover accommodation-friendly employment opportunities:
+
+- **REST Endpoints**:
+  - `GET /api/forms/employer-accommodations-v1/jsonld?lang=am`: Generates structured `schema.org/JobPosting` from form schemas.
+  - `GET /api/submissions/{id}/jsonld`: Generates structured `schema.org/JobPosting` from submitted employer commitments.
+- **DOM Injection**: On `/employer`, a `<script id="openpath-jsonld" type="application/ld+json">` tag is reactively maintained in the document head and cleanly removed on navigation.
+- **Strict Privacy**: Contact phone numbers, applicant answers, and accessibility preferences are guaranteed 100% excluded from the public JSON-LD graph.
+- **Automated Evidence**: Tested in `app/tests/jsonld.mjs` (37 assertions).
 
 ---
 
@@ -355,14 +399,20 @@ docker-compose.yml      nginx + API
 | `DATA_DIR` | `api/data` | where `submissions.jsonl` lives |
 | `SCHEMA_DIR` | `schema/` | which form definitions the API accepts |
 | `RATE_LIMIT_PER_MIN` | `30` | submissions per IP per minute |
-| `MAX_BODY_BYTES` | `32768` | request body cap |
+| `MAX_BODY_BYTES` | `32768` | request body cap (32 KB) |
 | `ALLOWED_ORIGIN` | `*` | CORS. Narrow it if you deploy publicly |
 | `TRUST_PROXY` | `1` | read `X-Forwarded-For` when behind nginx |
 | `DATA_KEY` | *(unset)* | 32-byte base64 key. Encrypts names, phones and ID numbers at rest. **Set this in production.** |
-| `ASR_URL` | *(unset)* | Speech-to-text endpoint (OpenAI-compatible multipart, e.g. `http://127.0.0.1:8080/inference` for `whisper.cpp`). **Unset = browser speech only**, and the UI says so. Browsers have no Amharic model, so this is what makes Amharic voice input work |
-| `ASR_KEY` | *(unset)* | Bearer key for `ASR_URL`, if the engine needs one. Server-side only — never shipped to the browser |
+| `ADDIS_AI_API_KEY` | *(unset)* | Addis AI key for Ethiopian speech recognition (`am`, `om`, `ti`) and text-to-speech |
+| `GEMINI_API_KEY` | *(unset)* | Google Gemini key for multilingual audio transcription (`am`, `om`, `ti`, `en`) |
+| `OLLAMA_HOST` | *(unset)* | Self-hosted Ollama endpoint (e.g. `http://localhost:11434`) for offline/local AI models |
+| `AI_PROVIDER` | `auto` | Preferred AI provider: `auto`, `addis-ai`, `gemini`, `ollama`, `openai-compatible`, `mock` |
+| `ASR_URL` | *(unset)* | OpenAI-compatible Whisper endpoint (e.g. `http://127.0.0.1:8080/inference` for `whisper.cpp`) |
+| `ASR_KEY` | *(unset)* | Bearer key for `ASR_URL`, if the engine needs one |
 | `ASR_MODEL` | `whisper-1` | Model name passed to the engine |
-| `MAX_AUDIO_BYTES` | `2097152` | Largest recording accepted by `/api/transcribe` (2 MB ≈ 30 s of Opus) |
+| `MAX_AUDIO_BYTES` | `2097152` | Largest recording accepted by `/api/transcribe` (2 MB ≈ 30 s of audio) |
+| `SMS_KEY` | *(unset)* | SMSEthiopia API key for connection-drop recovery SMS |
+| `SMS_SIMULATE` | `false` | When `true`, simulates SMS delivery without sending live carrier SMS |
 
 ---
 
@@ -370,28 +420,30 @@ docker-compose.yml      nginx + API
 
 ```bash
 cd app
-npm run check        # everything below, in about 60 s
+npm run check        # runs the full verification gate
 ```
 
 | Command | Proves |
 |---|---|
+| `npm run embed` | **Level 1 Embed**: `<script src="embed.js">` iframe loader on separate host port, postMessage protocol, auto-resize, microphone delegation, axe clean |
+| `npm run api` | **Level 2 REST**: 43 assertions — contract, validation, privacy stripping, **encryption at rest**, idempotent retries, rate limit, OpenAPI 3.1 parity |
+| `npm run jsonld` | **Level 3 Standard**: 37 assertions — `schema.org/JobPosting` JSON-LD generation from schemas and submissions, reactive DOM injection, strict zero PII |
+| `npm run ai` | **Multi-Provider AI**: 18 assertions — provider discovery, language auto-routing, fallback on upstream failure, mock engine |
+| `npm run target-size` | **WCAG 2.5.8**: all buttons, radio/checkbox inputs, settings chips meet or exceed 24×24px (and 48px touch targets) |
+| `npm run sms` | **SMS & Recovery**: phone normalization, checkpoint endpoints, SMS resume links, and offline drop recovery |
+| `npm run transcribe` | ASR endpoint behaviour: 503 unconfigured, real transcript, 415/413, and browser fallback |
 | `npm run validate` | schemas compile: **0 errors, 0 warnings** |
-| `npm run a11y` | **17 axe audits**, 0 serious/critical · error state · 320 px reflow · no mic on consent · payload privacy · stale-answer check · offline banner · **200 % zoom** |
-| `npm run pages` | `/onboard`, `/job`, `/employer` · deep links · old `#/` links · skip link · back button (21 checks) |
-| `npm run api` | **41 assertions** — contract, server-side validation, privacy stripping, **encryption at rest**, **idempotent retries**, rate limit, 413/415, spec parity |
-| `npm run audio` | generates `public/audio/index.json` + the recording list from the schema; flags orphaned clips |
-| `npm run audio:generate` | dry run by default; `--provider=… --write` creates the missing clips once. Dedupes by content, caps characters, refuses without a key | generates `public/audio/index.json` + the recording list from the schema; flags orphaned clips |
-| `npm run parity` | every form as rich as the richest: complete `ui` strings, a written message for every rule, *why* under every personal field, a simple twin for every long label — and no simple twin that is a word-for-word copy |
-| `npm run errors` | sweeps every `{placeholder}` in every schema error string and renders `minLength` live — no raw braces may reach a person |
-| `npm run transcribe` | `/api/transcribe` against a fake engine: 503 unconfigured, real transcript, 415/413, and the browser falling through to it with no engine of its own |
+| `npm run a11y` | **17 axe audits**, 0 serious/critical · error state · 320 px reflow · no mic on consent · payload privacy · **200 % zoom** |
+| `npm run pages` | `/onboard`, `/job`, `/employer` · deep links · skip link · back button (21 checks) |
 | `npm run controls` | **all three forms** walked to the end: read-aloud on every screen, microphone on every answering screen, none on consent |
 | `npm run literacy` | simple-mode walk: renders every screen, flags noun-only headings (`--strict` fails on them) |
-| `npm run offline` | **22 assertions** — Slow 3G budget, a draft that survives a reload with no signal, submit-with-no-connection, reconnect flush, one record on disk |
+| `npm run offline` | **22 assertions** — Slow 3G budget, a draft that survives a reload with no signal, reconnect flush |
 | `npm run submit` | form → API → stored record; and the no-API path that refuses to lie |
 | `npm run voice` | spoken Amharic digits → `911234567`; "a new question was added" announcement |
-| `npm run kb` | 14-stop tab order |
 | `npm run focus` | nothing focused is hidden under the sticky bar (2.4.11) |
 | `npm run hosts` | **zero third-party requests** |
+| `npm run copy` | hardcoded string ceiling check (`CEILING = 37`) |
+| `npm run audio:check` | static audio manifest coverage and provenance check |
 | `npm run verify:prod` | the *built* bundle behind nginx semantics: routing, 17 axe audits, CSP with no violations |
 | `python3 tests/font-coverage.py` | all 384 assigned Ethiopic codepoints still render |
 
