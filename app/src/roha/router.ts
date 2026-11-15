@@ -387,11 +387,29 @@ export class IntentRouter {
     }
 
     // 12. Support needs filter (C02)
-    if (raw.includes('flexible hours') || raw.includes('written instructions') || raw.includes('filter')) {
+    if (
+      raw.includes('flexible') ||
+      raw.includes('remote') ||
+      raw.includes('step-free') ||
+      raw.includes('entrance') ||
+      raw.includes('screen-reader') ||
+      raw.includes('desk') ||
+      raw.includes('ከቤት') ||
+      raw.includes('ተለዋዋጭ') ||
+      raw.includes('ደረጃ') ||
+      raw.includes('ስክሪን') ||
+      raw.includes('ጠረጴዛ') ||
+      raw.includes('ማጣሪያ') ||
+      raw.includes('calallii') ||
+      raw.includes('ምጽራይ') ||
+      raw.includes('written instructions') ||
+      raw.includes('filter')
+    ) {
       const filterTarget = this.findFilterTargetId() || pageMainId;
       let query = raw;
-      if (raw.includes('flexible')) query = 'flexible';
-      if (raw.includes('written')) query = 'written';
+      if (raw.includes('flexible') || raw.includes('ተለዋዋጭ')) query = 'flexible';
+      else if (raw.includes('remote') || raw.includes('ከቤት')) query = 'remote';
+      else if (raw.includes('written')) query = 'written';
 
       return {
         schemaVersion: '2.0',

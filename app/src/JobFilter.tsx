@@ -121,11 +121,13 @@ export function JobListingPage({
             return (
               <label
                 key={opt.value}
+                data-acc-value={opt.value}
                 className={`op-job-filter-chip ${isChecked ? 'op-chip-active' : ''}`}
               >
                 <input
                   type="checkbox"
                   className="op-filter-checkbox"
+                  value={opt.value}
                   checked={isChecked}
                   onChange={() => toggleAcc(opt.value)}
                 />

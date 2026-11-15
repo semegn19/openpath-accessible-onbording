@@ -110,6 +110,24 @@ export class FormActionExecutor {
       }
     }
 
+    // 1b. If job filter chips exist on screen, toggle/check matching filter chips
+    const chips = Array.from(document.querySelectorAll<HTMLElement>('.op-job-filter-chip'));
+    if (chips.length > 0) {
+      if (lowerQuery === 'all' || lowerQuery === 'show all' || lowerQuery === 'clear') {
+        const clearBtn = document.querySelector<HTMLButtonElement>('.op-filter-clear-btn');
+        if (clearBtn) clearBtn.click();
+      } else {
+        for (const chip of chips) {
+          const input = chip.querySelector<HTMLInputElement>('input[type="checkbox"]');
+          const val = input?.value?.toLowerCase() || chip.getAttribute('data-acc-value')?.toLowerCase() || '';
+          const label = (chip.querySelector('.op-chip-label')?.textContent || chip.textContent || '').toLowerCase();
+          if (input && (lowerQuery.includes(val) || lowerQuery.includes(label) || val.includes(lowerQuery) || (label.length > 3 && label.includes(lowerQuery)))) {
+            if (!input.checked) input.click();
+          }
+        }
+      }
+    }
+
     // 2. Filter visible job cards in the document locally (C02)
     const jobCards = document.querySelectorAll('section, article');
     for (const card of Array.from(jobCards)) {

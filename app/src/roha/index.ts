@@ -1068,6 +1068,7 @@ export class RohaSDK {
   }
 
   private handleSelectOptionIntent(query: string): boolean {
+    if (this.handleJobsFilterVoiceAction(query)) return true;
     const optionLabels = Array.from(document.querySelectorAll<HTMLElement>(
       '#op-main .op-options label, #op-main label.op-option, #op-main label.op-check, #op-main .op-choice'
     ));
@@ -1222,10 +1223,246 @@ export class RohaSDK {
     return true;
   }
 
+  public readFilteredJobs(customPrefix?: string): void {
+    const jobCards = Array.from(document.querySelectorAll<HTMLElement>('.op-job-cards-list .op-job-card'));
+    const count = jobCards.length;
+
+    let msg = '';
+    if (count === 0) {
+      msg = this.t({
+        am: 'የተመረጡትን ድጋፎች የሚያሟላ ክፍት የሥራ ቦታ አልተገኘም። ማጣሪያውን ለማጽዳት «ሁሉንም አሳይ» ማለት ይችላሉ።',
+        om: 'Hojiin deeggarsa filatame guutu hin argamne. Calallii haquuf "hunda agarsiisi" jechuu dandeessu.',
+        ti: 'ነቲ ዝተመረጸ ድጋፍ ዘማልእ ናይ ስራሕ ቦታ ኣይተረኽበን። ምጽራይ ንምልዓል «ኩሎም ኣርእየኒ» ክትብሉ ትኽእሉ ኢኹም።',
+        en: 'No open jobs found matching the selected accommodations. You can say "Show all" to clear filters.',
+      });
+    } else {
+      const jobSummaries = jobCards.map((card, idx) => {
+        const title = card.querySelector('.op-job-title')?.textContent?.trim() || '';
+        const company = card.querySelector('.op-job-company')?.textContent?.trim() || '';
+        const numLabel = this.t({
+          am: `${idx + 1}ኛ፦`,
+          om: `${idx + 1}ffaa:`,
+          ti: `${idx + 1}ይ፦`,
+          en: `${idx + 1}:`,
+        });
+        const atLabel = this.t({
+          am: 'በ',
+          om: 'dhaabbata',
+          ti: 'ኣብ',
+          en: 'at',
+        });
+        if (company) {
+          return `${numLabel} ${title} ${atLabel} ${company}`;
+        }
+        return `${numLabel} ${title}`;
+      });
+
+      const countHeader = this.t({
+        am: `${count} የሚስማሙ ክፍት የሥራ ቦታዎች ተገኝተዋል፦`,
+        om: `Hojiilee ${count} walsiman argamaniiru:`,
+        ti: `${count} ዝሰማምዑ ናይ ስራሕ ቦታታት ተረኺቦም ኣለዉ፦`,
+        en: `Found ${count} matching jobs:`,
+      });
+
+      const filterIntro = customPrefix || this.t({
+        am: 'የመረጡት ማጣሪያ ተተግብሯል።',
+        om: 'Calalliin filatame hojiirra ooleera.',
+        ti: 'ዝመረጽኩምዎ ምጽራይ ተተግቢሩ ኣሎ።',
+        en: 'Filter applied.',
+      });
+
+      msg = `${filterIntro} ${countHeader} ${jobSummaries.join('፤ ')}።`;
+    }
+
+    this.announce(msg);
+    this.readExecutor.speak(msg, this.locale);
+  }
+
+  private handleJobsFilterVoiceAction(utterance: string): boolean {
+    const filterContainer = document.querySelector<HTMLElement>('.op-job-filter-chips, .op-job-filter-fieldset');
+    const isJobsPage = Boolean(
+      filterContainer || document.querySelector('.op-job-listing-page')
+    );
+    if (!isJobsPage || !filterContainer) return false;
+
+    const raw = utterance.trim();
+    if (!raw) return false;
+    const lower = raw.toLowerCase();
+
+    // 1. Clear filters request
+    const isClearRequest = /(?:ሁሉንም|ሁሉ|አጽዳ|አሳይ|ሁሉንም\s*አሳይ|hunda|agarsiisi|hunda\s*agarsiisi|ኩሉ|ኩሎም|ኣጽሪ|ኩሎም\s*ኣርእየኒ|clear\s*filter|clear\s*filters|clear|all\s*jobs|show\s*all|reset\s*filter)/iu.test(lower);
+    if (isClearRequest) {
+      const clearBtn = document.querySelector<HTMLButtonElement>('.op-filter-clear-btn');
+      if (clearBtn) {
+        clearBtn.click();
+      } else {
+        const checkedBoxes = Array.from(document.querySelectorAll<HTMLInputElement>('.op-job-filter-chip input[type="checkbox"]:checked'));
+        for (const cb of checkedBoxes) cb.click();
+      }
+      const msg = this.t({
+        am: 'ማጣሪያው ተነስቷል። ሁሉንም ክፍት የሥራ ቦታዎች እያሳየን ነው።',
+        om: 'Calalliin haqameera. Hojiilee hunda agarsiisaa jirra.',
+        ti: 'ምጽራይ ተላዒሉ ኣሎ። ኩሎም ናይ ስራሕ ቦታታት ይርኣዩ ኣለዉ።',
+        en: 'Filters cleared. Showing all open jobs.',
+      });
+      this.announce(msg);
+      setTimeout(() => {
+        this.readFilteredJobs(msg);
+      }, 250);
+      return true;
+    }
+
+    // 2. Read jobs request
+    const isReadJobs = /(?:ስራዎቹን\s*(?:አንብብ|አንብቢ|አንብቢልኝ|ንገረኝ|ዘርዝር)|ስራዎችን\s*(?:አንብብ|አንብቢ|አንብቢልኝ|ንገረኝ|ዘርዝር)|ምን\s*ስራ\s*አለ|ምን\s*ስራዎች\s*አሉ|የስራ\s*ዝርዝር|hojiiwwan\s*(?:dubbisi|tarreessi)|hojii\s*kam|ስራሕቲ\s*(?:ኣንብብ|ኣንብበለይ|ዘርዝር)|እንታይ\s*ስራሕ|read\s*jobs|list\s*jobs|show\s*jobs|tell\s*me\s*jobs|what\s*jobs)/iu.test(lower);
+    if (isReadJobs) {
+      this.readFilteredJobs();
+      return true;
+    }
+
+    // 3. Apply / Register transition for jobs
+    const isApplyRequest = /(?:አመልክት|ይህን\s*ሥራ\s*አመልክት|ሥራውን\s*አመልክት|ይመዝገቡ|መዝግብ|hojii\s*kana\s*iyyannoo|iyyannoo|galmaa'i|ኣመልክት|እዚ\s*ስራሕ\s*ኣመልክት|ተመዝገብ|apply|apply\s*for\s*this|register)/iu.test(lower);
+    if (isApplyRequest) {
+      const applyBtn = document.querySelector<HTMLButtonElement>('.op-job-card .op-btn-apply, .op-job-listing-footer .op-btn-continue');
+      if (applyBtn) {
+        const msg = this.t({
+          am: 'ወደ ሥራ ማመልከቻ ቅጹ እየሄድን ነው።',
+          om: 'Gara unka iyyannoo hojiitti ce\'aa jirra.',
+          ti: 'ናብ ናይ ስራሕ መመልከቲ ቅጺ ንኸይድ ኣለና።',
+          en: 'Navigating to the job application form.',
+        });
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        setTimeout(() => applyBtn.click(), 400);
+        return true;
+      }
+    }
+
+    // 4. Accommodation Filter matching (single or multi-select!)
+    const chips = Array.from(filterContainer.querySelectorAll<HTMLElement>('.op-job-filter-chip'));
+    if (chips.length === 0) return false;
+
+    // Accommodation definitions with multi-language semantic patterns
+    const accDefs = [
+      {
+        value: 'step-free',
+        index: 0,
+        pattern: /(?:ደረጃ\s*የሌለው|ደረጃ\s*የሌለው\s*መግቢያ|መግቢያ|ደረጃ|ዊልቸር|መንኮራኩር|seensa\s*sadarkaa|sadarkaa\s*hin\s*qabne|ደረጃ\s*ዘይብሉ|ደረጃ\s*ዘይብሉ\s*ምእተዊ|መንኰርኰር|step[- ]free|step[- ]free\s*entrance|entrance|wheelchair|ramp)/iu,
+        ordinal: /(?:^|\s|[፣፤፥።፡,.\?!&])(?:1|1ኛ|1st|first|jalqabaa|ቀዳማይ)(?:$|\s|[፣፤፥።፡,.\?!&])/iu,
+      },
+      {
+        value: 'remote',
+        index: 1,
+        pattern: /(?:ከቤት|ከቤት\s*መሥራት|ከቤት\s*መስራት|በቤት|የርቀት|mana\s*taa'?anii|mana\s*ta'?anii|mana\s*taa'?ee|mana\s*hojjechuu|ካብ\s*ገዛ|ካብ\s*ገዛ\s*ምስራሕ|remote|remote\s*work|work\s*from\s*home|wfh|home\s*based)/iu,
+        ordinal: /(?:^|\s|[፣፤፥።፡,.\?!&])(?:2|2ኛ|2nd|second|lammaffaa|ካልኣይ)(?:$|\s|[፣፤፥።፡,.\?!&])/iu,
+      },
+      {
+        value: 'flexible',
+        index: 2,
+        pattern: /(?:ተለዋዋጭ|ተለዋዋጭ\s*ሰዓት|ተለዋዋጭ\s*የስራ\s*ሰዓት|ተለዋዋጭ\s*የሥራ\s*ሰዓት|የስራ\s*ሰዓት|የሥራ\s*ሰዓት|sa'?aatii\s*jijjiiramaa|saatii\s*jijjiiramaa|jijjiiramaa|ተለዋዋጢ|ተለዋዋጢ\s*ሰዓታት|ተለዋዋጢ\s*ሰዓት|flexible|flexible\s*hours|flex\s*hours|flexible\s*time)/iu,
+        ordinal: /(?:^|\s|[፣፤፥።፡,.\?!&])(?:3|3ኛ|3rd|third|sadaffaa|ሳልሳይ)(?:$|\s|[፣፤፥።፡,.\?!&])/iu,
+      },
+      {
+        value: 'screen-reader',
+        index: 3,
+        pattern: /(?:ስክሪን\s*አንባቢ|የስክሪን\s*አንባቢ|ስክሪን\s*ሪደር|አንባቢ\s*ሶፍትዌር|ሶፍትዌር|iskiriinii\s*dubbisu|iskiriinii\s*dubbisaa|iskiriinii|ስክሪን\s*ኣንባቢ|ናይ\s*ስክሪን\s*ኣንባቢ|screen[- ]reader|screen[- ]reader\s*software)/iu,
+        ordinal: /(?:^|\s|[፣፤፥።፡,.\?!&])(?:4|4ኛ|4th|fourth|afurffaa|ራብዓይ)(?:$|\s|[፣፤፥።፡,.\?!&])/iu,
+      },
+      {
+        value: 'sign-language',
+        index: 4,
+        pattern: /(?:ምልክት\s*ቋንቋ|የምልክት\s*ቋንቋ|አስተርጓሚ|ምልክት|afaan\s*mallattoo|turjumaana|mallattoo|ምልክት\s*ቋንቋ|ናይ\s*ምልክት\s*ቋንቋ|ኣተርጓሚ|sign[- ]language|sign[- ]language\s*interpreter|interpreter)/iu,
+        ordinal: /(?:^|\s|[፣፤፥።፡,.\?!&])(?:5|5ኛ|5th|fifth|shanaffaa|ሓሙሻይ)(?:$|\s|[፣፤፥።፡,.\?!&])/iu,
+      },
+      {
+        value: 'adapted-desk',
+        index: 5,
+        pattern: /(?:ምቹ\s*የሥራ\s*ጠረጴዛ|ምቹ\s*የስራ\s*ጠረጴዛ|ምቹ\s*ጠረጴዛ|ጠረጴዛ|ዴስክ|minjaala|minjaala\s*mijataa|teessoo|ምቹእ\s*መንበር|መንበር\s*ወይ\s*ጠረጴዛ|ምቹእ\s*ጠረጴዛ|adapted[- ]desk|ergonomic\s*desk|desk|table)/iu,
+        ordinal: /(?:^|\s|[፣፤፥።፡,.\?!&])(?:6|6ኛ|6th|sixth|jaffaa|ሳድሳይ)(?:$|\s|[፣፤፥።፡,.\?!&])/iu,
+      },
+    ];
+
+    const isRemove = /(?:አንሳ|አውጣ|አስወግድ|አስወጣ|አትምረጥ|uncheck|remove|deselect|dhiisi|baasi|ኣልዕል|ኣውጽእ)/iu.test(lower);
+
+    // Find all chips that match the user request
+    const matchedChips: HTMLElement[] = [];
+
+    accDefs.forEach(def => {
+      const chip = chips[def.index] || chips.find(c => c.getAttribute('data-acc-value') === def.value);
+      if (!chip) return;
+
+      const labelText = (chip.querySelector('.op-chip-label')?.textContent || chip.textContent || '').toLowerCase();
+
+      const matchesPattern = def.pattern.test(lower);
+      const matchesOrdinal = def.ordinal.test(lower);
+      const matchesLabelDirect = labelText.length > 3 && lower.includes(labelText);
+
+      if (matchesPattern || matchesOrdinal || matchesLabelDirect) {
+        if (!matchedChips.includes(chip)) {
+          matchedChips.push(chip);
+        }
+      }
+    });
+
+    if (matchedChips.length === 0) {
+      // Fallback: check if the utterance matches any chip's direct text content
+      for (const chip of chips) {
+        const text = (chip.querySelector('.op-chip-label')?.textContent || chip.textContent || '').trim().toLowerCase();
+        if (text && (lower.includes(text) || text.includes(lower))) {
+          if (!matchedChips.includes(chip)) matchedChips.push(chip);
+        }
+      }
+    }
+
+    if (matchedChips.length === 0) return false;
+
+    // Apply filter state to matched chips
+    const selectedNames: string[] = [];
+    for (const chip of matchedChips) {
+      const input = chip.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      if (!input) continue;
+      const labelText = chip.querySelector('.op-chip-label')?.textContent?.trim() || chip.textContent?.trim() || '';
+      selectedNames.push(labelText);
+
+      if (isRemove) {
+        if (input.checked) {
+          input.click();
+        }
+      } else {
+        if (!input.checked) {
+          input.click();
+        }
+      }
+    }
+
+    // Announce feedback and read filtered jobs after brief DOM render delay
+    const actionText = isRemove
+      ? this.t({
+          am: `«${selectedNames.join('፣ ')}» ከማጣሪያ ተነስቷል።`,
+          om: `"${selectedNames.join(', ')}" calallii keessaa haqameera.`,
+          ti: `«${selectedNames.join('፣ ')}» ካብ ምጽራይ ተላዒሉ ኣሎ።`,
+          en: `"${selectedNames.join(', ')}" removed from filters.`,
+        })
+      : this.t({
+          am: `«${selectedNames.join('፣ ')}» ተመርጧል።`,
+          om: `"${selectedNames.join(', ')}" filatameera.`,
+          ti: `«${selectedNames.join('፣ ')}» ተመሪጹ ኣሎ።`,
+          en: `"${selectedNames.join(', ')}" selected.`,
+        });
+
+    setTimeout(() => {
+      this.readFilteredJobs(actionText);
+    }, 250);
+
+    return true;
+  }
+
   private tryDirectVoiceAction(utterance: string): boolean {
     const raw = utterance.trim();
     if (!raw) return false;
     const lower = raw.toLowerCase();
+
+    // 0-job. Job Listing View Accommodation Filters & Search (/jobs)
+    if (this.handleJobsFilterVoiceAction(utterance)) return true;
 
     // 0. Consent & Agreement for statement/consent screens (e.g. referral agreement to share name/phone)
     const isConsentPhrase = /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ፈቃደኛ\s*ነኝ|ስምምነት|ስምምነቴን|ይሰጥ|ተሰማሚዐ|ተሰማሚዐ\s*ኣለኹ|ይወሃብ|ሕራይ|walii\s*nan\s*gala|walii\s*galeera|eeyyee|eeyyeen|tole|haa\s*kennamu|i\s*agree|agree|i\s*consent|consent|yes)/iu.test(lower) ||
