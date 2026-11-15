@@ -94,6 +94,7 @@ if (process.argv.includes('--list')) {
 }
 
 writeFileSync(new URL('../public/audio/index.json', import.meta.url), JSON.stringify(index, null, 0) + '\n');
+writeFileSync(new URL('../src/audio-index.json', import.meta.url), JSON.stringify(index, null, 0) + '\n');
 
 const bytes = [...present].reduce((n, f) => n + statSync(join(AUDIO_DIR, f)).size, 0);
 const lines = [

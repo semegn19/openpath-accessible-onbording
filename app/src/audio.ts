@@ -19,7 +19,7 @@
  * missing file or a failed play all fall through to the fallback — never to silence.
  */
 import type { Lang } from './types';
-import audioIndex from '../public/audio/index.json';
+import audioIndex from './audio-index.json';
 
 /** FNV-1a, 32-bit. Duplicated in scripts/audio-manifest.mjs — must stay identical. */
 const hash = (s: string): string => {
