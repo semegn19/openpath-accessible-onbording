@@ -1,0 +1,241 @@
+/* Inline assistance: normal document flow, clean side placement on large screens. */
+.roha-aside {
+  position: static;
+  margin: 1rem;
+  min-width: 0;
+  font: 1rem/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #172b4d;
+}
+.roha-aside *, .roha-aside *::before, .roha-aside *::after {
+  box-sizing: border-box;
+}
+.roha-aside [hidden] {
+  display: none !important;
+}
+.roha-aside .roha-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 100%;
+  border: 2px solid #002b56;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #172b4d;
+  font: inherit;
+  overflow-wrap: anywhere;
+  box-shadow: 0 4px 16px rgba(0, 43, 86, 0.08);
+}
+.roha-aside button, .roha-aside input {
+  min-height: 48px;
+  min-width: 48px;
+  max-width: 100%;
+  font: inherit;
+  border: 2px solid #526276;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  color: #172b4d;
+  background: #ffffff;
+  overflow-wrap: anywhere;
+}
+.roha-aside button {
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.roha-aside button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.roha-aside button:focus-visible, .roha-aside input:focus-visible {
+  outline: 3px solid #002b56;
+  outline-offset: 3px;
+}
+.roha-aside .roha-pill, .roha-aside .roha-btn-primary-blue, .roha-aside [data-roha-confirm] {
+  background: #002b56;
+  color: #ffffff;
+  border-color: #002b56;
+}
+.roha-aside .roha-pill:hover, .roha-aside .roha-btn-primary-blue:hover, .roha-aside [data-roha-confirm]:hover {
+  background: #001d3a;
+}
+.roha-aside .roha-pill {
+  width: 100%;
+}
+.roha-aside .roha-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.roha-aside .roha-title {
+  font-size: 1.35rem;
+  margin: 0;
+  color: #002b56;
+  font-weight: 700;
+}
+.roha-aside .roha-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #526276;
+}
+.roha-aside .roha-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.roha-aside .roha-top-actions {
+  margin-top: 0.25rem;
+}
+.roha-aside #roha-btn-stop {
+  background: #f8fafc;
+  color: #172b4d;
+}
+.roha-aside #roha-btn-stop:hover {
+  background: #edf2f7;
+}
+.roha-aside .roha-transcript, .roha-aside .roha-pending {
+  overflow-wrap: anywhere;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.6rem;
+  background: #f1f5f9;
+  color: #172b4d;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+.roha-aside .roha-pending {
+  border-color: #002b56;
+  background: #eaf0f6;
+}
+.roha-aside .roha-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.4rem;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.roha-aside .roha-badge-listening {
+  background: #dcfce7;
+  color: #14532d;
+  border-color: #86efac;
+}
+.roha-aside .roha-badge-speaking {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+.roha-aside .roha-badge-error {
+  background: #fee2e2;
+  color: #7f1d1d;
+  border-color: #fca5a5;
+}
+.roha-aside .roha-live-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.roha-aside .roha-command-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+.roha-aside .roha-command-form label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #002b56;
+}
+.roha-aside .roha-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.roha-aside .roha-command-form input {
+  flex: 1;
+  min-width: 0;
+  border: 1.5px solid #94a3b8;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+}
+.roha-aside .roha-consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #526276;
+  line-height: 1.4;
+  cursor: pointer;
+  margin-top: 0.2rem;
+}
+.roha-aside .roha-consent-label input[type="checkbox"] {
+  min-height: 20px;
+  min-width: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Large and medium-large screen layout: ALWAYS place Roha on the side */
+@media (min-width: 48rem), (min-width: 768px) {
+  body.roha-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem) !important;
+    align-items: start !important;
+    gap: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+  body.roha-layout > #root {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+  body.roha-layout > .roha-aside,
+  .roha-aside {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    position: sticky !important;
+    top: 1rem !important;
+    margin: 1.5rem 0 !important;
+    max-height: calc(100vh - 2rem) !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .roha-aside .roha-grid {
+    grid-template-columns: 1fr;
+  }
+  .roha-aside .roha-input-row {
+    flex-direction: column;
+  }
+}
+
+:root[data-roha-contrast="high-contrast"] .roha-aside .roha-card,
+:root[data-roha-contrast="high-contrast"] .roha-aside .roha-transcript,
+:root[data-roha-contrast="high-contrast"] .roha-aside .roha-pending,
+:root[data-roha-contrast="high-contrast"] .roha-aside .roha-title {
+  background: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+@media (forced-colors: active) {
+  .roha-aside button,
+  .roha-aside input,
+  .roha-aside .roha-card,
+  .roha-aside .roha-pending {
+    border: 2px solid ButtonText;
+  }
+}

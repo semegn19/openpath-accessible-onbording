@@ -1,6 +1,8 @@
 node_modules/
 dist/
 api/data/
+app/api/data/
+**/submissions.json*
 *.log
 .DS_Store
 
@@ -13,3 +15,10 @@ api/data/
 # Committing them gives every form two sources of truth and makes merge
 # conflicts in a generated file something a human has to resolve.
 app/src/schemas/
+app/src/audio-index.json
+
+# Local deployment secrets and credentials; commit only .env.example.
+.env
+.env.local
+.env.production
+*.env

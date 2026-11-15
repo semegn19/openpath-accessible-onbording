@@ -10,7 +10,7 @@
  *    stale about.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `openpath-shell-${VERSION}`;
 const RUNTIME = `openpath-runtime-${VERSION}`;
 
@@ -18,6 +18,8 @@ const SHELL_FILES = [
   '/',
   '/index.html',
   '/fonts.css',
+  '/roha.js',
+  '/roha.css',
   '/fonts/poppins-400-latin.woff2',
   '/fonts/poppins-600-latin.woff2',
   '/fonts/noto-sans-ethiopic-var.woff2',   // 136 KB, the one file that hurts on 3G — cache it
@@ -35,7 +37,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== SHELL && k !== RUNTIME).map((k) => caches.delete(k)));
+    await Promise.all(keys.filter((k) => k.startsWith('openpath-') && k !== SHELL && k !== RUNTIME).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -48,7 +50,9 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;        // never another origin
   if (url.pathname.startsWith('/api/')) return;           // answers are not content
 
-  if (req.mode === 'navigate') {
+  // Administration and arbitrary host pages must never replace the offline form shell.
+  if (url.pathname.startsWith('/roha-admin')) return;
+  if (req.mode === 'navigate' && ['/', '/index.html', '/onboard', '/job', '/employer'].includes(url.pathname)) {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(req);
@@ -62,6 +66,19 @@ self.addEventListener('fetch', (event) => {
         return cached ?? new Response('Offline and no cached copy.', {
           status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' },
         });
+      }
+    })());
+    return;
+  }
+
+  if (['/roha.js', '/roha.css'].includes(url.pathname)) {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        if (fresh.ok) { const cache = await caches.open(RUNTIME); await cache.put(req, fresh.clone()); }
+        return fresh;
+      } catch {
+        return await (await caches.open(RUNTIME)).match(req) || await (await caches.open(SHELL)).match(req) || Response.error();
       }
     })());
     return;

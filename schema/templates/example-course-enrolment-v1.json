@@ -6,16 +6,22 @@
   "defaultLang": "am",
   "langs": [
     "am",
-    "en"
+    "en",
+    "om",
+    "ti"
   ],
   "calendar": "EC",
   "title": {
     "am": "የኮርስ ምዝገባ (ምሳሌ)",
-    "en": "Course enrolment (example)"
+    "en": "Course enrolment (example)",
+    "om": "Galmee koorsii (fakkeenya)",
+    "ti": "ምዝገባ ኮርስ"
   },
   "intro": {
     "am": "ይህ ምሳሌ ነው። እርስዎ የሚፈልጉትን ጥያቄዎች ብቻ ይውሰዱ።",
-    "en": "This is an example. Take only the questions you need."
+    "en": "This is an example. Take only the questions you need.",
+    "om": "Kun fakkeenya waraqaa galmee koorsii weebsaayitii biraa keessatti argamuuti.",
+    "ti": "እዚ ኣብነት እዩ። ዘድልየኩም ሕቶታት ጥራይ ውሰዱ።"
   },
   "settings": {
     "progress": true,
@@ -28,11 +34,15 @@
       "type": "text",
       "label": {
         "am": "ሙሉ ስም",
-        "en": "Full name"
+        "en": "Full name",
+        "om": "Maqaa guutuu",
+        "ti": "ምሉእ ስም"
       },
       "simple": {
         "am": "ስም",
-        "en": "Name"
+        "en": "Name",
+        "om": "Maqaa",
+        "ti": "ስም"
       },
       "icon": "person",
       "required": true,
@@ -55,15 +65,21 @@
       "type": "tel",
       "label": {
         "am": "ስልክ ቁጥር",
-        "en": "Phone number"
+        "en": "Phone number",
+        "om": "Lakkoofsa bilbilaa",
+        "ti": "ናይ ስልኪ ቍጽሪ"
       },
       "simple": {
         "am": "ስልክ",
-        "en": "Phone"
+        "en": "Phone",
+        "om": "Bilbila",
+        "ti": "ናይ ርክብ ስልኪ"
       },
       "hint": {
         "am": "ምሳሌ፦ 0912 345 678",
-        "en": "Example: 0912 345 678"
+        "en": "Example: 0912 345 678",
+        "om": "Fakkeenyaaf: 0912 345 678",
+        "ti": "ንኣብነት፦ 0912 345 678"
       },
       "icon": "phone",
       "inputmode": "tel",
@@ -87,15 +103,21 @@
       "type": "email",
       "label": {
         "am": "ኢሜይል",
-        "en": "Email"
+        "en": "Email",
+        "om": "Imeelii",
+        "ti": "ኢሜይል"
       },
       "simple": {
         "am": "ኢሜይል",
-        "en": "Email"
+        "en": "Email",
+        "om": "Imeelii",
+        "ti": "ኢሜይል"
       },
       "hint": {
         "am": "ካለዎት ብቻ።",
-        "en": "Only if you have one."
+        "en": "Only if you have one.",
+        "om": "Yoo qabaattan qofa barreessaa.",
+        "ti": "ንኣብነት፦ name@example.com"
       },
       "icon": "mail",
       "inputmode": "email",
@@ -117,19 +139,27 @@
       "type": "date-ec-gc",
       "label": {
         "am": "የትውልድ ቀን",
-        "en": "Date of birth"
+        "en": "Date of birth",
+        "om": "Guyyaa dhalootaa",
+        "ti": "ዕለተ ልደት"
       },
       "simple": {
         "am": "የትውልድ ቀን",
-        "en": "Birth date"
+        "en": "Birth date",
+        "om": "Guyyaa dhalootaa",
+        "ti": "ዕለተ ልደት"
       },
       "hint": {
         "am": "ዓመቱን ብቻ ካወቁ ቅጹ ይፈቅድልዎታል።",
-        "en": "If you only know the year, the form allows that."
+        "en": "If you only know the year, the form allows that.",
+        "om": "Waggaa qofa yoo beektan, waraqichi ni heyyama.",
+        "ti": "ዓመት ጥራይ እንተፈሊጥኩም እቲ ቅጥዒ የፍቅድ እዩ።"
       },
       "why": {
         "am": "ዕድሜዎን ለማወቅ ነው። ለሌላ አካል አይላክም።",
-        "en": "We use it to know your age group. It is not shared."
+        "en": "We use it to know your age group. It is not shared.",
+        "om": "Garee umrii keessanii beekuuf fayyadama. Eenyuufuu hin qoodamu.",
+        "ti": "ናይ ዕድመ ደረትኩም ንምፍላጥ ንጥቀመሉ። ንሓደ'ኳ ኣይክፈልን እዩ።"
       },
       "icon": "clock",
       "required": false,
@@ -145,11 +175,15 @@
       "type": "radio",
       "legend": {
         "am": "የትኛውን ኮርስ ይመርጣሉ?",
-        "en": "Which course do you want?"
+        "en": "Which course do you want?",
+        "om": "Koorsii kam barbaaddu?",
+        "ti": "ክትመሃርዎ እትደልዩ ኮርስ ምረጹ"
       },
       "simple": {
         "am": "ኮርስ",
-        "en": "Course"
+        "en": "Course",
+        "om": "Koorsii",
+        "ti": "ኮርስ ምረጹ"
       },
       "icon": "book",
       "required": true,
@@ -167,7 +201,9 @@
           "value": "comm",
           "label": {
             "am": "የመግባቢያ ክህሎት",
-            "en": "Communication skills"
+            "en": "Communication skills",
+            "om": "Dandeettii qunnamtii",
+            "ti": "ናይ ርክብ ክእለት"
           },
           "icon": "speaker"
         },
@@ -175,7 +211,9 @@
           "value": "va",
           "label": {
             "am": "ምናባዊ አጋዥ",
-            "en": "Virtual assistant"
+            "en": "Virtual assistant",
+            "om": "Gargaaraa sararaa",
+            "ti": "ናይ ኦንላይን ሓጋዚ"
           },
           "icon": "desk"
         },
@@ -183,7 +221,9 @@
           "value": "data",
           "label": {
             "am": "ዳታ ሥራ",
-            "en": "Data work"
+            "en": "Data work",
+            "om": "Hojii daataa",
+            "ti": "ናይ ዳታ ስራሕ"
           },
           "icon": "screen"
         },
@@ -191,7 +231,9 @@
           "value": "other",
           "label": {
             "am": "ሌላ",
-            "en": "Other"
+            "en": "Other",
+            "om": "Kan biraa",
+            "ti": "ካልእ"
           },
           "icon": "doc"
         }
@@ -202,11 +244,15 @@
       "type": "radio",
       "legend": {
         "am": "መቼ ማጥናት ይመርጣሉ?",
-        "en": "When do you prefer to study?"
+        "en": "When do you prefer to study?",
+        "om": "Yoom barachuu filattu?",
+        "ti": "ኣየናይ ናይ ትምህርቲ ግዜ ይጥዕመኩም?"
       },
       "simple": {
         "am": "መቼ",
-        "en": "When"
+        "en": "When",
+        "om": "Yoom",
+        "ti": "ናይ ትምህርቲ ግዜ"
       },
       "icon": "clock",
       "required": true,
@@ -224,7 +270,9 @@
           "value": "morning",
           "label": {
             "am": "ጠዋት",
-            "en": "Morning"
+            "en": "Morning",
+            "om": "Ganama",
+            "ti": "ንግሆ"
           },
           "icon": "clock"
         },
@@ -232,7 +280,9 @@
           "value": "afternoon",
           "label": {
             "am": "ከሰዓት",
-            "en": "Afternoon"
+            "en": "Afternoon",
+            "om": "Waaree booda",
+            "ti": "ድሕሪ ቐትሪ"
           },
           "icon": "clock"
         },
@@ -240,7 +290,9 @@
           "value": "evening",
           "label": {
             "am": "ማታ",
-            "en": "Evening"
+            "en": "Evening",
+            "om": "Galgala",
+            "ti": "ምሸት"
           },
           "icon": "clock"
         }
@@ -251,15 +303,21 @@
       "type": "checkbox",
       "legend": {
         "am": "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ?",
-        "en": "How would you like this form to work for you?"
+        "en": "How would you like this form to work for you?",
+        "om": "Waraqaan kun akkamitti akka isiniif hojjetu barbaaddu?",
+        "ti": "እዚ ቅጥዒ ብኸመይ ክሰርሓልኩም ትመርጹ?"
       },
       "simple": {
         "am": "እርዳታ",
-        "en": "Support"
+        "en": "Support",
+        "om": "Gargaarsa",
+        "ti": "ትካልኩም እንታይ ይህብ?"
       },
       "hint": {
         "am": "ይህ መረጃ ወደ ማንም አይላክም።",
-        "en": "This is not sent to anyone."
+        "en": "This is not sent to anyone.",
+        "om": "Kun eenyuufuu hin ergamu.",
+        "ti": "ንሓደ'ኳ ኣይክፈልን እዩ"
       },
       "icon": "help",
       "required": false,
@@ -274,7 +332,9 @@
           "value": "read-aloud",
           "label": {
             "am": "ጥያቄዎች እንዲነበቡልኝ",
-            "en": "Read questions to me"
+            "en": "Read questions to me",
+            "om": "Gaaffilee naaf dubbisi",
+            "ti": "ሕቶታት ክንበቡለይ"
           },
           "icon": "speaker",
           "applies": "readAloud"
@@ -283,7 +343,9 @@
           "value": "large-text",
           "label": {
             "am": "ትልቅ ጽሑፍ",
-            "en": "Bigger text"
+            "en": "Bigger text",
+            "om": "Barreeffama guddaa",
+            "ti": "ዓቢ ጽሑፍ"
           },
           "icon": "text-large",
           "applies": "big"
@@ -295,15 +357,21 @@
       "type": "textarea",
       "label": {
         "am": "ሌላ ማለት የሚፈልጉት?",
-        "en": "Anything else?"
+        "en": "Anything else?",
+        "om": "Wanti biraa jiru?",
+        "ti": "ተወሳኺ ሓሳብ ኣሎዶ?"
       },
       "simple": {
         "am": "ሌላ",
-        "en": "More"
+        "en": "More",
+        "om": "Dabalata",
+        "ti": "ተወሳኺ"
       },
       "hint": {
         "am": "አንድ ዓረፍተ ነገር በቂ ነው።",
-        "en": "One sentence is enough."
+        "en": "One sentence is enough.",
+        "om": "Himi tokko gahaadha.",
+        "ti": "ሓደ ሓሳብ እኹል እዩ።"
       },
       "icon": "doc",
       "required": false,
@@ -324,15 +392,21 @@
       "type": "file",
       "label": {
         "am": "የትምህርት ማስረጃ (ካለዎት)",
-        "en": "School certificate (if you have one)"
+        "en": "School certificate (if you have one)",
+        "om": "Waraqaa ragaa barnootaa (yoo qabaattan)",
+        "ti": "ናይ ትምህርቲ ምስክር ወረቐት (እንተሃልዩ)"
       },
       "simple": {
         "am": "ማስረጃ",
-        "en": "Certificate"
+        "en": "Certificate",
+        "om": "Ragaa",
+        "ti": "ምስክር ወረቐት"
       },
       "hint": {
         "am": "ሰነድ ከሌለዎ ይህን ይዝለሉ።",
-        "en": "If you have no document, skip this."
+        "en": "If you have no document, skip this.",
+        "om": "Sanada yoo hin qabaanne, bira darbaa.",
+        "ti": "ሰነድ እንተዘይብልኩም ሕለፍዎ።"
       },
       "icon": "doc",
       "accept": "image/*,application/pdf",
@@ -349,7 +423,9 @@
       "type": "review",
       "label": {
         "am": "መረጃዎን ይመልከቱ",
-        "en": "Check your information"
+        "en": "Check your information",
+        "om": "Odeeffannoo keessan mirkaneeffadhaa",
+        "ti": "ሓበሬታኹም ርኣዩ"
       },
       "icon": "check"
     },
@@ -358,12 +434,16 @@
       "type": "submit",
       "label": {
         "am": "ማረጋገጫ",
-        "en": "Confirmation"
+        "en": "Confirmation",
+        "om": "Mirkaneessa",
+        "ti": "መረጋገጺ"
       },
       "icon": "check",
       "submitLabel": {
         "am": "ምዝገባውን ጨርስ",
-        "en": "Finish enrolment"
+        "en": "Finish enrolment",
+        "om": "Galmee xumuri",
+        "ti": "ምዝገባ ዛዝም"
       },
       "required": true,
       "pii": "none",
@@ -378,7 +458,9 @@
           "value": "consent-course",
           "label": {
             "am": "መረጃዬ ለኮርሱ እንዲውል ተስማምቻለሁ።",
-            "en": "I agree that my information is used for this course."
+            "en": "I agree that my information is used for this course.",
+            "om": "Odeeffannoon koo koorsii kanaaf akka oolu walii nan gala.",
+            "ti": "ሓበሬታይ ንምዝገባ እዚ ኮርስ ከም ዝውዕል ተሰማሚዐ ኣለኹ።"
           },
           "required": true
         }
@@ -389,27 +471,39 @@
   "errors": {
     "required": {
       "am": "ይህን መሙላት ያስፈልጋል።",
-      "en": "This needs an answer."
+      "en": "This needs an answer.",
+      "om": "Iddoon kun guutamuu qaba.",
+      "ti": "እዚ ቦታ ክምላእ ኣለዎ።"
     },
     "phone-et": {
       "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
-      "en": "That phone number does not look right. Example: 0912345678"
+      "en": "That phone number does not look right. Example: 0912345678",
+      "om": "Mee lakkoofsa bilbilaa Itoophiyaa sirrii galchaa (fakkeenyaaf 0911234567).",
+      "ti": "እቲ ናይ ስልኪ ቍጽሪ ትኽክል ኣይመስልን። ንኣብነት፦ 0912345678"
     },
     "email": {
       "am": "ኢሜይሉ ትክክል አይመስልም።",
-      "en": "That email does not look right."
+      "en": "That email does not look right.",
+      "om": "Mee teessoo imeelii sirrii galchaa (fakkeenyaaf name@example.com).",
+      "ti": "ትኽክለኛ ኢሜይል ኣድራሻ የእትዉ (ንኣብነት name@example.com)።"
     },
     "minLength": {
       "am": "ቢያንስ {n} ፊደሎች ያስፈልጋሉ።",
-      "en": "Please write at least {n} letters."
+      "en": "Please write at least {n} letters.",
+      "om": "Yoo xiqqaate qubee {n} barreessaa.",
+      "ti": "ብውሑዱ {n} ፊደላት ጽሓፉ።"
     },
     "maxLength": {
       "am": "በጣም ረጅም ነው።",
-      "en": "That is too long."
+      "en": "That is too long.",
+      "om": "Qubee {n} caaluu hin qabu.",
+      "ti": "ካብ {n} ፊደላት ክበዝሕ የብሉን።"
     },
     "exclusiveOption": {
       "am": "ይህን ከመረጡ ሌላ መምረጥ አያስፈልግም።",
-      "en": "If you choose this, you do not need to choose anything else."
+      "en": "If you choose this, you do not need to choose anything else.",
+      "om": "Yoo kana filattan kanneen biroo dhiisaa.",
+      "ti": "ነዚ እንተመሪጽኩም ካልእ ክትመርጹ ኣየድልየኩምን እዩ።"
     }
   }
 }

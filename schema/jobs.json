@@ -1,0 +1,120 @@
+{
+  "id": "jobs-catalog-v1",
+  "kind": "jobs-catalog",
+  "version": "1.0.0",
+  "jobs": [
+    {
+      "id": "job-savanna-dev",
+      "title": {
+        "am": "የተደራሽነትና ሶፍትዌር መሃንዲስ",
+        "en": "Accessibility & Software Specialist",
+        "om": "Ogeessa Sooftiweerii fi Qaqqabamummaa",
+        "ti": "ሰብሞያ ተበጻሕነትን ሶፍትዌርን"
+      },
+      "company": "Savanna Digital Technologies",
+      "category": "it",
+      "accommodations": [
+        "remote",
+        "flexible",
+        "screen-reader"
+      ],
+      "location": {
+        "am": "ከቤት የሚሠራ / አዲስ አበባ",
+        "en": "Remote / Addis Ababa",
+        "om": "Mana taa'anii / Finfinnee",
+        "ti": "ካብ ገዛ / ኣዲስ ኣበባ"
+      },
+      "description": {
+        "am": "ለዲጂታል መድረኮች ተደራሽነትን የሚያረጋግጥና የኮምፒውተር ሶፍትዌር የሚያዘጋጅ ባለሙያ።",
+        "en": "Builds and audits digital interfaces for screen-reader and keyboard accessibility.",
+        "om": "Ogeessa sooftiweerii fi qaqqabamummaa toora dijitaalaa mirkaneessu.",
+        "ti": "ንዲጂታል መድረኻት ተበጻሕነት ዘረጋግጽን ሶፍትዌር ዘዳሉን ሰብሞያ።"
+      }
+    },
+    {
+      "id": "job-liway-admin",
+      "title": {
+        "am": "የቢሮ አስተዳደር ረዳት",
+        "en": "Office Administrative Assistant",
+        "om": "Gargaaraa Bulchiinsa Waajjiraa",
+        "ti": "ሓጋዚ ምምሕዳር ቢሮ"
+      },
+      "company": "LIWAY Inclusive Works",
+      "category": "office",
+      "accommodations": [
+        "step-free",
+        "adapted-desk",
+        "flexible"
+      ],
+      "location": {
+        "am": "ልደታ፣ አዲስ አበባ",
+        "en": "Lideta, Addis Ababa",
+        "om": "Lidataa, Finfinnee",
+        "ti": "ልደታ፣ ኣዲስ ኣበባ"
+      },
+      "description": {
+        "am": "የቢሮ ሰነዶችን ማዘጋጀትና የእንግዶች አቀባበልን ማስተናገድ። ደረጃ የሌለው መግቢያና ምቹ ጠረጴዛ አለው።",
+        "en": "Manages documentation and front desk. Ground-floor office with step-free entrance and ergonomic desks.",
+        "om": "Waraqaalee waajjiraa qindeessuu fi keessummoota simachuu. Seensa sadarkaa hin qabne qaba.",
+        "ti": "ሰነዳት ምምሕዳርን እንግዶታት ምእንጋድን። ደረጃ ዘይብሉ ምእተውን ምቹእ ጠረጴዛን ኣለዎ።"
+      }
+    },
+    {
+      "id": "job-ethio-support",
+      "title": {
+        "am": "የደንበኞች አገልግሎት ተወካይ",
+        "en": "Customer Support Representative",
+        "om": "Bakka Bu'aa Tajaajila Maamiltootaa",
+        "ti": "ተወካሊ ኣገልግሎት ዓማዊል"
+      },
+      "company": "Ethio Inclusive Telecom",
+      "category": "sales",
+      "accommodations": [
+        "remote",
+        "screen-reader",
+        "sign-language"
+      ],
+      "location": {
+        "am": "ከቤት የሚሠራ (በመላው ኢትዮጵያ)",
+        "en": "Remote (Nationwide)",
+        "om": "Mana taa'anii (Itoophiyaa guutuu)",
+        "ti": "ካብ ገዛ (ኣብ መላእ ኢትዮጵያ)"
+      },
+      "description": {
+        "am": "ደንበኞችን በጽሑፍ ወይም በቪዲዮ የምልክት ቋንቋ መርዳት። ከቤት ሆነው መሥራት ይቻላል።",
+        "en": "Assists customers via live chat and sign language video. Full work-from-home setup provided.",
+        "om": "Maamiltoota karaa barreeffamaa fi afaan mallattootiin tajaajiluu. Mana taa'anii hojjechuun ni danda'ama.",
+        "ti": "ንዓማዊል ብጽሑፍ ወይ ብናይ ምልክት ቋንቋ ቪድዮ ምሕጋዝ። ካብ ገዛ ኮንካ ምስራሕ ይከኣል እዩ።"
+      }
+    },
+    {
+      "id": "job-alx-instructor",
+      "title": {
+        "am": "የኮምፒውተር ክህሎት አሰልጣኝ",
+        "en": "Digital Skills Trainer",
+        "om": "Leenjisaa Ogummaa Dijitaalaa",
+        "ti": "ኣሰልጣኒ ዲጂታል ክእለት"
+      },
+      "company": "ALX Inclusive Learning Hub",
+      "category": "teaching",
+      "accommodations": [
+        "step-free",
+        "screen-reader",
+        "sign-language",
+        "adapted-desk"
+      ],
+      "location": {
+        "am": "ልደታ ቴክ ሀብ፣ አዲስ አበባ",
+        "en": "Lideta Tech Hub, Addis Ababa",
+        "om": "Lidataa Teek Haab, Finfinnee",
+        "ti": "ልደታ ቴክ ሃብ፣ ኣዲስ ኣበባ"
+      },
+      "description": {
+        "am": "ለወጣቶች መሠረታዊ የኮምፒውተርና ዲጂታል ክህሎት ማስተማር። ሙሉ በሙሉ ተደራሽ የመማሪያ ክፍል አለው።",
+        "en": "Trains learners in digital skills. Facility has step-free access, screen-readers, and sign interpreters.",
+        "om": "Dargaggootaaf ogummaa kompiitaraa leenjisuu. Iddoon leenjii guutummaatti mijataadha.",
+        "ti": "ንመንእሰያት ናይ ኮምፒውተርን ዲጂታልን ክእለት ምምሃር። ምሉእ ብምሉእ ተበጻሒ ዝኾነ ክፍሊ ኣለዎ።"
+      }
+    }
+  ]
+}

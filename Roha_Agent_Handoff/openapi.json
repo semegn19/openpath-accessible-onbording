@@ -1,0 +1,57 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Roha proposed API surface",
+    "version": "2.0.0",
+    "description": "Planning contract only; no server is included. The browser SDK performs live DOM discovery and action resolution. Host authentication, permissions, final approval and private recipient separation remain authoritative. No generic execute-code or click-arbitrary-URL endpoint is provided."
+  },
+  "servers": [{"url": "https://example.invalid/api/roha", "description": "Placeholder origin; replace only with an authorised host service"}],
+  "security": [{"HostSession": []}],
+  "paths": {
+    "/v1/capabilities": {
+      "get": {
+        "operationId": "getRohaCapabilities",
+        "description": "Return actual provider/device/language capabilities. Planned examples must not be presented as measured availability.",
+        "responses": {
+          "200": {"description": "Capability statuses and evidence", "content": {"application/json": {"schema": {"$ref": "./schemas/capabilities.schema.json"}}}},
+          "401": {"$ref": "#/components/responses/Unauthorised"}
+        }
+      }
+    },
+    "/v1/intent/validate": {
+      "post": {
+        "operationId": "validateRohaIntentStructure",
+        "description": "Optional structural validation only. This does not approve an action. The frontend runtime must separately resolve the fresh map/DOM target, visibility, host permission and actual learner confirmation. Client-supplied data cannot grant authority.",
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "./schemas/intent.schema.json"}}}},
+        "responses": {
+          "200": {
+            "description": "Schema validation result; no action executed",
+            "content": {"application/json": {"schema": {"type": "object", "additionalProperties": false, "required": ["valid", "validationScope", "executionPerformed", "errors"], "properties": {"valid": {"type": "boolean"}, "validationScope": {"const": "schema-only"}, "executionPerformed": {"const": false}, "errors": {"type": "array", "items": {"type": "string"}}}}}}
+          },
+          "400": {"description": "Malformed or oversized request"},
+          "401": {"$ref": "#/components/responses/Unauthorised"}
+        }
+      }
+    },
+    "/v1/transcribe": {
+      "post": {
+        "operationId": "transcribePermittedAudio",
+        "description": "Optional configured provider route. Collect audio-processing consent first, state whether this is local/LAN/remote, enforce limits, and do not retain raw audio by default. Language availability must be checked; this contract does not guarantee all four languages.",
+        "parameters": [{"name": "X-Roha-Language", "in": "header", "required": true, "schema": {"type": "string", "enum": ["en", "am", "ti", "om"]}}],
+        "requestBody": {"required": true, "content": {"audio/webm": {"schema": {"type": "string", "format": "binary"}}, "audio/wav": {"schema": {"type": "string", "format": "binary"}}, "audio/mp4": {"schema": {"type": "string", "format": "binary"}}}},
+        "responses": {
+          "200": {"description": "Candidate transcript for learner review", "content": {"application/json": {"schema": {"type": "object", "additionalProperties": false, "required": ["text", "language", "providerId"], "properties": {"text": {"type": "string", "maxLength": 16000}, "language": {"type": "string", "enum": ["en", "am", "ti", "om"]}, "providerId": {"type": "string"}}}}}},
+          "401": {"$ref": "#/components/responses/Unauthorised"},
+          "413": {"description": "Recording exceeds configured limit"},
+          "422": {"description": "Unavailable language or undecodable recording"},
+          "429": {"description": "Provider capacity reached; preserve the form and offer retry/text"},
+          "503": {"description": "Provider is not configured or available"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {"HostSession": {"type": "apiKey", "in": "cookie", "name": "roha_host_session", "description": "Illustrative host-managed session. Integrate with the real host's authentication and CSRF controls; do not expose a shared model API key in the browser."}},
+    "responses": {"Unauthorised": {"description": "Host authentication is absent/expired; preserve permitted progress and explain recovery"}}
+  }
+}

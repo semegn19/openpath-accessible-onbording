@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Roha capability evidence v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "profile",
+    "device",
+    "languages"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0"
+    },
+    "profile": {
+      "enum": [
+        "device-local",
+        "local-hub",
+        "remote-opt-in"
+      ]
+    },
+    "device": {
+      "type": "string",
+      "minLength": 1
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "capabilities"
+        ],
+        "properties": {
+          "tag": {
+            "enum": [
+              "en",
+              "am",
+              "ti",
+              "om"
+            ]
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ui",
+              "commands",
+              "transcription",
+              "dynamicTts",
+              "promptAudio",
+              "wake"
+            ],
+            "properties": {
+              "ui": {
+                "$ref": "#/$defs/evidence"
+              },
+              "commands": {
+                "$ref": "#/$defs/evidence"
+              },
+              "transcription": {
+                "$ref": "#/$defs/evidence"
+              },
+              "dynamicTts": {
+                "$ref": "#/$defs/evidence"
+              },
+              "promptAudio": {
+                "$ref": "#/$defs/evidence"
+              },
+              "wake": {
+                "$ref": "#/$defs/evidence"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "offlineReady"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "planned",
+            "not-tested",
+            "partial",
+            "verified",
+            "unavailable"
+          ]
+        },
+        "offlineReady": {
+          "type": "boolean"
+        },
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "verified"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "evidenceRef"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ],
+            "properties": {
+              "offlineReady": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "offlineReady": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "evidenceRef"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "verified",
+                  "partial"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

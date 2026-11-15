@@ -1,0 +1,44 @@
+# Explicit production profile. Terminate HTTPS at your trusted ingress; do not expose API/DB.
+# docker compose -f docker-compose.yml -f compose.production.yml up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: roha
+      POSTGRES_USER: roha
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a unique database password}
+    volumes:
+      - roha-database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roha -d roha"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  migrate:
+    image: openpath-api:local
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: ["node", "migrate.mjs"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set the PostgreSQL connection URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+  api:
+    environment:
+      ROHA_DEPLOYMENT: production
+      DATABASE_URL: ${DATABASE_URL:?Set the PostgreSQL connection URL}
+      DATA_KEY: ${DATA_KEY:?Set a base64 encoded 32-byte encryption key}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:?Set the HTTPS form origin}
+      ROHA_ADMIN_ORIGIN: ${ROHA_ADMIN_ORIGIN:?Set the HTTPS administrator origin}
+      ROHA_ADMIN_TOKEN: ${ROHA_ADMIN_TOKEN:?Set a random administrator token of at least 32 characters}
+      ROHA_EMBED_ORIGINS: ${ROHA_EMBED_ORIGINS:-}
+      ROHA_AI_ENDPOINTS: ${ROHA_AI_ENDPOINTS:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+volumes:
+  roha-database:

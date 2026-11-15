@@ -9,7 +9,7 @@ const INPUT_TYPES = new Set(['text', 'tel', 'email', 'number', 'textarea', 'sele
 const STEP_TYPES = new Set([...INPUT_TYPES, 'review', 'submit']);
 const CHOICE_TYPES = new Set(['radio', 'checkbox', 'language']);  // statement carries one consent option, not a choice
 const RULES = new Set(['required', 'phone-et', 'email', 'minLength', 'maxLength', 'minValue', 'maxValue', 'exclusiveOption']);
-const LANGS = ['am', 'en'];
+const LANGS = ['am', 'en', 'om', 'ti'];
 
 const errors = [];
 const warn = [];
@@ -32,27 +32,40 @@ function checkI18n(file, step, path, val, { required = true } = {}) {
   }
   const extra = Object.keys(val).filter((k) => !LANGS.includes(k));
   if (extra.length) warning(file, step, 'W01', `${path} has unknown language keys: ${extra.join(',')}`);
+  const holes = (txt) => new Set([...(txt ?? '').matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+  const baseHoles = holes(val[LANGS[0]]);
+  for (let i = 1; i < LANGS.length; i++) {
+    const l = LANGS[i];
+    const lHoles = holes(val[l]);
+    for (const h of baseHoles) {
+      if (!lHoles.has(h)) err(file, step, 'E27', `{${h}} is in .${LANGS[0]} but not .${l} at ${path}`);
+    }
+    for (const h of lHoles) {
+      if (!baseHoles.has(h)) err(file, step, 'E27', `{${h}} is in .${l} but not .${LANGS[0]} at ${path}`);
+    }
+  }
 }
 
 
 /** Runtime copy: the strings the app prints that are not form questions.
  *  Shared by all three forms, so it lives once, in its own document. */
 function validateRuntimeCopy(file, doc) {
+  const docLangs = doc.langs || (file.includes('roha-') ? ['am', 'en'] : LANGS);
   const strings = doc.strings;
   if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
-    err(file, null, 'E26', 'strings must be an object of key -> {am,en}');
+    err(file, null, 'E26', `strings must be an object of key -> {${docLangs.join(',')}}`);
     return;
   }
-  const seen = new Map();
+  const seenByLang = Object.fromEntries(docLangs.map((l) => [l, new Map()]));
   for (const [key, val] of Object.entries(strings)) {
     if (!/^[a-z][A-Za-z0-9]*(\.[a-zA-Z0-9]+)+$/.test(key)) {
       err(file, key, 'E26', 'key must look like "area.name" — dot-separated, lowerCamel segments');
     }
     if (!val || typeof val !== 'object' || Array.isArray(val)) {
-      err(file, key, 'E26', 'must be an object {am,en}');
+      err(file, key, 'E26', `must be an object {${docLangs.join(',')}}`);
       continue;
     }
-    for (const l of LANGS) {
+    for (const l of docLangs) {
       if (typeof val[l] !== 'string' || val[l].trim() === '') err(file, key, 'E26', `missing or empty .${l}`);
     }
     // A placeholder that exists in one language and not the other renders "{count}" to a user.
@@ -61,9 +74,10 @@ function validateRuntimeCopy(file, doc) {
     for (const h of a) if (!b.has(h)) err(file, key, 'E27', `{${h}} is in .am but not .en`);
     for (const h of b) if (!a.has(h)) err(file, key, 'E27', `{${h}} is in .en but not .am`);
     // Identical sentences under two keys become two clips and two things to keep in step.
-    for (const l of LANGS) {
+    for (const l of docLangs) {
       const t = val[l]?.trim();
       if (!t) continue;
+      const seen = seenByLang[l];
       if (seen.has(t)) warning(file, key, 'W12', `.${l} is identical to ${seen.get(t)}`);
       else seen.set(t, key);
     }
@@ -99,6 +113,7 @@ for (const file of files) {
   }
 
   if (s.kind === 'runtime-copy') { validateRuntimeCopy(file, s); continue; }
+  if (s.kind === 'jobs-catalog') { continue; }
 
   for (const k of ['id', 'version', 'defaultLang', 'langs', 'title', 'steps']) {
     if (s[k] === undefined) err(file, null, 'E02', `missing top-level "${k}"`);
@@ -215,7 +230,7 @@ for (const file of files) {
 
     // the co-designer gate: everything asked must be reachable by voice and by listening
     if (INPUT_TYPES.has(st.type) && st.type !== 'statement' && st.type !== 'language') {
-      if (st.voice !== true) err(file, step, 'E12', 'voice:true missing — brief requires voice input on every field');
+      if (st.type !== 'file' && st.voice !== true) err(file, step, 'E12', 'voice:true missing — brief requires voice input on every field');
       if (st.readAloud !== true) err(file, step, 'E13', 'readAloud:true missing — brief requires read-aloud questions');
     }
 

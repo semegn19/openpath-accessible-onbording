@@ -37,11 +37,16 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
 
 for (const form of FORMS) {
   const page = await ctx.newPage();
+  // Exercise a deterministic queued receipt, independent of any API running on :8080.
+  await page.route('**/api/submissions', (route) => route.fulfill({
+    status: 503, contentType: 'application/json', body: '{"error":{"code":"unavailable"}}',
+  }));
   await page.goto(`${SITE}/${form.slug}`, { waitUntil: 'load' });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'load' });
 
   const seen = [];
+  let reachedReceipt = false;
   for (let step = 0; step < 14; step++) {
     const info = await page.evaluate(() => {
       const root = document.querySelector('.op-root');
@@ -54,14 +59,24 @@ for (const form of FORMS) {
           || /ማረጋገጫ|Confirmation/.test(document.querySelector('h1')?.textContent || ''),
         stepType: root?.getAttribute('data-step-type') ?? '',
         isReview: Boolean(root?.querySelector('.op-review')),
-        finished: document.body.textContent?.includes('ምዝገባው ተጠናቅቋል') || document.body.textContent?.includes('Sign-up complete'),
+        finished: Boolean(root?.classList.contains('op-done'))
+          || Boolean(document.querySelector('.op-done'))
+          || document.body.textContent?.includes('ምዝገባው ተጠናቅቋል')
+          || document.body.textContent?.includes('Sign-up complete'),
         type: root?.querySelector('input[type=radio]') ? 'radio'
           : root?.querySelector('input[type=checkbox]') ? 'checkbox'
           : root?.querySelector('select') ? 'select'
           : root?.querySelector('input, textarea') ? 'text' : 'none',
       };
     });
-    if (info.finished) break;
+    if (info.finished) {
+      reachedReceipt = true;
+      const receipt = await page.locator('.op-receipt').innerText();
+      ok(/መሣሪያ|device/i.test(info.h1) && receipt.trim().length > 0
+        && await page.locator('.op-ref').count() === 0,
+      `${form.label}: unavailable API shows a queued receipt, not submission success`);
+      break;
+    }
     seen.push(info);
 
     // fill this step the way a person would, then advance
@@ -75,6 +90,7 @@ for (const form of FORMS) {
       for (const el of root.querySelectorAll('input, textarea')) {
         if (el.type === 'radio') { if (!root.querySelector('input[type=radio]:checked')) el.click(); continue; }
         if (el.type === 'checkbox') { if (!el.checked && root.querySelectorAll('input[type=checkbox]').length === 1) el.click(); continue; }
+        if (el.type === 'file') continue;
         if (el.value) continue;
         if (el.type === 'tel') setNative(el, '0912345678');
         else if (el.type === 'email') setNative(el, 'sara@example.com');
@@ -86,7 +102,7 @@ for (const form of FORMS) {
       if (sel && !sel.value) { sel.selectedIndex = 1; sel.dispatchEvent(new Event('change', { bubbles: true })); }
     });
     await page.waitForTimeout(120);
-    const nextBtn = page.getByRole('button', { name: /ቀጣይ|Next|ምዝገባውን ጨርስ|Finish/ });
+    const nextBtn = page.locator('.op-root .op-nav .op-btn-primary');
     try { await nextBtn.click({ timeout: 2500 }); } catch { break; }
     await page.waitForTimeout(200);
     // a validation error means the filler missed something — record it rather than loop forever
@@ -98,19 +114,14 @@ for (const form of FORMS) {
   console.log(`\n=== ${form.slug} — ${seen.length} screens walked ===`);
   seen.forEach((s, i) => console.log(`  ${String(i + 1).padStart(2)}. ${s.h1.padEnd(32)} readAloud:${s.readAloud} mic:${s.mic}${s.consent ? ' [consent]' : ''}`));
 
-  ok(seen.length >= (form.slug === 'employer' ? 6 : 8), `${form.label}: the walk reaches the end`, `${seen.length} screens`);
+  ok(reachedReceipt && seen.length >= (form.slug === 'employer' ? 6 : 8), `${form.label}: the walk reaches the receipt`, `${seen.length} question screens`);
 
   const noReadAloud = seen.map((s, i) => (!s.readAloud ? `${i + 1} (${s.h1})` : null)).filter(Boolean);
   ok(noReadAloud.length === 0, `${form.label}: every screen can read itself aloud`, noReadAloud.join(', ') || 'all screens');
 
-  // A microphone is expected wherever a person has to *produce* something to say: free text,
-  // a number, a long choice list. It is deliberately absent on (a) consent screens — a dictated
-  // consent is not consent — and (b) the language question, whose two answers are the names of
-  // two languages, rendered in both scripts, in the one screen where we cannot yet know which
-  // language they read. Those two exceptions are the rule, not an oversight.
   // A microphone is expected wherever a person produces an answer. It is absent only on consent
   // screens — a dictated consent is not consent. The language question now has one too.
-  const NO_MIC_BY_DESIGN = ['statement', 'submit'];
+  const NO_MIC_BY_DESIGN = ['statement', 'submit', 'file'];
   const answering = seen
     .map((s, i) => ({ s, i }))
     .filter(({ s }) => !s.isReview && !s.finished && !NO_MIC_BY_DESIGN.includes(s.stepType));
@@ -126,7 +137,7 @@ for (const form of FORMS) {
 /* ---------- the two setup screens must SHOW what is applied ----------
    A checkbox that stays blank while the setting is on is worse than no checkbox: it tells the
    person the opposite of the truth about the page they are looking at. */
-for (const slug of ['onboard', 'job']) {
+for (const slug of ['onboard', 'job?apply=1']) {
   const page = await ctx.newPage();
   await page.goto(`${SITE}/${slug}`, { waitUntil: 'load' });
   await page.evaluate(() => localStorage.clear());

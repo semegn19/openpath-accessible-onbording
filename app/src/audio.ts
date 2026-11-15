@@ -19,6 +19,7 @@
  * missing file or a failed play all fall through to the fallback — never to silence.
  */
 import type { Lang } from './types';
+import audioIndex from './audio-index.json';
 
 /** FNV-1a, 32-bit. Duplicated in scripts/audio-manifest.mjs — must stay identical. */
 const hash = (s: string): string => {
@@ -34,18 +35,28 @@ const hash = (s: string): string => {
 export const clipName = (lang: Lang, text: string): string => hash(`${lang}|${text.trim()}`);
 
 type Index = Record<string, string>;          // clipName → file name in /audio/
-let index: Index | null = null;
+let index: Index = (audioIndex && typeof audioIndex === 'object' ? audioIndex : {}) as Index;
 let loading: Promise<void> | null = null;
 let current: HTMLAudioElement | null = null;
 
 async function load(): Promise<void> {
-  if (index || loading) return loading ?? Promise.resolve();
+  if (index && Object.keys(index).length > 0) return Promise.resolve();
+  if (loading) return loading;
   loading = fetch('/audio/index.json', { cache: 'force-cache' })
     .then((r) => (r.ok ? r.json() : {}))
-    .then((j: unknown) => { index = (j && typeof j === 'object' ? j : {}) as Index; })
-    .catch(() => { index = {}; })
+    .then((j: unknown) => {
+      if (j && typeof j === 'object') {
+        index = { ...index, ...(j as Index) };
+      }
+    })
+    .catch(() => {})
     .finally(() => { loading = null; });
   return loading;
+}
+
+// Prefetch manifest eagerly so audio playback in user click ticks avoids network latency
+if (typeof window !== 'undefined') {
+  void load();
 }
 
 export function stopAudio(): void {
@@ -55,21 +66,121 @@ export function stopAudio(): void {
   }
 }
 
+export function isAudioPlaying(): boolean {
+  return Boolean(current && !current.paused && !current.ended);
+}
+
+/** Play a single audio file from /audio/ or absolute URL. Returns true if playback succeeded. */
+async function playFile(src: string): Promise<boolean> {
+  stopAudio();
+  return new Promise<boolean>((resolve) => {
+    try {
+      const url = src.startsWith('/') ? src : `/audio/${src}`;
+      const el = new Audio(url);
+      el.preload = 'auto';
+      let done = false;
+      const finish = (ok: boolean) => {
+        if (!done) {
+          done = true;
+          if (!ok && current === el) current = null;
+          resolve(ok);
+        }
+      };
+      el.addEventListener('error', () => finish(false), { once: true });
+      el.addEventListener('ended', () => {
+        if (current === el) current = null;
+      }, { once: true });
+      current = el;
+      el.play().then(() => finish(true)).catch(() => finish(false));
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
 /** Play the recorded clip for this text. False means "no clip", not "it failed badly". */
 export async function playRecorded(lang: Lang, text: string): Promise<boolean> {
   await load();
   const file = index?.[clipName(lang, text)];
   if (!file) return false;
-  stopAudio();
-  try {
-    const el = new Audio(`/audio/${file}`);
-    el.preload = 'auto';
-    current = el;
-    await el.play();
-    return true;
-  } catch {
-    return false;      // autoplay refusal, decode error, 404 — fall through, never silent
+  return playFile(file);
+}
+
+export interface QuestionAudioOptions {
+  stepId: string;
+  formId?: string;
+  lang: Lang;
+  simple?: boolean;
+  text: string;
+  audioProp?: Partial<Record<Lang, string>>;
+}
+
+/**
+ * Play recorded audio for a question/step.
+ * Resolves by:
+ *  1. Direct schema audio property (if configured)
+ *  2. Step & language keys in index.json (e.g. "accessibility-prefs:am", "accessibility-prefs.am")
+ *  3. Exact text hash in index.json
+ *  4. Direct file probes in /audio/ (e.g. "accessibility-prefs.am.mp3")
+ * Returns false if no recorded file was found/playable, allowing immediate TTS fallback.
+ */
+export async function playQuestionAudio(opts: QuestionAudioOptions): Promise<boolean> {
+  await load();
+
+  // 1. Direct audio property from schema
+  const directProp = opts.audioProp?.[opts.lang];
+  if (directProp) {
+    const file = index?.[directProp] ?? directProp;
+    if (await playFile(file)) return true;
   }
+
+  // 2. Candidate keys in index.json
+  const keys: string[] = [];
+  const formPrefix = opts.formId ? opts.formId.replace(/-v\d+$/, '').replace(/^savanna-/, '') : '';
+
+  if (opts.simple) {
+    if (opts.formId) keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}:simple`);
+    if (formPrefix) {
+      keys.push(`${formPrefix}:${opts.stepId}:${opts.lang}:simple`);
+      keys.push(`${formPrefix}_${opts.stepId}.${opts.lang}.simple`);
+    }
+    keys.push(`${opts.stepId}:${opts.lang}:simple`);
+    keys.push(`${opts.stepId}.${opts.lang}.simple`);
+  }
+
+  if (opts.formId) keys.push(`${opts.formId}:${opts.stepId}:${opts.lang}`);
+  if (formPrefix) {
+    keys.push(`${formPrefix}:${opts.stepId}:${opts.lang}`);
+    keys.push(`${formPrefix}_${opts.stepId}.${opts.lang}`);
+  }
+  keys.push(
+    `${opts.stepId}:${opts.lang}`,
+    `${opts.stepId}.${opts.lang}`,
+    `${opts.stepId}_${opts.lang}`,
+    clipName(opts.lang, opts.text),
+  );
+
+  for (const k of keys) {
+    const file = index?.[k];
+    if (file) {
+      if (await playFile(file)) return true;
+    }
+  }
+
+  // 3. Direct file fallback probe in /audio/ if not mapped in index:
+  const directFiles: string[] = [];
+  if (opts.simple) {
+    directFiles.push(`${opts.stepId}.${opts.lang}.simple.mp3`);
+    if (formPrefix) directFiles.push(`${formPrefix}_${opts.stepId}.${opts.lang}.simple.mp3`);
+  }
+  directFiles.push(`${opts.stepId}.${opts.lang}.mp3`);
+  if (formPrefix) directFiles.push(`${formPrefix}_${opts.stepId}.${opts.lang}.mp3`);
+
+  for (const f of directFiles) {
+    if (await playFile(f)) return true;
+  }
+
+  return false;
 }
 
 /** How many clips this build actually ships. Used by the UI and by tests. */

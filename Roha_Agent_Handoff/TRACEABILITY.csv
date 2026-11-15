@@ -1,0 +1,61 @@
+id,group,priority,name,testId,status
+D01,DISCOVERY,P0,Automatic page discovery,AT-D01,planned
+D02,DISCOVERY,P0,Accessible names and ambiguity,AT-D02,planned
+D03,DISCOVERY,P0,Generated JSON map and live registry,AT-D03,planned
+D04,DISCOVERY,P0,Dynamic pages and navigation,AT-D04,planned
+D05,DISCOVERY,P0,Optional host overrides,AT-D05,planned
+D06,DISCOVERY,P0,Honest unsupported-control handling,AT-D06,planned
+D07,DISCOVERY,P1,Website compatibility report,AT-D07,planned
+V01,VOICE,P0,Enable voice and visible permission state,AT-V01,planned
+V02,VOICE,P0,Natural turn-taking,AT-V02,planned
+V03,VOICE,P1,Foreground name activation,AT-V03,planned
+V04,VOICE,P0,Conversation state and answer correction,AT-V04,planned
+V05,VOICE,P0,Voice navigation and recovery,AT-V05,planned
+V06,VOICE,P0,No invented user information,AT-V06,planned
+V07,VOICE,P1,Spelling and number verification,AT-V07,planned
+V08,VOICE,P1,Interruption and resume recap,AT-V08,planned
+A01,ACCESS,P0,Real text scaling and reset,AT-A01,planned
+A02,ACCESS,P0,Simple explanation with original available,AT-A02,planned
+A03,ACCESS,P0,Read-aloud and page navigation,AT-A03,planned
+A04,ACCESS,P1,"Contrast, motion and calm view",AT-A04,planned
+A05,ACCESS,P0,"Keyboard, screen reader and sound-off parity",AT-A05,planned
+A06,ACCESS,P1,Orientation: where am I?,AT-A06,planned
+A07,ACCESS,P1,Preview and undo local changes,AT-A07,planned
+A08,ACCESS,P2,Optional reading focus and spacing,AT-A08,planned
+O01,ONBOARDING,P0,Sign-up and profile engine,AT-O01,planned
+O02,ONBOARDING,P0,"Voice answers, review and edit",AT-O02,planned
+O03,ONBOARDING,P0,No form inactivity timer,AT-O03,planned
+O04,ONBOARDING,P0,Low-literacy route,AT-O04,planned
+O05,ONBOARDING,P0,Alternative ID routes,AT-O05,planned
+O06,ONBOARDING,P0,Private support without medical proof,AT-O06,planned
+O07,ONBOARDING,P0,Learner-controlled attachments,AT-O07,planned
+O08,ONBOARDING,P0,"Consent, review and truthful submission",AT-O08,planned
+O09,ONBOARDING,P0,Minimal save/resume and deletion,AT-O09,planned
+C01,CAREER,P0,Conversational job application,AT-C01,planned
+C02,CAREER,P0,Private support-needs job filter,AT-C02,planned
+C03,CAREER,P0,Employer accommodations form,AT-C03,planned
+C04,CAREER,P1,Job context and application checklist,AT-C04,planned
+F01,OFFLINE,P0,Host-origin offline cache,AT-F01,planned
+F02,OFFLINE,P0,Explicit runtime profiles,AT-F02,planned
+F03,OFFLINE,P0,Pack installation and readiness,AT-F03,planned
+F04,OFFLINE,P0,Loss recovery without duplicate sends,AT-F04,planned
+F05,OFFLINE,P0,"Small, measured core",AT-F05,planned
+L01,LANGUAGE,P0,Language-pack architecture,AT-L01,planned
+L02,LANGUAGE,P1,Reviewed translations and prompt audio,AT-L02,planned
+L03,LANGUAGE,P0,"Free, replaceable model providers",AT-L03,planned
+L04,LANGUAGE,P1,Language switching and cross-platform matrix,AT-L04,planned
+L05,LANGUAGE,P1,Ethiopic script and explicit calendar context,AT-L05,planned
+P01,TRUST,P0,Validated proposals and host authority,AT-P01,planned
+P02,TRUST,P0,Untrusted-page isolation,AT-P02,planned
+P03,TRUST,P0,Minimum data and separate recipients,AT-P03,planned
+P04,TRUST,P1,Preference profile and shared-device reset,AT-P04,planned
+P05,TRUST,P1,Recovery and action explanations,AT-P05,planned
+I01,ADOPTION,P0,One-script SDK and teardown,AT-I01,planned
+I02,ADOPTION,P0,Savanna adapter and API contract,AT-I02,planned
+I03,ADOPTION,P0,Evidence and complete handoff,AT-I03,planned
+I04,ADOPTION,P1,Scalable service boundaries,AT-I04,planned
+I05,ADOPTION,P2,JobPosting standard and extension route,AT-I05,planned
+B01,BONUS,P2,Partner-assisted registration,AT-B01,planned
+B02,BONUS,P2,SMS resume link,AT-B02,planned
+B03,BONUS,P2,Private human-help handoff,AT-B03,planned
+B04,BONUS,P2,Task walkthrough and local feedback,AT-B04,planned

@@ -9,7 +9,7 @@ p.on('console', (m) => { if (/Content Security Policy|Refused to/i.test(m.text()
 p.on('pageerror', (e) => problems.push('pageerror: ' + e.message.slice(0, 140)));
 p.on('requestfailed', (r) => problems.push('failed: ' + r.url().split('/').pop()));
 
-for (const path of ['/onboard', '/job', '/employer']) {
+for (const path of ['/onboard', '/job', '/employer', '/roha-admin.html']) {
   await p.goto(ORIGIN + path, { waitUntil: 'networkidle' });
   const alive = await p.locator('h1').first().isVisible();
   console.log(`${alive && !problems.length ? '✓' : '✗'} ${path.padEnd(11)} rendered=${alive} fonts=${await p.evaluate(() => document.fonts.check('600 16px "Noto Sans Ethiopic"'))} problems=${problems.length}`);

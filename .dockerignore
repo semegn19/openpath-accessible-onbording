@@ -7,3 +7,7 @@
 uploads
 docs
 api/data
+.env
+.env.*
+**/*.dump
+**/*.pem

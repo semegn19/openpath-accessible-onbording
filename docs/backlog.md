@@ -77,7 +77,7 @@ accounting.
 |---|---|---|---|---|
 | **INT-1** | **`public/embed.js` loader + `docs/embed-contract.md`.** `<script src="…/embed.js" data-form="onboard" data-target="#signup">` creates a titled iframe, sizes it, and speaks a versioned `postMessage` contract (`ready`, `resize`, `submitted` with the reference, `error`) | **L1** | ~4 h | `tests/embed.mjs`: host page on another port completes the form inside the iframe and receives `submitted` with a real `sub_…` reference; axe clean on the host page |
 | **INT-2** | **Nothing to do** — REST + OpenAPI 3.1 + parity test already ship | **L2** | done | `npm run api` (41 assertions) |
-| **INT-3** | **schema.org/JobPosting JSON-LD** from the employer form: `jobTitle`, `hiringOrganization`, `jobLocation`, accessibility summary. Either a `<script type="application/ld+json">` on the employer page or `GET /api/forms/{id}/jsonld` | **L3** | ~3–4 h | Validator test: JSON-LD parses, required JobPosting properties present, no PII in the output |
+| **INT-3** | **schema.org/JobPosting JSON-LD** from the employer form: `title`, `hiringOrganization`, `jobLocation`, accessibility summary. Both `<script type="application/ld+json">` on employer page and `GET /api/forms/{id}/jsonld` & `GET /api/submissions/{id}/jsonld` | **L3** | done | `npm run jsonld` (37 assertions): JSON-LD parses, required JobPosting properties present, reactive DOM injection, strict zero PII |
 | **INT-4** | LTI 1.3 (OIDC login, JWT signing, JWKS, deep linking, AGS) | **L3 alt** | 10–14 h | Needs a real LMS instance; schedule for the paid weeks, not the weekend |
 | **INT-5** | Open Badges 3.0 (VC 2.0, Ed25519, DID) | **L3 alt** | 6–8 h | Off-message since course enrolment was dropped; only if a badge is wanted for completion |
 

@@ -1,7 +1,7 @@
 /**
  * OpenPath forms API — Level 2 of the adoptability ladder.
  *
- * Four endpoints, zero dependencies, zero secrets to configure, no database.
+ * Development JSONL store or production PostgreSQL with server-owned AI settings.
  *   GET  /api/health
  *   GET  /api/forms/{formId}
  *   POST /api/submissions
@@ -16,21 +16,51 @@ import { randomBytes, createCipheriv, createDecipheriv } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createAssistant } from './assistant.mjs';
+import { connectDatabase } from './database.mjs';
+import { createHash } from 'node:crypto';
+import { generateJobPostingFromSchema, generateJobPostingFromSubmission } from './jsonld.mjs';
+import { sendSms, formatResumeMessage, normalizePhone } from './sms.mjs';
+import { aiRegistry } from './ai/registry.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+// Auto-load .env from api/.env or repo root .env to populate any unset variables
+for (const envPath of [join(here, '.env'), join(here, '..', '.env')]) {
+  if (existsSync(envPath)) {
+    try {
+      const lines = readFileSync(envPath, 'utf8').split('\n');
+      for (const line of lines) {
+        const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)?\s*$/);
+        if (m && process.env[m[1]] === undefined) {
+          process.env[m[1]] = m[2].trim();
+        }
+      }
+    } catch { /* ignore */ }
+  }
+}
+
+const checkpoints = new Map();
 
 const PORT = Number(process.env.PORT ?? 8080);
 const DATA_DIR = process.env.DATA_DIR ?? join(here, 'data');
 const SCHEMA_DIR = process.env.SCHEMA_DIR ?? join(here, '..', 'schema');
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN ?? '*';
 const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MIN ?? 30);
-const TRUST_PROXY = process.env.TRUST_PROXY !== '0';   // behind nginx, remoteAddress is nginx
+const TRUST_PROXY = process.env.TRUST_PROXY === '1';   // opt in only behind a trusted proxy
 const MAX_BODY = Number(process.env.MAX_BODY_BYTES ?? 32 * 1024);
-/** Speech-to-text is OPT-IN. Unset = the endpoint says so and the UI falls back to buttons.
- *  Either an OpenAI-compatible endpoint or a self-hosted whisper.cpp server works. */
+const PRODUCTION = process.env.ROHA_DEPLOYMENT === 'production';
+if (PRODUCTION && (!process.env.DATABASE_URL || !process.env.DATA_KEY || !/^https:\/\//.test(ALLOWED_ORIGIN) || !/^https:\/\//.test(process.env.ROHA_ADMIN_ORIGIN || '') || (process.env.ROHA_ADMIN_TOKEN || '').length < 32)) {
+  throw new Error('Production requires DATABASE_URL, DATA_KEY, HTTPS ALLOWED_ORIGIN/ROHA_ADMIN_ORIGIN and a strong ROHA_ADMIN_TOKEN');
+}
+const database = process.env.DATABASE_URL ? await connectDatabase(process.env.DATABASE_URL) : null;
+if (database) await database.ready();
+const assistant = createAssistant({ directory: DATA_DIR, persistence: database });
+/** Speech-to-text is OPT-IN via the Multi-Provider AI Registry (Addis AI, Gemini, Ollama, OpenAI-compatible). */
 const ASR_URL = process.env.ASR_URL ?? '';
 const ASR_KEY = process.env.ASR_KEY ?? '';
 const ASR_MODEL = process.env.ASR_MODEL ?? 'whisper-1';
+const HAS_ASR = aiRegistry.isConfigured();
 const MAX_AUDIO = Number(process.env.MAX_AUDIO_BYTES ?? 2 * 1024 * 1024);
 const VERSION = '1.3.0';
 
@@ -106,7 +136,7 @@ function initStore() {
     }
   }
 }
-initStore();
+if (!database) initStore();
 
 
 /** step ids whose answers must never touch the disk in the clear */
@@ -132,9 +162,9 @@ const rememberRef = (ref, id) => {
 
 // Rebuild the index from disk, so a restart does not resurrect the double-submit that the
 // retry was protecting against.
-for (const rec of store.values()) if (rec.clientRef) byClientRef.set(rec.clientRef, rec.id);
+for (const rec of store.values()) if (rec.clientRef) byClientRef.set(`${rec.formId}:${rec.clientRef}`, rec.id);
 
-function save(record) {
+async function save(record) {
   // append + rename-free: an interrupted write leaves a partial LAST line, which initStore
   // skips on the next boot. Nothing before it is ever damaged.
   let forDisk = record;
@@ -146,8 +176,10 @@ function save(record) {
     }
     forDisk = { ...record, answers, encryptedFields: [...Object.keys(record.answers)].filter((k) => ids.has(k)) };
   }
+  if (database) return database.saveSubmission(forDisk);
   appendFileSync(DATA_FILE, JSON.stringify(forDisk) + '\n', { mode: 0o600 });
-  store.set(record.id, record);          // memory keeps the plaintext: the API returns what was sent
+  store.set(record.id, record);          // development file store
+  return { record, duplicate: false };
 }
 
 /* --------------------------------------------------------------- validation */
@@ -212,6 +244,15 @@ const NEVER_STORED = new Set([
   'accommodations', 'medical', 'disability', 'diagnosis',
 ]);
 
+function isStepVisible(step, answers) {
+  if (!step.showIf) return true;
+  const conds = Array.isArray(step.showIf) ? step.showIf : [step.showIf];
+  return conds.every((c) => {
+    const dep = answers[c.step];
+    return typeof dep === 'string' && c.in.includes(dep);
+  });
+}
+
 function validateSubmission(body) {
   const problems = [];
   const stripped = [];
@@ -228,8 +269,10 @@ function validateSubmission(body) {
 
   const answers = {};
   for (const step of schema.steps) {
+    if (!isStepVisible(step, answersIn)) continue;
     const raw = answersIn[step.id];
-    if (NEVER_STORED.has(step.id) || step.localOnly) {
+    const isEmployerAccommodation = schema.kind === 'employer' && step.id === 'accommodations';
+    if (!isEmployerAccommodation && (NEVER_STORED.has(step.id) || step.localOnly)) {
       if (raw !== undefined) stripped.push(step.id);
       continue;                       // never stored, never echoed, never logged
     }
@@ -250,6 +293,7 @@ function validateSubmission(body) {
   // it — a client that invents a field cannot get it stored either.
   const named = Object.keys(answersIn);
   for (const k of named) {
+    if (schema.kind === 'employer' && k === 'accommodations') continue;
     if (NEVER_STORED.has(k) && !stripped.includes(k)) stripped.push(k);
   }
   const unknown = named.filter((k) => !schema.steps.some((s) => s.id === k) && !NEVER_STORED.has(k));
@@ -261,7 +305,8 @@ function validateSubmission(body) {
 /* ------------------------------------------------------------ rate limiting */
 
 const hits = new Map();          // ip -> { count, resetAt }
-function limited(ip) {
+async function limited(ip) {
+  if (database) return !await database.reserve('submission:'+createHash('sha256').update(ip).digest('hex'), RATE_LIMIT, 60000);
   const now = Date.now();
   const e = hits.get(ip);
   if (!e || now > e.resetAt) { hits.set(ip, { count: 1, resetAt: now + 60_000 }); return false; }
@@ -323,9 +368,20 @@ function readRaw(req, limit) {
 
 /* ------------------------------------------------------------------- routes */
 
-const server = createServer(async (req, res) => {
+const server = createServer((req,res) => {
+  void handleRequest(req,res).catch(() => {
+    console.error('request failed');
+    if (!res.headersSent) error(res,503,'service-unavailable','The service is temporarily unavailable. Your saved draft can be retried.');
+    else res.end();
+  });
+});
+server.requestTimeout = 30000;
+server.headersTimeout = 15000;
+server.maxRequestsPerSocket = 1000;
+async function handleRequest(req, res) {
   const url = new URL(req.url ?? '/', 'http://localhost');
   const path = url.pathname.replace(/\/+$/, '') || '/';
+  if (await assistant.handle(req, res, path)) return;
   // Behind nginx every request appears to come from the proxy, which would turn a per-IP
   // limit into one global bucket. Take the first hop X-Forwarded-For when we are proxied.
   const forwarded = TRUST_PROXY ? (req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() : '';
@@ -334,15 +390,19 @@ const server = createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, '');
 
   if (path === '/api/health' && req.method === 'GET') {
+    if (database) await database.ready();
     return send(res, 200, {
       ok: true,
       version: VERSION,
       forms: [...schemas.keys()],
-      submissions: store.size,
+      submissions: database ? undefined : store.size,
+      storage: database ? 'postgresql' : 'development-file',
       uptimeSec: Math.round(process.uptime()),
       // "none" means the browser's own speech recognition is the only option, and it has no
       // Amharic model. An operator should never have to read source to learn that.
-      transcription: ASR_URL ? 'configured' : 'none',
+      transcription: aiRegistry.isConfigured() ? 'configured' : 'none',
+      transcriptionLanguages: aiRegistry.getSupportedLanguages(),
+      aiProviders: aiRegistry.listProviders().filter((p) => p.configured).map((p) => p.id),
       encryption: KEY ? 'aes-256-gcm' : 'none',
     });
   }
@@ -353,10 +413,126 @@ const server = createServer(async (req, res) => {
     return send(res, 200, readFileSync(f, 'utf8'), { 'Content-Type': 'application/yaml; charset=utf-8' });
   }
 
+  if (path === '/api/tts' && req.method === 'GET') {
+    const text = (url.searchParams.get('text') || '').trim();
+    const lang = (url.searchParams.get('lang') || 'am').trim().toLowerCase();
+    // Map language for optimal phonetic pronunciation
+    // Tigrinya uses Ge'ez script, phonetically shared with Amharic
+    // Afaan Oromoo and Somali use Latin script, phonetically mapped to East African Swahili phonemes
+    const ttsLang = lang === 'ti' ? 'am' : (lang === 'om' || lang === 'so') ? 'sw' : lang;
+    console.log('[TTS Request]', { lang, ttsLang, text: text.slice(0, 80) });
+    if (!text) return error(res, 400, 'text-required', 'Text parameter is required.');
+    if (text.length > 2000) return error(res, 413, 'text-too-large', 'Text exceeds 2000 characters.');
+
+    try {
+      const chunks = [];
+      const maxLength = 180;
+      let remaining = text;
+      while (remaining.length > 0) {
+        if (remaining.length <= maxLength) {
+          chunks.push(remaining);
+          break;
+        }
+        let splitIdx = remaining.lastIndexOf('።', maxLength);
+        if (splitIdx === -1) splitIdx = remaining.lastIndexOf('.', maxLength);
+        if (splitIdx === -1) splitIdx = remaining.lastIndexOf(' ', maxLength);
+        if (splitIdx === -1 || splitIdx < 50) splitIdx = maxLength;
+        chunks.push(remaining.substring(0, splitIdx + 1).trim());
+        remaining = remaining.substring(splitIdx + 1).trim();
+      }
+
+      const audioBuffers = [];
+      for (const chunk of chunks) {
+        if (!chunk) continue;
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(ttsLang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+        const ttsRes = await fetch(ttsUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (ttsRes.ok) {
+          const buf = Buffer.from(await ttsRes.arrayBuffer());
+          audioBuffers.push(buf);
+        }
+      }
+
+      if (!audioBuffers.length) {
+        return error(res, 502, 'tts-failed', 'Could not generate speech.');
+      }
+
+      const combined = Buffer.concat(audioBuffers);
+      res.writeHead(200, {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': combined.length,
+        'Cache-Control': 'public, max-age=86400',
+        'Access-Control-Allow-Origin': req.headers.origin || '*',
+      });
+      res.end(combined);
+      return;
+    } catch (err) {
+      console.error('[TTS Error]', err);
+      return error(res, 502, 'tts-error', 'Speech synthesis request failed.');
+    }
+  }
+
   if (path === '/api/forms' && req.method === 'GET') {
     return send(res, 200, {
       forms: [...schemas.values()].map((s) => ({ id: s.id, version: s.version, kind: s.kind, title: s.title, langs: s.langs })),
     });
+  }
+
+  if (path === '/api/jobs' && req.method === 'GET') {
+    const jobsFile = join(SCHEMA_DIR, 'jobs.json');
+    let seedJobs = [];
+    if (existsSync(jobsFile)) {
+      try {
+        const raw = JSON.parse(readFileSync(jobsFile, 'utf8'));
+        seedJobs = Array.isArray(raw?.jobs) ? raw.jobs : [];
+      } catch {}
+    }
+    const employerJobs = [];
+    for (const [id, sub] of store.entries()) {
+      if (sub.formId === 'employer-accommodations-v1' && sub.answers) {
+        const a = sub.answers;
+        employerJobs.push({
+          id: `emp-${id}`,
+          title: {
+            am: a.role || 'ክፍት የሥራ ቦታ',
+            en: a.role || 'Open Position',
+            om: a.role || 'Hojii Banaa',
+            ti: a.role || 'ክፍቲ ስራሕ',
+          },
+          company: a.company || 'አሠሪ ድርጅት',
+          category: a['job-category'] || 'other',
+          accommodations: Array.isArray(a.accommodations) ? a.accommodations : [],
+          location: {
+            am: 'አዲስ አበባ',
+            en: 'Addis Ababa',
+            om: 'Finfinnee',
+            ti: 'ኣዲስ ኣበባ',
+          },
+          description: {
+            am: 'በአሠሪው የተመዘገበ ክፍት የሥራ ቦታ።',
+            en: 'Verified employer opportunity with accommodation commitments.',
+            om: 'Hojii banaa qacaraadhaan galmaa\'e.',
+            ti: 'ብቀጣሪ ዝተመዝገበ ክፍቲ ናይ ስራሕ ዕድል።',
+          },
+        });
+      }
+    }
+    const allJobs = [...seedJobs, ...employerJobs];
+    return send(res, 200, { jobs: allJobs, count: allJobs.length });
+  }
+
+  const formJsonLdMatch = path.match(/^\/api\/forms\/([^/]+)\/jsonld$/);
+  if (formJsonLdMatch && req.method === 'GET') {
+    const s = schemas.get(decodeURIComponent(formJsonLdMatch[1]));
+    if (!s) return error(res, 404, 'unknown-form', 'No form with that id.');
+    if (s.generates !== 'schema.org/JobPosting') {
+      return error(res, 422, 'not-supported', `Form ${s.id} does not generate schema.org structured data.`);
+    }
+    const lang = url.searchParams.get('lang') || 'en';
+    const jsonLd = generateJobPostingFromSchema(s, { lang });
+    return send(res, 200, jsonLd, { 'Content-Type': 'application/ld+json; charset=utf-8' });
   }
 
   const formMatch = path.match(/^\/api\/forms\/([^/]+)$/);
@@ -367,7 +543,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (path === '/api/submissions' && req.method === 'POST') {
-    if (limited(ip)) return error(res, 429, 'rate-limited', `Too many submissions. Limit is ${RATE_LIMIT} per minute.`);
+    if (await limited(ip)) return error(res, 429, 'rate-limited', `Too many submissions. Limit is ${RATE_LIMIT} per minute.`);
     const type = (req.headers['content-type'] ?? '').split(';')[0].trim();
     if (type !== 'application/json') return error(res, 415, 'unsupported-media-type', 'Send application/json.');
 
@@ -391,9 +567,10 @@ const server = createServer(async (req, res) => {
     if (clientRef && !REF_RE.test(clientRef)) {
       return error(res, 422, 'invalid', 'Some answers need fixing.', { fields: [{ field: 'clientRef', rule: 'format' }] });
     }
-    const seenId = clientRef ? byClientRef.get(clientRef) : undefined;
-    if (seenId) {
-      const seen = store.get(seenId);
+    const refKey = `${body?.formId}:${clientRef}`;
+    const seen = clientRef ? (database ? await database.findSubmission(String(body?.formId || ''), clientRef) : store.get(byClientRef.get(refKey))) : undefined;
+    if (seen) {
+      const seenId = seen.id;
       return send(res, 200, {
         id: seenId,
         receivedAt: seen?.receivedAt ?? new Date().toISOString(),
@@ -417,8 +594,9 @@ const server = createServer(async (req, res) => {
       stripped: result.stripped,                // field NAMES only — proves what never arrived
       ...(clientRef ? { clientRef } : {}),      // opaque token, not personal data
     };
-    save(record);
-    rememberRef(clientRef, record.id);
+    const saved = await save(record);
+    if (saved.duplicate) return send(res,200,{id:saved.record.id,receivedAt:saved.record.receivedAt,stripped:saved.record.stripped,duplicate:true});
+    if (!database) rememberRef(clientRef ? refKey : undefined, record.id);
     console.log(`stored ${record.id} form=${record.formId}${result.stripped.length ? ` stripped=${result.stripped.join(',')}` : ''}`);
     return send(res, 201, {
       id: record.id,
@@ -429,13 +607,26 @@ const server = createServer(async (req, res) => {
     }, { Location: `/api/submissions/${record.id}` });
   }
 
+  /* ---- GET /api/transcribe/config or /api/transcribe — inspection of active providers and supported languages ---- */
+  if ((path === '/api/transcribe/config' || path === '/api/transcribe') && req.method === 'GET') {
+    const lang = (url.searchParams.get('lang') || 'am').toLowerCase().trim();
+    const active = aiRegistry.resolveProvider({ lang });
+    return send(res, 200, {
+      configured: aiRegistry.isConfigured(),
+      activeProvider: active?.id || null,
+      activeProviderName: active?.name || null,
+      supportedLanguages: aiRegistry.getSupportedLanguages(),
+      providers: aiRegistry.listProviders(),
+    });
+  }
+
   /* ---- POST /api/transcribe — audio in, text out, through an engine the operator chose ---- */
   if (path === '/api/transcribe' && req.method === 'POST') {
-    if (!ASR_URL) {
+    if (!aiRegistry.isConfigured()) {
       // Deliberately explicit: "not configured" is a different problem from "no speech heard",
       // and an adopter debugging their deployment needs to tell them apart.
       return error(res, 503, 'asr-not-configured',
-        'Speech-to-text is not configured on this server. Set ASR_URL to enable it, or the form will use the buttons.');
+        'Speech-to-text is not configured on this server. Set ADDIS_AI_API_KEY, GEMINI_API_KEY, or ASR_URL to enable it, or the form will use the buttons.');
     }
     const type = String(req.headers['content-type'] ?? '');
     if (!/^audio\//.test(type)) {
@@ -445,42 +636,138 @@ const server = createServer(async (req, res) => {
     if (read.tooLarge) return error(res, 413, 'audio-too-large', `Audio over ${MAX_AUDIO} bytes. Keep it under 30 seconds.`);
     if (!read.body?.length) return error(res, 400, 'empty-audio', 'No audio in the body.');
 
+    const reqLang = (url.searchParams.get('lang') || req.headers['x-language'] || 'am').toLowerCase().trim();
+    const preferredProvider = (url.searchParams.get('provider') || req.headers['x-ai-provider'] || '').toLowerCase().trim();
+
     try {
-      // OpenAI-compatible multipart, which whisper.cpp's /inference and most servers also accept.
-      const form = new FormData();
-      form.append('file', new Blob([read.body], { type }), 'speech.webm');
-      form.append('model', ASR_MODEL);
-      const r = await fetch(ASR_URL, {
-        method: 'POST',
-        headers: ASR_KEY ? { Authorization: `Bearer ${ASR_KEY}` } : {},
-        body: form,
-        signal: AbortSignal.timeout(20000),
+      const result = await aiRegistry.transcribe({
+        audioBuffer: read.body,
+        mimeType: type,
+        lang: reqLang,
+        preferredProvider,
       });
-      if (!r.ok) {
-        console.log(`transcribe upstream ${r.status}`);
+
+      console.log(`transcribed (${result.engine}${result.model ? `/${result.model}` : ''} [${reqLang}]) ${read.body.length}B → ${result.text.length} chars`);
+      return send(res, 200, {
+        text: result.text,
+        engine: result.engine,
+        lang: result.lang || reqLang,
+        ...(result.model ? { model: result.model } : {}),
+      });
+    } catch (e) {
+      if (e.code === 'no-speech' || e.message?.includes('No speech')) {
+        return error(res, 422, 'no-speech', 'No speech was recognised in that recording.');
+      }
+      if (e.code === 'language-not-supported') {
+        return error(res, 422, 'language-not-supported', e.message);
+      }
+      if (e.code === 'asr-not-configured' || e.status === 503) {
+        return error(res, 503, 'asr-not-configured', e.message);
+      }
+      if (e.code === 'asr-failed' || e.status === 502) {
         return error(res, 502, 'asr-failed', 'The speech engine did not accept the audio.');
       }
-      const data = await r.json().catch(() => ({}));
-      const text = String(data.text ?? data.transcription ?? '').trim();
-      if (!text) return error(res, 422, 'no-speech', 'No speech was recognised in that recording.');
-      // The audio is NOT stored, ever: not on disk, not in memory beyond this request.
-      console.log(`transcribed ${read.body.length}B → ${text.length} chars`);
-      return send(res, 200, { text, engine: data.engine ?? 'remote' });
-    } catch (e) {
       console.log(`transcribe error: ${e.message}`);
       return error(res, 504, 'asr-timeout', 'The speech engine did not answer in time.');
     }
   }
 
+  const subJsonLdMatch = path.match(/^\/api\/submissions\/([^/]+)\/jsonld$/);
+  if (subJsonLdMatch && req.method === 'GET') {
+    const subId = decodeURIComponent(subJsonLdMatch[1]);
+    const rec = store.get(subId);
+    if (!rec) return error(res, 404, 'not-found', 'No submission with that id.');
+    const s = schemas.get(rec.formId);
+    if (!s || s.generates !== 'schema.org/JobPosting') {
+      return error(res, 422, 'not-supported', `Submission ${rec.id} does not generate schema.org structured data.`);
+    }
+    const lang = url.searchParams.get('lang') || rec.answers?.language || 'en';
+    const jsonLd = generateJobPostingFromSubmission(rec, s, { lang });
+    return send(res, 200, jsonLd, { 'Content-Type': 'application/ld+json; charset=utf-8' });
+  }
+
   const subMatch = path.match(/^\/api\/submissions\/([^/]+)$/);
   if (subMatch && req.method === 'GET') {
-    const rec = store.get(decodeURIComponent(subMatch[1]));
+    const id = decodeURIComponent(subMatch[1]);
+    const rec = database ? await database.getSubmission(id) : store.get(id);
     if (!rec) return error(res, 404, 'not-found', 'No submission with that id.');
-    return send(res, 200, rec);
+    // Receipt IDs are bearer capabilities. Production returns receipt metadata only.
+    return send(res, 200, PRODUCTION ? {id:rec.id,receivedAt:rec.receivedAt,formId:rec.formId} : rec);
+  }
+
+  if (path === '/api/checkpoints' && req.method === 'POST') {
+    const read = await readBody(req);
+    let body;
+    try { body = JSON.parse(read.body); } catch { return error(res, 400, 'bad-json', 'Invalid JSON'); }
+    const token = body.token || randomBytes(16).toString('hex');
+    const checkpoint = {
+      token,
+      formId: body.formId || 'savanna-onboard-v1',
+      phone: body.phone,
+      answers: body.answers || {},
+      currentStep: body.currentStep ?? 0,
+      stepId: body.stepId,
+      savedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+    };
+    checkpoints.set(token, checkpoint);
+    const origin = body.origin || 'http://localhost:5173';
+    const slug = checkpoint.formId.replace(/-v\d+$/, '').replace(/^savanna-/, '');
+    const resumeUrl = `${origin}/${slug}?resume=${token}`;
+    return send(res, 200, { ok: true, token, resumeUrl, checkpoint });
+  }
+
+  const cpMatch = path.match(/^\/api\/checkpoints\/([a-zA-Z0-9_-]+)$/);
+  if (cpMatch && req.method === 'GET') {
+    const token = cpMatch[1];
+    const cp = checkpoints.get(token);
+    if (!cp) return error(res, 404, 'not-found', 'Checkpoint not found');
+    if (new Date(cp.expiresAt) < new Date()) {
+      checkpoints.delete(token);
+      return error(res, 410, 'expired', 'Checkpoint expired');
+    }
+    return send(res, 200, { ok: true, checkpoint: cp });
+  }
+
+  if (path === '/api/sms/send-resume' && req.method === 'POST') {
+    const read = await readBody(req);
+    let body;
+    try { body = JSON.parse(read.body); } catch { return error(res, 400, 'bad-json', 'Invalid JSON'); }
+    let token = body.token;
+    let cp = token ? checkpoints.get(token) : null;
+    if (!cp && body.answers) {
+      token = token || randomBytes(16).toString('hex');
+      cp = {
+        token,
+        formId: body.formId || 'savanna-onboard-v1',
+        phone: body.phone,
+        answers: body.answers || {},
+        currentStep: body.currentStep ?? 0,
+        stepId: body.stepId,
+        savedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+      };
+      checkpoints.set(token, cp);
+    }
+    const phone = body.phone || cp?.phone || cp?.answers?.phone;
+    if (!phone) return error(res, 400, 'missing-phone', 'No phone number for SMS resume link.');
+    const origin = body.origin || 'http://localhost:5173';
+    const slug = (cp?.formId || 'savanna-onboard-v1').replace(/-v\d+$/, '').replace(/^savanna-/, '');
+    const resumeUrl = `${origin}/${slug}?resume=${token}`;
+    const lang = body.lang || cp?.answers?.language || 'am';
+    const text = formatResumeMessage(resumeUrl, lang);
+    const simulate = Boolean(body.simulate || req.headers['x-simulate-sms'] || process.env.SMS_SIMULATE === 'true' || process.env.SMS_MODE === 'simulation');
+    const smsResult = await sendSms({ to: phone, text, simulate });
+    return send(res, 200, {
+      ok: true,
+      token,
+      resumeUrl,
+      sms: smsResult,
+    });
   }
 
   return error(res, 404, 'not-found', `${req.method} ${path} is not an endpoint. See /api/openapi.yaml.`);
-});
+}
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`openpath api ${VERSION} on :${PORT} — ${schemas.size} form(s), ${store.size} submission(s), ${DATA_FILE}`);
@@ -490,7 +777,7 @@ for (const sig of ['SIGTERM', 'SIGINT']) {
   // Do not wait on keep-alive connections: a container that ignores SIGTERM for 10 s is a
   // container that gets SIGKILLed, and a test that hangs is a test nobody runs.
   process.on(sig, () => {
-    server.close(() => process.exit(0));
+    server.close(async () => { await database?.close(); process.exit(0); });
     setTimeout(() => process.exit(0), 2000).unref();
   });
 }

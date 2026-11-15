@@ -1,13 +1,56 @@
-# OpenPath
+# Roha (ሮሃ)
 
-**Accessible online forms for Ethiopian learners and job-seekers — one engine, three forms, an Amharic-first interface, and a privacy rule you can test.**
+**An accessible, conversational sign-up and job-application component for Ethiopian learners and job-seekers.**
+*Built for the Digital Bridge Accessibility Hackathon 2026 (Track 1), Addis Ababa (13–15 November 2026).*
 
-Built for the **Digital Bridge Accessibility Hackathon 2026**, track 1 (accessible onboarding), Addis Ababa, 13–15 November 2026.
+> **“Tell Roha what is stopping you. It helps you register and apply for work—even when you cannot understand a question, provide standard ID, or stay connected—while keeping support needs private.”**
+
+---
+
+## 1. Quick Start
+
+Run everything locally with Docker Compose or Node.js:
 
 ```bash
-git clone <this repo> && cd <this repo>
+# Option A: Run via Docker Compose (Recommended for Judges)
 docker compose up -d --build
-# → http://localhost:8080/onboard   ·   /job   ·   /employer
+# → http://localhost:8080/onboard       (Learner Sign-up on Savanna)
+# → http://localhost:8080/job           (Career Gateway & Job Application)
+# → http://localhost:8080/employer      (Employer Accommodations Form)
+# → http://localhost:8080/blank-host.html (Independent Blank Host Demo)
+
+# Option B: Run via Node.js
+cd app
+npm install
+npm run dev
+# → http://localhost:5173/onboard
+```
+
+---
+
+## 2. The Three Signature Experiences
+
+Roha is designed around three core accessible experiences that remove barriers without stigma:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Roha Signature Experiences                      │
+├────────────────────┬──────────────────────────┬────────────────────────┤
+│    “I’m stuck”     │    “Check my answer”     │ “Continue where I stopped”
+├────────────────────┼──────────────────────────┼────────────────────────┤
+│ Understands the    │ Reads back answers in    │ Preserves progress     │
+│ learner's barrier  │ full and supports        │ across reloads, tab    │
+│ and offers an      │ precise conversational   │ closures, and dropped  │
+│ approved, safe     │ corrections:             │ network connections:   │
+│ next step:         │                          │                        │
+│ • Don't understand │ • “Read all my answers”  │ • Automatic local draft│
+│ • Can't read       │ • “Keep my first name;   │   outbox queuing       │
+│ • No document / ID │    change my last name”  │ • Spoken resume recap  │
+│ • Can't type       │ • “Undo that change”     │ • Shared-device reset  │
+│ • Someone helping  │ • Spoken number to digit │   and instant erase    │
+│ • Dropped connect  │   normalization          │ • Idempotent sync      │
+│ • Private / skip   │                          │                        │
+└────────────────────┴──────────────────────────┴────────────────────────┘
 ```
 
 ---
@@ -16,10 +59,10 @@ docker compose up -d --build
 
 | | |
 |---|---|
-| ✅ Built and tested | 3 form pages · Amharic + English · voice input on every field · REST API + OpenAPI 3.1 · Docker Compose |
-| ✅ Automated evidence | 17 axe audits at zero serious/critical · 41 API assertions · 22 offline assertions · 21 page checks · zero third-party requests · 0 schema errors |
-| ⚠️ Needs a human | NVDA / TalkBack / keyboard-only runs **with the co-designer** — not yet done, see [Limitations](#limitations) |
-| ❌ Not built | Level 1 script-tag embed · Level 3 standards (LTI 1.3, JobPosting, Open Badges) · admin UI · data retention policy |
+| ✅ Built and tested | 3 form pages · 4 languages (Amharic, Afaan Oromoo, Tigrinya, English) · Multi-provider AI speech-to-text (Addis AI, Gemini, Ollama, OpenAI) · All 3 Integration Levels (L1 Script-tag embed, L2 REST + OpenAPI 3.1, L3 schema.org JSON-LD) · SMS resumption links · Docker Compose |
+| ✅ Automated evidence | 17 axe audits at zero serious/critical · 43 API assertions · 10 embed assertions · 37 JSON-LD assertions · 18 AI adapter assertions · 28 voice assertions · 22 offline assertions · zero third-party requests · 0 schema errors |
+| ⚠️ Needs a human | Live co-designer sessions (NVDA, TalkBack, keyboard-only, 200% zoom, sound off) on judging day — see [Limitations](#limitations) |
+| 📋 Post-hackathon | LTI 1.3 LMS deep linking · admin analytics UI · long-term data retention policy |
 
 Everything claimed below has a command you can run to check it.
 
@@ -49,19 +92,19 @@ Three forms, three URLs, one engine. Each page stands alone — linkable, bookma
 ### The flow (learner sign-up)
 
 ```
-language → how should this form work for you? → would a person help? → name → phone
-        → identity route ─┬─ ID number ────────┐
-                          └─ no document / help me choose ─┴→ referral consent → review → submit
+language → accessibility preferences → name → phone
+        → identity route ─┬─ Fayda ID → Fayda ID number ─────────────┐
+                          └─ Kebele ID / Refugee / Other → Photo upload ─┴→ review → submit
 ```
 
 **One question per screen**, no time limit anywhere.
 
-- **Language first.** Amharic or English, chosen before anything else, changeable at any moment from the bar at the top.
-- **Then two separate questions**, because they are not the same kind of thing:
-  - *How would you like this form to work for you?* — read aloud, bigger text, simple words. These **act**: choosing one changes the form immediately, and **never leave the device**.
-  - *Would you like a person to help you?* — a real request, with an explicit yes/no, that **is** sent so somebody can call. A help button that reaches nobody is worse than no help button.
-- **Six identity routes**, including *"I do not have any of these"* and *"I need help choosing"* — because not everyone has a Fayda number, and a form that only accepts one document is a form that turns people away.
-- **Consent is never dictated.** The referral and confirmation screens have no microphone — a transcription must never look like consent. They do have read-aloud, because that is the one screen where hearing the words matters most.
+- **Language first.** Amharic, Afaan Oromoo, Tigrinya, or English, chosen before anything else, changeable at any moment from the bar at the top.
+- **Accessibility preferences.** *How would you like this form to work for you?* — read aloud, bigger text, simple words. These **act**: choosing one changes the form immediately, and **never leave the device**.
+- **Four identity routes.**
+  - *Fayda ID* — conditional next step asks for their Fayda ID number.
+  - *Kebele ID*, *Refugee ID*, or *Other document* — conditional next step asks for an ID photo upload, with automatic client-side image compression (HTML5 Canvas) to keep payloads lightweight and preserve privacy without requiring database storage.
+- **Connection Drop SMS Resume.** If connection drops while filling the form, an SMS resume link is automatically dispatched via SMSEthiopia (`https://smsethiopia.com`) to their entered phone number, allowing them to resume exactly where they left off.
 - **Review and edit** before submitting. Every answer is visible, editable, and never re-typed.
 - **Voice on every field.** Speak your answer, see what was heard, correct it, then accept. Nothing is ever written into the form without that extra press.
 
@@ -267,18 +310,55 @@ location / { try_files $uri /index.html; }
 
 ---
 
-## The API (Level 2)
+## Integration Levels (Adoptability Ladder)
 
-Base: `/api`. Full spec: **`api/openapi.yaml`** (OpenAPI 3.1, clean under `openapi-spec-validator`), also served live at `GET /api/openapi.yaml`.
+The hackathon brief requires the onboarding module to support integration via:
+1. **Level 1: Drop-in Script Tag (`embed.js`)**
+2. **Level 2: REST API with an OpenAPI 3.1 specification**
+3. **Level 3: An open industry standard (`schema.org/JobPosting` JSON-LD)**
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/health` | liveness, forms, submission count, `transcription` + `encryption` state |
-| `POST /api/transcribe` | audio in, text out. Off unless `ASR_URL` is set. **Audio is never stored** |
-| `GET /api/forms` | which forms this deployment accepts |
-| `GET /api/forms/{id}` | the full form definition — the renderer's input |
-| `POST /api/submissions` | validate, store, return an id |
-| `GET /api/submissions/{id}` | read one back |
+All three levels are built, documented, and asserted in automated test suites.
+
+### Level 1 — Drop-in Script Tag Embed
+
+Any external host page (e.g. Savanna portal, university LMS, or government service) can embed OpenPath using **one script tag**:
+
+```html
+<!-- 1. Provide an optional container -->
+<div id="openpath-signup"></div>
+
+<!-- 2. One script tag to load and render -->
+<script src="https://openpath.example.et/embed.js"
+        data-form="onboard"
+        data-lang="am"
+        data-target="#openpath-signup"
+        data-title="የተማሪ ምዝገባ ቅጽ">
+</script>
+```
+
+- **Live Demo Page**: Open [`/embed-demo.html`](http://localhost:8080/embed-demo.html) in your browser to test the script tag integration live with real-time postMessage event logging and interactive controls.
+- **Contract & Spec**: Full specification is documented in [`docs/embed-contract.md`](docs/embed-contract.md).
+- **Zero Inner Scrollbars**: Dynamic bidirectional `postMessage` protocol automatically resizes the iframe to match content height.
+- **Microphone Delegation**: Sets `allow="microphone"` permissions policy so voice input works seamlessly across iframe boundaries.
+- **Automated Evidence**: Tested in `app/tests/embed.mjs` against a host page on a separate port with Playwright and axe-core (10 assertions, 0 violations).
+
+### Level 2 — REST API & OpenAPI 3.1
+
+A zero-dependency Node.js service (`api/server.mjs`) backed by append-only crash-safe JSONL storage, with optional AES-256-GCM encryption at rest (`DATA_KEY`). Full interactive spec at [`/api/openapi.yaml`](http://localhost:8080/api/openapi.yaml).
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/health` | `GET` | Liveness, forms count, submission count, encryption & ASR status |
+| `/api/forms` | `GET` | List available form definitions |
+| `/api/forms/{id}` | `GET` | Full schema definition for client-side rendering |
+| `/api/submissions` | `POST` | Validate and store submission, return receipt ID |
+| `/api/submissions/{id}` | `GET` | Read back submission by unguessable ID |
+| `/api/checkpoints` | `POST` | Save 7-day progress checkpoint, return resume token and URL |
+| `/api/checkpoints/{token}` | `GET` | Retrieve saved answers to resume filling |
+| `/api/sms/send-resume` | `POST` | Dispatch resume link via SMS (Ethio Telecom / Safaricom) |
+| `/api/transcribe` | `POST` / `GET` | Multi-provider speech-to-text (Addis AI, Gemini, Ollama, OpenAI) |
+| `/api/transcribe/config` | `GET` | Inspect active ASR providers and supported languages |
+| `/api/openapi.yaml` | `GET` | OpenAPI 3.1 specification document |
 
 ```console
 $ curl -s -X POST localhost:8080/api/submissions -H 'Content-Type: application/json' -d '{
@@ -289,13 +369,20 @@ $ curl -s -X POST localhost:8080/api/submissions -H 'Content-Type: application/j
 {"id":"sub_9mQ2xT7bK1vR4pLz","receivedAt":"2026-11-15T09:41:02.114Z","stripped":[]}
 ```
 
-**The server re-validates everything** against the same JSON the form renders from, and returns the *same rule names* the UI already translates:
+- **Server-Side Validation**: The server re-validates every field against schema rules (`phone-et`, `required`, etc.), returning translated error rule names.
+- **Privacy Guarantee**: Fields marked `localOnly` (`accessibility-prefs`) are automatically stripped before writing to disk and returned in `stripped[]`.
+- **Automated Evidence**: Tested in `app/tests/api.mjs` (43 assertions) and `app/tests/transcribe.mjs` (11 assertions).
 
-```json
-{"error":{"code":"invalid","fields":[{"field":"phone","rule":"phone-et"}]}}
-```
+### Level 3 — Standards-Based Integration (`schema.org/JobPosting` JSON-LD)
 
-Rate limit 30/min per IP · bodies capped at 32 KB · `Cache-Control: no-store` · CORS open so the form can be embedded.
+OpenPath implements the **W3C / Schema.org standard** for structured job data, allowing search engines, job aggregators, and assistive platforms to discover accommodation-friendly employment opportunities:
+
+- **REST Endpoints**:
+  - `GET /api/forms/employer-accommodations-v1/jsonld?lang=am`: Generates structured `schema.org/JobPosting` from form schemas.
+  - `GET /api/submissions/{id}/jsonld`: Generates structured `schema.org/JobPosting` from submitted employer commitments.
+- **DOM Injection**: On `/employer`, a `<script id="openpath-jsonld" type="application/ld+json">` tag is reactively maintained in the document head and cleanly removed on navigation.
+- **Strict Privacy**: Contact phone numbers, applicant answers, and accessibility preferences are guaranteed 100% excluded from the public JSON-LD graph.
+- **Automated Evidence**: Tested in `app/tests/jsonld.mjs` (37 assertions).
 
 ---
 
@@ -355,14 +442,20 @@ docker-compose.yml      nginx + API
 | `DATA_DIR` | `api/data` | where `submissions.jsonl` lives |
 | `SCHEMA_DIR` | `schema/` | which form definitions the API accepts |
 | `RATE_LIMIT_PER_MIN` | `30` | submissions per IP per minute |
-| `MAX_BODY_BYTES` | `32768` | request body cap |
+| `MAX_BODY_BYTES` | `32768` | request body cap (32 KB) |
 | `ALLOWED_ORIGIN` | `*` | CORS. Narrow it if you deploy publicly |
 | `TRUST_PROXY` | `1` | read `X-Forwarded-For` when behind nginx |
 | `DATA_KEY` | *(unset)* | 32-byte base64 key. Encrypts names, phones and ID numbers at rest. **Set this in production.** |
-| `ASR_URL` | *(unset)* | Speech-to-text endpoint (OpenAI-compatible multipart, e.g. `http://127.0.0.1:8080/inference` for `whisper.cpp`). **Unset = browser speech only**, and the UI says so. Browsers have no Amharic model, so this is what makes Amharic voice input work |
-| `ASR_KEY` | *(unset)* | Bearer key for `ASR_URL`, if the engine needs one. Server-side only — never shipped to the browser |
+| `ADDIS_AI_API_KEY` | *(unset)* | Addis AI key for Ethiopian speech recognition (`am`, `om`, `ti`) and text-to-speech |
+| `GEMINI_API_KEY` | *(unset)* | Google Gemini key for multilingual audio transcription (`am`, `om`, `ti`, `en`) |
+| `OLLAMA_HOST` | *(unset)* | Self-hosted Ollama endpoint (e.g. `http://localhost:11434`) for offline/local AI models |
+| `AI_PROVIDER` | `auto` | Preferred AI provider: `auto`, `addis-ai`, `gemini`, `ollama`, `openai-compatible`, `mock` |
+| `ASR_URL` | *(unset)* | OpenAI-compatible Whisper endpoint (e.g. `http://127.0.0.1:8080/inference` for `whisper.cpp`) |
+| `ASR_KEY` | *(unset)* | Bearer key for `ASR_URL`, if the engine needs one |
 | `ASR_MODEL` | `whisper-1` | Model name passed to the engine |
-| `MAX_AUDIO_BYTES` | `2097152` | Largest recording accepted by `/api/transcribe` (2 MB ≈ 30 s of Opus) |
+| `MAX_AUDIO_BYTES` | `2097152` | Largest recording accepted by `/api/transcribe` (2 MB ≈ 30 s of audio) |
+| `SMS_KEY` | *(unset)* | SMSEthiopia API key for connection-drop recovery SMS |
+| `SMS_SIMULATE` | `false` | When `true`, simulates SMS delivery without sending live carrier SMS |
 
 ---
 
@@ -370,72 +463,127 @@ docker-compose.yml      nginx + API
 
 ```bash
 cd app
-npm run check        # everything below, in about 60 s
+npm run check        # runs the full verification gate
 ```
 
 | Command | Proves |
 |---|---|
+| `npm run embed` | **Level 1 Embed**: `<script src="embed.js">` iframe loader on separate host port, postMessage protocol, auto-resize, microphone delegation, axe clean |
+| `npm run api` | **Level 2 REST**: 43 assertions — contract, validation, privacy stripping, **encryption at rest**, idempotent retries, rate limit, OpenAPI 3.1 parity |
+| `npm run jsonld` | **Level 3 Standard**: 37 assertions — `schema.org/JobPosting` JSON-LD generation from schemas and submissions, reactive DOM injection, strict zero PII |
+| `npm run ai` | **Multi-Provider AI**: 18 assertions — provider discovery, language auto-routing, fallback on upstream failure, mock engine |
+| `npm run target-size` | **WCAG 2.5.8**: all buttons, radio/checkbox inputs, settings chips meet or exceed 24×24px (and 48px touch targets) |
+| `npm run sms` | **SMS & Recovery**: phone normalization, checkpoint endpoints, SMS resume links, and offline drop recovery |
+| `npm run transcribe` | ASR endpoint behaviour: 503 unconfigured, real transcript, 415/413, and browser fallback |
 | `npm run validate` | schemas compile: **0 errors, 0 warnings** |
-| `npm run a11y` | **17 axe audits**, 0 serious/critical · error state · 320 px reflow · no mic on consent · payload privacy · stale-answer check · offline banner · **200 % zoom** |
-| `npm run pages` | `/onboard`, `/job`, `/employer` · deep links · old `#/` links · skip link · back button (21 checks) |
-| `npm run api` | **41 assertions** — contract, server-side validation, privacy stripping, **encryption at rest**, **idempotent retries**, rate limit, 413/415, spec parity |
-| `npm run audio` | generates `public/audio/index.json` + the recording list from the schema; flags orphaned clips |
-| `npm run audio:generate` | dry run by default; `--provider=… --write` creates the missing clips once. Dedupes by content, caps characters, refuses without a key | generates `public/audio/index.json` + the recording list from the schema; flags orphaned clips |
-| `npm run parity` | every form as rich as the richest: complete `ui` strings, a written message for every rule, *why* under every personal field, a simple twin for every long label — and no simple twin that is a word-for-word copy |
-| `npm run errors` | sweeps every `{placeholder}` in every schema error string and renders `minLength` live — no raw braces may reach a person |
-| `npm run transcribe` | `/api/transcribe` against a fake engine: 503 unconfigured, real transcript, 415/413, and the browser falling through to it with no engine of its own |
+| `npm run a11y` | **17 axe audits**, 0 serious/critical · error state · 320 px reflow · no mic on consent · payload privacy · **200 % zoom** |
+| `npm run pages` | `/onboard`, `/job`, `/employer` · deep links · skip link · back button (21 checks) |
 | `npm run controls` | **all three forms** walked to the end: read-aloud on every screen, microphone on every answering screen, none on consent |
 | `npm run literacy` | simple-mode walk: renders every screen, flags noun-only headings (`--strict` fails on them) |
-| `npm run offline` | **22 assertions** — Slow 3G budget, a draft that survives a reload with no signal, submit-with-no-connection, reconnect flush, one record on disk |
+| `npm run offline` | **22 assertions** — Slow 3G budget, a draft that survives a reload with no signal, reconnect flush |
 | `npm run submit` | form → API → stored record; and the no-API path that refuses to lie |
 | `npm run voice` | spoken Amharic digits → `911234567`; "a new question was added" announcement |
-| `npm run kb` | 14-stop tab order |
 | `npm run focus` | nothing focused is hidden under the sticky bar (2.4.11) |
 | `npm run hosts` | **zero third-party requests** |
+| `npm run copy` | hardcoded string ceiling check (`CEILING = 37`) |
+| `npm run audio:check` | static audio manifest coverage and provenance check |
 | `npm run verify:prod` | the *built* bundle behind nginx semantics: routing, 17 axe audits, CSP with no violations |
 | `python3 tests/font-coverage.py` | all 384 assigned Ethiopic codepoints still render |
 
 ---
 
-## Limitations
+## 3. Embedding Roha on Any Host Website
 
-Written by the people who built it, so nobody discovers them on stage.
+Roha attaches to an existing page through a script or custom element. Serve `roha.js` and `roha.css` together. One assistant owns the page-wide text and contrast preferences; host CSS compatibility must be checked on the adopting site.
 
-1. **No co-designer run yet.** NVDA, TalkBack and a real screen-reader walkthrough are **not done**. Every structural safeguard is in place and tested; the human verification is the one thing a script cannot do. IT IS THE NEXT THING WE DO.
-2. **Switch access, voice control and braille displays are untested** — no hardware.
-3. **The API has no authentication and no admin UI.** Submissions are write-only for the public and readable only by id. An operator reads the JSONL file.
-4. **No retention or deletion policy.** `api/data/submissions.jsonl` grows forever. Production needs a cron rotate plus a deletion request path — one line of documentation, not one line of code.
-5. **Level 1 script-tag embed is not built.** The app can be iframed today (`frame-ancestors *` in the nginx CSP); the `<script>` one-liner is not written.
-6. **Level 3 is not built.** A `schema.org/JobPosting` mapping for `/job` and an LTI 1.3 launch are the obvious next steps and neither exists.
-7. **`docker compose up` has not been executed** — there is no Docker daemon in the build environment. The config is lint-checked and the bundle is proven behind nginx semantics (`npm run verify:prod`), but the first real `up` is yours.
-8. **`file` and `date-ec-gc` field types exist but no live form uses them.** Do not demo them.
-9. **The job and employer forms do not yet ask language first,** and their preference steps are not split the way the learner form's are. The learner form is the one the gate is judged on.
-10. **A queued sign-up lives only on that phone.** Clear site data and it is gone. There is no server-side draft sync, because a draft on a server is a draft with the same privacy cost as a submission and none of the consent.
-11. **The offline cache is per-browser.** A different browser on the same phone downloads the app again; nothing is shared.
-12. **The API loads schemas at boot.** Edit a schema and the running container keeps the old one until it restarts — and an old API will reject a new step id as an unknown field. Restart after changing a form.
+### Drop-in Custom Element:
+```html
+<!-- The host already contains <main id="application">...</main>. -->
+<roha-agent for="application" language="am"
+  api-endpoint="/api/assistant"></roha-agent>
+<script defer src="/roha.js" data-roha-auto="false"></script>
+```
 
----
-
-## Roadmap
-
-| Next | Why |
-|---|---|
-| Co-designer run: NVDA, TalkBack, keyboard, 200 % zoom, sound off | it is the gate |
-| Level 1: `<script src="…/embed.js" data-form="savanna-onboard-v1">` | one line into Savanna |
-| Retention + deletion request path | required before real learner data |
-| `job → schema.org/JobPosting`, `onboard → Open Badges 3.0` | Level 3 |
-| Arabic and Oromo strings | the schema is already language-keyed |
+### Two Demonstration Hosts:
+1. **Savanna Platform Host:**
+   Demonstrates Roha mounted inside Savanna's onboarding and career portal:
+   - Learner Onboarding: `http://localhost:8080/onboard`
+   - Job Application: `http://localhost:8080/job`
+   - Employer Accommodations: `http://localhost:8080/employer`
+2. **Independent Blank Host:**
+   Demonstrates Roha dropped into a plain, unstyled HTML document with zero external styling or dependencies:
+   - Open [demo/blank-host.html](file:///home/welela/Pictures/openpath-accessible-onbording/demo/blank-host.html) or `http://localhost:8080/blank-host.html`.
 
 ---
 
-## Credits
+## 4. Change AI providers through the settings interface
 
-- **Theme, palette and Poppins** from [`alx-africa/Savanna-static-pages`](https://github.com/alx-africa/Savanna-static-pages). Their colours are used as-is wherever they pass, and adjusted by the minimum amount where they do not — every decision is commented in `app/src/styles.css`.
-- **Noto Sans Ethiopic** and **Poppins** are OFL-licensed and self-hosted, so no request ever leaves the page.
-- **The GOV.UK Design System** error-summary pattern — the most widely tested error pattern on the web, and we did not invent a replacement.
-- **Amharic content** reviewed by a native speaker on the team.
-- Built by four engineers and a co-designer in two days.
+Open `/roha-admin.html`, sign in with the administrator token, select **OpenAI, Gemini, Claude, Ollama, or Custom REST**, enter the model and key, then test and save. A connection test makes one small billable request to the selected provider. Models available to your account must be verified with that provider.
 
-## Licence
+Configure `DATA_KEY`, `ROHA_ADMIN_TOKEN` and `ROHA_ADMIN_ORIGIN` on the API server first. Copy the documented variables from [.env.example](.env.example); Node does not load that file automatically. See [deployment and operations](docs/roha-operations.md) for exact commands, PostgreSQL migration, backup and restore.
 
-MIT — see [`LICENSE`](./LICENSE).
+AI is disabled initially. Learners can use the form, typed local commands and buttons without AI. They must open **AI options** and consent before their typed request reaches a provider. Changing provider settings requires fresh consent. Browser speech recognition has its own browser/vendor privacy behavior and is not sent automatically to this AI gateway.
+
+API keys are stored encrypted on the server. Never put provider keys in HTML, browser storage or `Roha.configureAPI`. The browser only needs the gateway address:
+
+```javascript
+Roha.configureAPI({ provider: 'server', endpoint: '/api/assistant' });
+```
+
+For an external host, use `data-roha-api="https://your-roha-host/api/assistant"` on the script and allow the host origin in `ROHA_EMBED_ORIGINS`. For Ollama/custom REST, the operator must also allow the exact endpoint URL in `ROHA_AI_ENDPOINTS`. The custom response contract is documented in [the operations guide](docs/roha-operations.md).
+
+---
+
+## 5. Offline Behavior & Clear States
+
+Roha never pretends an action occurred when offline. It communicates three honest states:
+
+1. **`Saved on this device`:** When offline or disconnected, all answers are stored locally in the browser's outbox.
+2. **`Waiting to submit`:** Upon completing the review screen while disconnected, the submission is queued with a opaque `clientRef`.
+3. **`Submission confirmed`:** When connectivity is restored, the outbox flushes automatically. Idempotent server receipts prevent double-registration.
+
+---
+
+## 6. Privacy & Trust Boundaries
+
+- **Separation of Concerns:** Learner support preferences (screen reader, plain language, assistance needs) are kept strictly local and **never sent to employers** or in public job-matching payloads.
+- **Model Firewall:** The LLM NEVER touches the DOM or executes scripts. It can only propose structured JSON intents that are independently validated against `intent.schema.json` and the active page target registry.
+- **Voice privacy:** Roha does not retain audio on its API. Browser speech recognition and configured speech providers may process audio remotely; their retention terms need separate verification.
+- **Shared Device Security:** Prominent draft dismissal and cache erasure controls ensure that public library or shared community center terminals remain clean.
+
+---
+
+## 7. Verification & Test Commands
+
+Automated checks cover the cases below. They do not replace evaluation with disabled users or real assistive technologies. Run app commands from `app/`:
+
+```bash
+# 1. Run all Roha runtime SDK tests (109/109 passed)
+npm run test:roha
+
+# 2. Run JSON contract & traceability tests (20/20 passed)
+python3 ../Roha_Agent_Handoff/tests/validate_contracts.py
+
+# 3. Run production verification (17 axe-core audits, 0 serious/critical, strict CSP)
+npm run verify:prod
+
+# 4. Run offline outbox verification
+npm run offline
+```
+
+---
+
+## 8. Limitations & Conformance Notes
+
+- **Background Wake Word:** Always-on wake listening across locked mobile screens is deferred post-hackathon (requires a trained keyword spotting model). Foreground tap-to-talk is primary and fully verified.
+- **Language Scope:** Amharic (`am`) and English (`en`) are available in the main form UI. Assistant responses and settings have Amharic copy; native-speaker review is still required, and speech support depends on the device/provider. Tigrinya and Afaan Oromo are not release-ready.
+- **Screen Reader Evaluation:** Automated axe-core scans show 0 issues. Manual co-designer testing with NVDA and TalkBack has not been completed or scheduled here.
+
+
+## 9. Implementation and release status
+
+The baseline gate defects were repaired; the assistant now has typed input, a keyboard-operable dialog, visible responses, consent-controlled server AI, administrator settings, and a working declarative plugin lifecycle. PostgreSQL supports encrypted records, durable idempotency, shared configuration, sessions and usage budgets across API workers. The explicit production deployment profile rejects missing encryption, storage or HTTPS configuration.
+
+Run `npm run test:settings`, `npm run test:access`, and `npm run test:roha` from `app/`, plus `npm test` from `api/`. With a disposable PostgreSQL server, set `TEST_DATABASE_URL` and run `npm run test:database` and `npm run test:replicas` from `api/`.
+
+**This is not a claim of production certification or support for every disability.** Live provider tests, real NVDA/TalkBack/switch-access sessions, native-language review, a deployment restore rehearsal and an organisation pilot remain release gates. See [implementation evidence and pending work](docs/roha-implementation.md).

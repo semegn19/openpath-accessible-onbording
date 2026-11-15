@@ -1,0 +1,169 @@
+openapi: 3.1.0
+info:
+  title: Roha & OpenPath Accessibility API
+  version: 2.1.0
+  description: >
+    API specification for Roha, an accessible conversational onboarding
+    and job-application component for Ethiopian learners and job-seekers.
+    Provides idempotent submission handling, forms schema retrieval,
+    capability reporting, and privacy-preserving partner handoff.
+servers:
+  - url: http://localhost:8080/api
+    description: Local Docker / Dev API Gateway
+  - url: /api
+    description: Same-origin Nginx reverse proxy
+
+paths:
+  /health:
+    get:
+      summary: API health and capability status
+      operationId: getHealth
+      responses:
+        '200':
+          description: API is operational
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, version, forms]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: 2.1.0
+                  forms:
+                    type: array
+                    items:
+                      type: string
+                    example: [savanna-onboard-v1, savanna-job-v1, employer-accommodations-v1]
+
+  /forms/{formId}:
+    get:
+      summary: Retrieve schema definition for a guided form
+      operationId: getFormDefinition
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [savanna-onboard-v1, savanna-job-v1, employer-accommodations-v1]
+      responses:
+        '200':
+          description: Form schema JSON
+        '404':
+          description: Form schema not found
+
+  /submissions:
+    post:
+      summary: Submit a completed onboarding registration or job application
+      description: >
+        Stores learner answers. ClientRef guarantees idempotency across network retries.
+        Private support needs are processed locally and excluded from public payloads.
+      operationId: postSubmission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [formId, answers]
+              properties:
+                formId:
+                  type: string
+                  example: savanna-onboard-v1
+                clientRef:
+                  type: string
+                  description: Unique UUID token for idempotency
+                  example: 550e8400-e29b-41d4-a716-446655440000
+                answers:
+                  type: object
+                  description: Key-value learner responses
+                  example:
+                    name: Abebe Bikila
+                    phone: "+251911223344"
+                    idRoute: referral
+      responses:
+        '200':
+          description: Submission already processed (idempotent receipt returned)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionReceipt'
+        '201':
+          description: New submission accepted and stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionReceipt'
+        '422':
+          description: Validation error on submitted fields
+
+  /submissions/{id}:
+    get:
+      summary: Retrieve submission status and non-sensitive receipt
+      operationId: getSubmissionReceipt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Submission receipt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionReceipt'
+        '404':
+          description: Submission not found
+
+  /transcribe:
+    post:
+      summary: Optional server-side speech transcription
+      operationId: postTranscribe
+      requestBody:
+        required: true
+        content:
+          audio/webm:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Candidate transcript
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [text]
+                properties:
+                  text:
+                    type: string
+                    example: አበበ ቢቂላ
+
+components:
+  schemas:
+    SubmissionReceipt:
+      type: object
+      required: [id, receivedAt]
+      properties:
+        id:
+          type: string
+          example: sub-1794674301-ab82
+        clientRef:
+          type: string
+          example: 550e8400-e29b-41d4-a716-446655440000
+        receivedAt:
+          type: string
+          format: date-time
+        stripped:
+          type: array
+          items:
+            type: string
+          description: Fields excluded for privacy protection (e.g. support preferences)
+          example: [accessibilityPreferences, disabilityDetails]
+

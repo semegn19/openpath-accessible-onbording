@@ -1,0 +1,167 @@
+Build Roha: a reusable conversational accessibility agent for Track 1 of the Digital Bridge Accessibility Hackathon.
+
+Act as a senior accessibility engineer, full-stack developer and practical product builder. Implement and verify working software. Start by inspecting the existing project and reusing useful code. The team has approximately 12 hours. Prioritize a complete, accessible learner task and easy installation on a second website.
+
+PRODUCT GOAL
+
+Roha is an assistant people talk to while using a website. A website owner installs one script. Roha automatically discovers the current page, builds its own JSON map, understands requests in context, and performs permitted website actions. A manually authored schema must be optional. Form filling is one capability within this wider website assistant.
+
+Use Roha for the product name, UI, README, component and examples. Proposed activation phrase: "Hey Roha". Treat wake recognition as an engineering feature to test, not a capability obtained by renaming a model.
+
+Example experience:
+- Learner enables voice once and permits the microphone.
+- "Hey Roha, what can I do here?" Roha explains the page's main tasks.
+- "Make the words bigger." Actual website text becomes larger.
+- "Use simple words." Roha gives a simpler explanation of the selected content.
+- "Help me register." Roha finds the form and asks one question at a time.
+- "Change my phone number." Roha returns to that answer and confirms the correction.
+- "I don't have a kebele ID." Roha explains supported alternative routes.
+- "Read my answers before I send them." Roha reviews the application and waits for approval.
+
+JUDGING PRIORITIES
+
+Build around the supplied criteria: 30% works for intended users; 25% adoption; 15% Ethiopia; 15% quality/security/privacy; 15% sustainability. The accessibility gate comes first: unaided co-designer tasks, NVDA, TalkBack, keyboard only, 200% zoom, sound off, zero critical/serious axe findings, and an honest WCAG 2.2 AA evaluation.
+
+Use actual co-designer observations and the 21 October findings if supplied. Never invent feedback, test results, partnerships or compliance. Reserve the final three hours for testing, fixes and submission materials.
+
+1. AUTOMATIC WEBSITE UNDERSTANDING
+
+- Discover visible semantic DOM content: headings, regions, labels, fields, choices, required states, errors, buttons, links, menus, search, tables, documents and job cards.
+- Resolve accessible names from visible labels, aria-labelledby, aria-label and suitable semantic relationships. Report ambiguous or unlabelled controls rather than guessing consequential actions.
+- Build a versioned JSON map automatically. Give discovered targets stable session IDs and maintain a target registry. Do not use an LLM to invent selectors.
+- Update affected parts after navigation, route changes, expanded menus and dynamic DOM updates. Debounce observation, avoid repeatedly sending the whole DOM, and exclude Roha's own UI.
+- Do not scrape hidden/private values, password fields, credentials or tokens. Use only minimal context needed for the current task.
+- Support an optional host-authored manifest/adapter to improve reliability. The default demonstration must work on ordinary labelled HTML without a bespoke schema.
+- State limitations for closed shadow roots, cross-origin frames, canvas interfaces and unsupported custom widgets. Do not pretend every website automatically becomes WCAG conformant.
+
+2. CONVERSATIONAL VOICE EXPERIENCE
+
+- Provide an accessible Enable voice action, clear audio-processing notice, visible listening/speaking status and an always-available Stop control.
+- After permission, alternate listening, understanding and speaking without requiring a microphone click for every field. Avoid transcribing Roha's own speech. Keep text equivalents throughout.
+- Support repeat, slower, stop speaking, pause, continue, back, next, explain this, read this, review and correct an answer.
+- Use the learner's preferred name only after learning it or receiving permitted profile context. Do not invent personal details.
+- Capture candidate answers, show/read them back and allow editing or cancellation before committing. Keep the final submission confirmation separate.
+- Show plain recovery messages for silence, denied microphone, unavailable language, disconnected provider and recognition errors. Preserve answers.
+- Implement foreground activation by "Hey Roha" only if actually tested. Keep tap/keyboard activation available. Do not claim reliable background/locked-screen operation across browsers.
+- Explain how a dedicated local wake detector would be trained, licensed and tested after the core flow. Do not include incompatible pretrained weights as an unrestricted dependency.
+
+3. ACCESSIBILITY ACTIONS THAT REALLY CHANGE THE WEBSITE
+
+- Increase/decrease/reset text size, with usable reflow at 200% zoom and no clipped actions.
+- Offer high contrast, reduced motion and a calmer/simple presentation with an undo/reset option.
+- Read the current question, selected content, headings and available choices. Let the learner stop or repeat audio.
+- Explain content in simple words while preserving its original meaning. Keep original text available; do not silently rewrite consent, eligibility rules or legal meaning.
+- Navigate to named headings, sections, links and controls. Ask when multiple targets match.
+- Search or filter using actual supported website controls.
+- Keep essential commands deterministic and local. A local LLM may interpret flexible wording but must not be required for every button or preference change.
+- Respect existing keyboard, screen-reader and browser zoom behaviour. Avoid focus theft, live-region spam, keyboard traps and an assistant panel that covers important content.
+
+4. ALL REQUIRED TRACK 1 FLOWS
+
+- Accessible sign-up and profile editing with clear labels, plain errors, no form inactivity timer, one question per screen, and voice input/review for appropriate fields.
+- Low-literacy mode: short sentences, icons with text, read-aloud questions and easy correction.
+- Alternative identity routes: refugee ID, other documents, or partner referral. Do not force a kebele ID/passport when another route is allowed.
+- Private support request without medical proof or required disability disclosure.
+- Documents: explain permitted formats, let the learner control the native picker, announce the chosen filename and explain invalid files. Do not scan desktop folders or claim a spoken command bypasses browser permission/gesture requirements.
+- Final review, answer editing and explicit consent before sharing. A host integration must truthfully distinguish prepared, submitted, failed and received states.
+- Save/resume with explicit opt-in and deletion. Default saved drafts exclude private support, identity-document content and selected files; explain what must be entered again.
+
+5. REQUIRED CAREER GATEWAY
+
+- Job application flow using the same conversation/form engine, including voice answers and final review.
+- Private "support I need" job filter using the learner's explicit preferences and accommodations declared by the employer. Do not infer a disability or disclose the filter in the application.
+- Employer form describing accommodations offered and a private way to request them.
+- Clearly mark demonstration vacancies as samples. Never claim a real application was sent without a genuine host receipt.
+
+Only after the main flow passes: partner-assisted registration with learner consent and authenticated partner roles; SMS resume using opaque revocable tokens. Do not put answers/private needs in SMS URLs or claim SMS is free/offline. Keep disconnected integrations visibly unconnected.
+
+6. OFFLINE, LOW BANDWIDTH AND CROSS-PLATFORM DESIGN
+
+- Use one responsive web core, with optional PWA installation where supported. Target Windows, macOS, Linux, Android and iOS through a documented browser test matrix.
+- Provide explicit runtime profiles: device-local; local-network hub with no internet dependency; optional remote provider with consent. A local hub still requires a network and trusted browser transport.
+- Cache approved app assets, host manifests/content and selected language packs using a host-origin service worker. Do not cache private API responses or claim a plugin caches an arbitrary website automatically.
+- Use IndexedDB for minimal opt-in drafts. Handle quota errors, unavailable storage and eviction; offer a portable draft as a fallback.
+- Separate the small core from optional model/audio/font packs. Download only chosen packs with size, progress, cancellation, integrity checks and version information.
+- Aim for a core JS/CSS budget of 150 KB compressed, excluding optional models/audio/fonts. Measure and report actual bytes; this is a target, not an existing achievement.
+- Avoid mandatory cloud requests, remote fonts, heavy animation and continuous audio uploads. Keep interface updates responsive while inference runs in a worker/service.
+- Provide an Offline ready screen that checks actual cached capabilities.
+- Verify a reload and core task with internet disconnected. State whether a local network is still required. Offline completion may prepare review; reconnecting must not silently submit. Reconfirm after refreshing session/data and prevent duplicate submissions with host idempotency.
+- Do not promise a large local model runs acceptably on every inexpensive phone. Select lighter validated profiles or disclose the capability limit.
+
+7. FOUR LANGUAGES AND FREE MODEL STRATEGY
+
+Target English (en), Amharic (am), Tigrinya (ti) and Afaan Oromo (om). Track UI translation, command recognition, free-form transcription, dynamic read-aloud and wake detection separately for each language.
+
+- Use provider interfaces so models can be replaced without rewriting the product. Keep a useful rule/template mode when the LLM is unavailable.
+- Evaluate a local Qwen3-4B-Instruct model through Ollama or another suitable local runtime for conversation/structured intent proposals. Keep context and responses short.
+- Evaluate local faster-whisper for English/Amharic. Do not assume standard Whisper supports Tigrinya or Afaan Oromo.
+- Evaluate a permissively licensed additional ASR candidate such as omniASR-CTC-300M; verify exact language inventory, platform support, memory and latency from current official sources and real recordings.
+- MMS has relevant language candidates but restrictive licences. Treat any such provider as explicitly optional research/demo material unless deployment rights are resolved; do not make it an undisclosed commercial dependency.
+- Use installed offline voices when available, and native-speaker-approved recordings for fixed prompts. Recorded questions do not constitute arbitrary text-to-speech for every website.
+- Verify every selected model's current model card, licence and installation requirements. Never invent multilingual quality, costs or speed.
+- Build the pack interface for all four languages now. Activate each capability only after it works; label planned/unavailable features accurately. Have native speakers review translations and simple explanations.
+- No required paid API or proprietary hosted agent service. Keep all secrets on the server. Budget model setup time so downloads do not consume the hackathon.
+
+8. SAFE JSON ACTION ENGINE
+
+Create JSON Schemas and examples for the discovered website map, host overrides and proposed intents. Include target IDs, role/type, labels, actions, form constraints, visibility, privacy, confirmation and offline policy.
+
+Example proposed intent:
+{
+  "schemaVersion": "1.0",
+  "utteranceId": "turn-001",
+  "intent": "text_scale",
+  "targetId": "page.main",
+  "payload": {"percent": 150}
+}
+
+Validate every proposal against both the JSON Schema and the fresh target registry. Verify visibility, current state, allowed arguments, host authority and required confirmation. Schemas alone do not grant permission.
+
+Treat page content as untrusted data, not instructions to the agent. Never execute model-generated JavaScript, shell commands, file paths, arbitrary URLs or selectors. Protect against stale targets and malicious page instructions. Let the host enforce authentication, CSRF protection, upload validation, permissions and sharing.
+
+Separate public application data, private support and identity documents. No raw-audio retention or personal-data telemetry by default. Never send private support to an employer through a generic completion event. Do not infer disability, refugee status or eligibility from behaviour.
+
+9. INSTALLATION, ADOPTION AND SCALABILITY
+
+- Deliver a bundled script and minimal installation example; for example a hosted roha.js plus a roha-assistant component. Keep optional packs separate.
+- Provide mount/unmount, configuration, events and optional host adapter hooks. Respect the host's CSP and existing layout.
+- Integrate into the supplied Savanna starter if present. If absent, provide a clean adapter boundary and explicitly identify the remaining verification; do not claim successful integration.
+- Provide a REST/OpenAPI integration surface where it adds value. Attempt a small schema.org/JobPosting integration only after the required tasks pass.
+- Demonstrate installation on two differently structured sites without rewriting the core or manually describing their basic forms.
+- Cache public static content. Keep server endpoints stateless where possible, isolate tenants, bound inference concurrency and document capacity testing. Do not equate 3,000 learners with 3,000 simultaneous model sessions.
+- Include local startup instructions, Docker Compose, licences, provider configuration, offline-pack instructions and cost assumptions. A stranger should be able to install from the README in an hour.
+
+10. IMPLEMENTATION ORDER
+
+Hour 0-1: inspect existing code, obtain the starter, freeze one registration and one job journey, define the automatic map/action contract, start selected model downloads.
+Hours 1-3: implement discovery, contextual conversation, local command routing, real text scaling/simple explanations and answer correction.
+Hours 3-5: connect and test one real local speech path and foreground activation. Keep tap/text fallback.
+Hours 5-7: implement offline caching, minimal draft recovery, readiness checks and the second-site installation.
+Hours 7-9: finish alternative ID, private support, career flows and available Savanna integration.
+Hours 9-12: co-designer tests, accessibility fixes, security/privacy checks, packaging and demo rehearsal.
+
+Reduce optional breadth before sacrificing the tested main task. A change must lead to a working flow, not merely an attractive screen.
+
+11. ACCEPTANCE TESTS AND EVIDENCE
+
+Verify at least these:
+- On a previously unseen labelled HTML fixture, Roha discovers a form and starts guiding it without a supplied page schema.
+- "Make words bigger" changes actual host text; "reset" reverses it; 200% zoom remains usable.
+- "Use simple words" preserves the question's meaning; the original remains available.
+- A learner answers, corrects a misheard value, navigates backward and reaches final review without losing progress.
+- The no-standard-ID path reaches review without a forced national-ID upload.
+- Private support and private filter choices never appear in public application exports, generic events or logs.
+- Denied microphone, unavailable model, ambiguous target, changed DOM and network loss produce recoverable plain errors.
+- After required packs are installed, disconnect internet, reload and complete the declared offline task. Record requests and any LAN requirement.
+- Test actual microphone audio when available. Label synthetic voice fixtures as synthetic; do not treat a mock provider as proof of speech support.
+- Test keyboard only, NVDA, TalkBack, sound off, 200% zoom and representative mobile layouts. Obtain actual co-designer task results when available.
+- Run axe on relevant states, including errors, choices, file selection, dialogs, review and job filtering. Fix critical/serious findings; automated scans alone do not establish conformance.
+- Record every result as passed, failed, not tested or unavailable, with the tested environment. Preserve honest verification limits.
+
+12. FINAL DELIVERABLES
+
+Provide working source, reproducible startup commands, reusable script bundle, two host fixtures, JSON Schemas/examples, OpenAPI where implemented, Docker Compose, tests, an honest accessibility report, language/device capability matrix, dependency/model licence notes, offline/cost documentation and a three-minute demo script.
+
+Demo order: install on the second site; activate Roha; enlarge real text; simplify/read a question; complete a no-ID registration with a correction; show private support separation; apply to a sample job; demonstrate the verified offline flow and measured accessibility evidence.
+
+Begin implementing now. Give concise updates about working behaviour, blockers and verification. Make routine reversible engineering choices yourself. Ask only for genuinely blocking information. Do not stop after a plan or claim unimplemented features work. End with exact run commands, deliverable paths and the remaining limitations.

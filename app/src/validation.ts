@@ -43,22 +43,22 @@ export function firstFailure(step: Step, value: unknown): Failure | null {
         break;
       case 'minLength':
         if (!isEmpty(value) && String(value).trim().length < (r.value ?? 1)) {
-          return { rule: 'minLength', params: { n: r.value ?? 1 } };
+          return { rule: 'minLength', params: { n: r.value ?? 1, minLength: r.value ?? 1 } };
         }
         break;
       case 'maxLength':
         if (!isEmpty(value) && String(value).trim().length > (r.value ?? Infinity)) {
-          return { rule: 'maxLength', params: { n: r.value ?? '' } };
+          return { rule: 'maxLength', params: { n: r.value ?? '', maxLength: r.value ?? '' } };
         }
         break;
       case 'minValue':
         if (num(value) !== null && (num(value) as number) < (r.value ?? -Infinity)) {
-          return { rule: 'minValue', params: { n: r.value ?? 0 } };
+          return { rule: 'minValue', params: { n: r.value ?? 0, minValue: r.value ?? 0 } };
         }
         break;
       case 'maxValue':
         if (num(value) !== null && (num(value) as number) > (r.value ?? Infinity)) {
-          return { rule: 'maxValue', params: { n: r.value ?? 0 } };
+          return { rule: 'maxValue', params: { n: r.value ?? 0, maxValue: r.value ?? 0 } };
         }
         break;
       case 'exclusiveOption': {

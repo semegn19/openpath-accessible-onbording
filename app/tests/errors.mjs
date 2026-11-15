@@ -20,7 +20,7 @@ const placeholders = [];
 for (const f of FORMS) {
   const d = JSON.parse(readFileSync(join('../schema', `${f}.json`), 'utf8'));
   for (const [rule, msg] of Object.entries(d.errors ?? {})) {
-    for (const lang of ['am', 'en']) {
+    for (const lang of ['am', 'en', 'om', 'ti']) {
       const text = msg?.[lang] ?? '';
       if (!text) { placeholders.push({ f, rule, lang, problem: 'empty message' }); continue; }
       for (const m of text.matchAll(/\{(\w+)\}/g)) {
@@ -45,9 +45,6 @@ await p.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await p.waitForTimeout(150);
 await p.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await p.waitForTimeout(150);
-await p.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
-await p.getByRole('button', { name: /ቀጣይ|Next/ }).click();
-await p.waitForTimeout(200);
 
 // one letter is under the minimum of three
 await p.locator('input[type="text"]').first().fill('ሳ');

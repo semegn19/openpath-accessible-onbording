@@ -1,29 +1,64 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Lang } from './types';
 import { t, tpl } from './i18n';
-import type { Schema } from './types';
+import type { Lang, Schema, Step } from './types';
 
 import { c } from './copy';
 import { Icon } from './icons';
 import { spokenToDigits } from './digits';
-import { playRecorded, stopAudio } from './audio';
+import { playRecorded, playQuestionAudio, stopAudio, isAudioPlaying } from './audio';
 
-/** Speak one string with the browser. Amharic only if a matching voice exists — otherwise say so. */
+/** Speak one string with the browser. Ethiopian languages & Somali use matching device voice or TTS endpoint. */
 export function speak(text: string, lang: Lang) {
   stopAudio();
+  const langCode = (lang as string).toLowerCase().slice(0, 2);
+  const isEthiopicScript = /[\u1200-\u137F]/u.test(text);
+  const isMulti = langCode === 'am' || langCode === 'ti' || langCode === 'om' || langCode === 'so' || isEthiopicScript;
+
+  if (isMulti) {
+    const want = langCode === 'am' ? 'am' : langCode === 'ti' ? 'ti' : langCode === 'om' ? 'om' : langCode === 'so' ? 'so' : 'am';
+    const voice = 'speechSynthesis' in window ? window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want)) : null;
+    if (voice && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice = voice;
+      u.lang = voice.lang;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+      return true;
+    }
+    try {
+      const audio = new Audio(`/api/tts?lang=${encodeURIComponent(want)}&text=${encodeURIComponent(text)}`);
+      audio.play().catch(() => {});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   if (!('speechSynthesis' in window)) return false;
   const u = new SpeechSynthesisUtterance(text);
-  const want = lang === 'am' ? 'am' : 'en';
-  const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(want));
-  if (!voice) return false;
-  u.voice = voice;
-  u.lang = voice.lang;
+  const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('en'));
+  if (voice) {
+    u.voice = voice;
+    u.lang = voice.lang;
+  }
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(u);
   return true;
 }
 
-export function ReadAloudButton({ text, lang, schema }: { text: string; lang: Lang; schema: Schema }) {
+export function ReadAloudButton({
+  text,
+  lang,
+  schema,
+  step,
+  simple,
+}: {
+  text: string;
+  lang: Lang;
+  schema: Schema;
+  step?: Step;
+  simple?: boolean;
+}) {
   const [msg, setMsg] = useState('');
   const label = t(schema.ui?.readAloud, lang);
   return (
@@ -33,11 +68,29 @@ export function ReadAloudButton({ text, lang, schema }: { text: string; lang: La
         className="op-btn op-btn-quiet"
         onClick={async () => {
           setMsg('');
-          // 1. a recording we shipped (works offline, on any phone, in a human voice)
+          if (isAudioPlaying()) {
+            stopAudio();
+            return;
+          }
+          // 1. A pre-recorded human audio clip (works offline, on any phone)
+          if (
+            step &&
+            (await playQuestionAudio({
+              stepId: step.id,
+              formId: schema.id,
+              lang,
+              simple,
+              text,
+              audioProp: step.audio,
+            }))
+          ) {
+            return;
+          }
           if (await playRecorded(lang, text)) return;
-          // 2. the device's own voice, if it has one for this language
+          // 2. The device's own voice fallback, if it has one for this language
           const ok = speak(text, lang);
-          setMsg(ok ? '' : c('voice.noVoice', lang));
+          if (ok) return;
+          setMsg(c('voice.noVoice', lang));
         }}
       >
         <Icon name="speaker" />{label}
@@ -73,17 +126,29 @@ function getRecognition(): SpeechRecognitionLike | null {
 export type Choice = { value: string; label: string; aliases?: string[] };
 
 /** Is this deployment configured with a speech engine? Asked once, cached, and only when needed. */
-let asrAvailable: Promise<boolean> | null = null;
+let asrAvailable: Promise<{ configured: boolean; langs: string[] | null }> | null = null;
 /** What the last probe found: null = not asked yet. Lets the message say why no engine answered. */
 let asrKnown: boolean | null = null;
-const canTranscribeOnServer = (): Promise<boolean> => {
+let asrLangs: string[] | null = null;
+const canTranscribeOnServer = async (lang?: Lang): Promise<boolean> => {
   if (!asrAvailable) {
     asrAvailable = fetch('/api/health')
       .then((r) => (r.ok ? r.json() : {}))
-      .then((h: { transcription?: string }) => { asrKnown = h.transcription === 'configured'; return asrKnown; })
-      .catch(() => { asrKnown = false; return false; });
+      .then((h: { transcription?: string; transcriptionLanguages?: string[] }) => {
+        asrKnown = h.transcription === 'configured';
+        asrLangs = Array.isArray(h.transcriptionLanguages) ? h.transcriptionLanguages : null;
+        return { configured: asrKnown, langs: asrLangs };
+      })
+      .catch(() => {
+        asrKnown = false;
+        asrLangs = null;
+        return { configured: false, langs: null };
+      });
   }
-  return asrAvailable;
+  const info = await asrAvailable;
+  if (!info.configured) return false;
+  if (lang && info.langs && !info.langs.includes(lang)) return false;
+  return true;
 };
 
 const pickMime = (): string => {
@@ -99,7 +164,7 @@ let stopRecording: (() => void) | null = null;
 export const isRecording = () => Boolean(stopRecording);
 export const finishRecording = () => { stopRecording?.(); };
 
-async function recordAndTranscribe(maxMs = 15_000): Promise<{ text?: string; error?: string }> {
+async function recordAndTranscribe(lang: Lang = 'am', maxMs = 15_000): Promise<{ text?: string; error?: string }> {
   const md = navigator.mediaDevices as MediaDevices | undefined;
   if (!md?.getUserMedia) return { error: 'not-allowed' };
   let stream: MediaStream;
@@ -121,7 +186,11 @@ async function recordAndTranscribe(maxMs = 15_000): Promise<{ text?: string; err
     await done;
     stream.getTracks().forEach((t) => t.stop());
     const blob = new Blob(chunks, { type: chunks[0]?.type || 'audio/webm' });
-    const res = await fetch('/api/transcribe', { method: 'POST', headers: { 'Content-Type': blob.type }, body: blob });
+    const res = await fetch(`/api/transcribe?lang=${encodeURIComponent(lang)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': blob.type, 'X-Language': lang },
+      body: blob,
+    });
     const data = (await res.json().catch(() => ({}))) as { text?: string; error?: { code?: string } };
     if (res.ok && data.text) return { text: data.text };
     return { error: data.error?.code ?? `http-${res.status}` };
@@ -179,29 +248,29 @@ export function VoiceButton({ lang, schema, fieldType, choices, tryLangs, onAcce
   };
 
   /** The server engine: used when the browser has none, or has none for this language. */
-  const useServer = async (cause = 'language-not-supported') => {
-    if (!(await canTranscribeOnServer())) {
+  const useServer = async (cause = 'language-not-supported', targetLang: Lang = order[0] ?? lang) => {
+    if (!(await canTranscribeOnServer(targetLang))) {
       // Report what the browser actually said, not a generic "no model" — a blocked microphone and
       // an unreachable speech service need different fixes.
-      setWhy({ code: cause, lang: order[0] });
+      setWhy({ code: cause, lang: targetLang });
       setPhase('unavailable');
       return;
     }
     setPhase('recording');
-    const out = await recordAndTranscribe();
+    const out = await recordAndTranscribe(targetLang);
     if (out.text) { handleTranscript(out.text); return; }
-    setWhy({ code: out.error ?? 'unknown', lang: order[0] });
-    setPhase(out.error === 'asr-not-configured' ? 'unavailable' : 'unavailable');
+    setWhy({ code: out.error ?? 'unknown', lang: targetLang });
+    setPhase('unavailable');
   };
 
   const listen = (i: number) => {
     const r = getRecognition();
-    if (!r) { void useServer('language-not-supported'); return; }  // Firefox/Safari: no browser engine at all
     const attempt = order[i] ?? null;
+    if (!r) { void useServer('language-not-supported', attempt ?? order[0] ?? lang); return; }  // Firefox/Safari: no browser engine at all
     if (!attempt) { setWhy({ code: 'language-not-supported', lang: order[0] }); setPhase('unavailable'); return; }
 
     rec.current = r;
-    r.lang = attempt === 'am' ? 'am-ET' : 'en-US';
+    r.lang = attempt === 'am' ? 'am-ET' : attempt === 'om' ? 'om-ET' : attempt === 'ti' ? 'ti-ET' : 'en-US';
     r.interimResults = false;
     r.maxAlternatives = 3;
 
@@ -224,7 +293,7 @@ export function VoiceButton({ lang, schema, fieldType, choices, tryLangs, onAcce
       // job to the server engine if this deployment has one. Nothing is sent unless it is
       // configured — `canTranscribeOnServer()` asks /api/health first.
       if (['language-not-supported', 'service-not-allowed', 'network'].includes(code)) {
-        void useServer(code);
+        void useServer(code, attempt);
         return;
       }
       setWhy({ code, lang: attempt });

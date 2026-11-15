@@ -38,8 +38,8 @@ const mk = (port, env = {}) => spawn('node', ['../api/server.mjs'], {
   },
   stdio: 'ignore',
 });
-const withEngine = mk(API_OK, { ASR_URL: `http://127.0.0.1:${ASR_PORT}/inference` });
-const withoutEngine = mk(API_BARE);
+const withEngine = mk(API_OK, { ASR_URL: `http://127.0.0.1:${ASR_PORT}/inference`, ADDIS_AI_API_KEY: '', GEMINI_API_KEY: '' });
+const withoutEngine = mk(API_BARE, { ASR_URL: '', ADDIS_AI_API_KEY: '', GEMINI_API_KEY: '' });
 const stop = () => { withEngine.kill('SIGKILL'); withoutEngine.kill('SIGKILL'); engine.close(); };
 process.on('exit', stop);
 
@@ -118,9 +118,6 @@ await page.reload({ waitUntil: 'load' });
 await page.getByRole('radio', { name: /አማርኛ/ }).check();
 await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await page.waitForTimeout(150);
-await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
-await page.waitForTimeout(150);
-await page.getByRole('radio', { name: /አይ፣ ራሴ|No, I will fill it myself/ }).check();
 await page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
 await page.waitForTimeout(200);
 

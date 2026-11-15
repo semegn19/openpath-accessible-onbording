@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "2.0",
+  "mapId": "signup-map",
+  "mapVersion": 1,
+  "routeKey": "registration",
+  "locale": "en",
+  "origin": "illustrative-shape-only",
+  "resources": [
+    {
+      "id": "page.main",
+      "kind": "region",
+      "name": "Join a course",
+      "nameSource": "text",
+      "visible": true,
+      "enabled": true,
+      "risk": "read-only",
+      "allowedIntents": [
+        "read",
+        "explain",
+        "text_scale",
+        "simple_mode",
+        "contrast",
+        "reduced_motion",
+        "reset_preferences",
+        "pause",
+        "resume",
+        "undo"
+      ],
+      "privacy": "page-metadata"
+    },
+    {
+      "id": "form.signup",
+      "kind": "form",
+      "name": "Learner registration",
+      "nameSource": "aria-labelledby",
+      "visible": true,
+      "enabled": true,
+      "risk": "external-write",
+      "allowedIntents": [
+        "read",
+        "review",
+        "request_submission"
+      ],
+      "privacy": "page-metadata",
+      "parentId": "page.main"
+    },
+    {
+      "id": "field.name",
+      "kind": "field",
+      "name": "What should we call you?",
+      "nameSource": "label",
+      "visible": true,
+      "enabled": true,
+      "risk": "local-change",
+      "allowedIntents": [
+        "read",
+        "explain",
+        "focus",
+        "propose_answer"
+      ],
+      "privacy": "application",
+      "parentId": "form.signup",
+      "fieldType": "text",
+      "required": true
+    },
+    {
+      "id": "field.id-route",
+      "kind": "field",
+      "name": "Which identity route works for you?",
+      "nameSource": "label",
+      "visible": true,
+      "enabled": true,
+      "risk": "local-change",
+      "allowedIntents": [
+        "read",
+        "explain",
+        "focus",
+        "propose_answer"
+      ],
+      "privacy": "identity",
+      "parentId": "form.signup",
+      "fieldType": "select",
+      "required": true,
+      "options": [
+        {
+          "id": "route.national",
+          "label": "National ID"
+        },
+        {
+          "id": "route.refugee",
+          "label": "Refugee ID"
+        },
+        {
+          "id": "route.other",
+          "label": "Another document"
+        },
+        {
+          "id": "route.refer",
+          "label": "Refer me through a partner"
+        }
+      ]
+    },
+    {
+      "id": "field.support",
+      "kind": "field",
+      "name": "What would make learning easier?",
+      "nameSource": "label",
+      "visible": true,
+      "enabled": true,
+      "risk": "local-change",
+      "allowedIntents": [
+        "read",
+        "explain",
+        "focus",
+        "propose_answer"
+      ],
+      "privacy": "private-support",
+      "parentId": "form.signup",
+      "fieldType": "textarea",
+      "required": false
+    }
+  ]
+}

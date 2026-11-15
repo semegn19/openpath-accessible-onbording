@@ -6,16 +6,17 @@
  * follows.
  */
 export const LABELS = {
-  next: /ቀጣይ|Next/,
-  finish: /ምዝገባውን ጨርስ|Finish/,
+  next: /ቀጣይ|Next|Itti fufi/,
+  finish: /ምዝገባውን ጨርስ|Finish|Xumuri|ምዝገባ ወድእ/,
   amharic: /አማርኛ/,
-  english: /English/,
-  agree: /ተስማምቻለሁ|agree/i,
-  callMe: /አዎ፣ ይደውሉልኝ|Yes, call me/,
-  noThanks: /አይ፣ ራሴ|No, I will fill it myself/,
-  noDocument: /ምንም መታወቂያ|do not have any/,
-  helpChoosing: /የትኛውን እንድመርጥ|need help choosing/,
-  fayda: /የፋይዳ|Fayda/,
+  english: /English|እንግሊዝኛ|Afaan Ingilizii/,
+  oromo: /Afaan Oromoo|ኦሮምኛ/,
+  tigrinya: /ትግርኛ/,
+  agree: /ተስማምቻለሁ|agree|walii nan gala|ተሰማሚዐ ኣለኹ/i,
+  callMe: /አዎ፣ ይደውሉልኝ|Yes, call me|Eeyyee, naaf bilbilaa|እወ፣ ደውሉለይ/,
+  noThanks: /አይ፣ ራሴ|No, I will fill it myself|Lakki, anumatu guuta|ኣይፋል፣ ባዕለይ ክመልኦ እየ/,
+  fayda: /የፋይዳ|Fayda|Faayidaa|ፋይዳ/,
+  kebele: /ቀበሌ|Kebele|Gandaa/,
 };
 
 export const goto = async (page, url) => {
@@ -30,14 +31,14 @@ export const next = (page) => page.getByRole('button', { name: LABELS.next }).cl
 export async function answer(page, {
   lang = 'am',
   prefs = [],              // accessibility-prefs values: read-aloud | large-text | simple-words
-  assistance = 'no-thanks',
+  assistance = 'no-thanks', // kept for backwards-compat with callers passing it
   name = 'ሳራ በቀለ ታደሰ',
   phone = '0912345678',
-  route = 'fayda',         // fayda | refugee | passport | other | no-document | help-choosing
+  route = 'fayda',         // fayda | refugee | kebele | other
   idValue = '3910028475',
 } = {}) {
   // 1. language
-  await page.getByRole('radio', { name: lang === 'am' ? LABELS.amharic : LABELS.english }).check();
+  await page.getByRole('radio', { name: lang === 'am' ? LABELS.amharic : lang === 'om' ? LABELS.oromo : lang === 'ti' ? LABELS.tigrinya : LABELS.english }).check();
   await next(page);
   await page.waitForTimeout(120);
 
@@ -51,39 +52,31 @@ export async function answer(page, {
   await next(page);
   await page.waitForTimeout(120);
 
-  // 3. assistance — always answered explicitly
-  await page.getByRole('radio', { name: assistance === 'call-me' ? LABELS.callMe : LABELS.noThanks }).check();
-  await next(page);
-  await page.waitForTimeout(120);
-
-  // 4. name
+  // 3. name
   await page.locator('input[type="text"]').first().fill(name);
   await next(page);
   await page.waitForTimeout(120);
 
-  // 5. phone
+  // 4. phone
   await page.locator('input[type="tel"]').fill(phone);
   await next(page);
   await page.waitForTimeout(120);
 
-  // 6. identity route
+  // 5. identity route
   const routeLabel = {
     fayda: LABELS.fayda,
     refugee: /ስደተኛ|Refugee/,
-    passport: /ፓስፖርት|Passport/,
+    kebele: LABELS.kebele,
     other: /ሌላ ሰነድ|Another document/,
-    'no-document': LABELS.noDocument,
-    'help-choosing': LABELS.helpChoosing,
-  }[route];
+    refer: /አጋር|partner/i,
+  }[route] || LABELS.fayda;
   await page.getByRole('radio', { name: routeLabel }).check();
   await next(page);
   await page.waitForTimeout(150);
 
-  // 7. conditional: ID number, or the referral consent
-  if (route === 'fayda' || route === 'refugee' || route === 'passport' || route === 'other') {
-    if (idValue !== null) await page.locator('input[type="text"]').first().fill(idValue);
-  } else {
-    await page.getByRole('checkbox', { name: LABELS.agree }).first().check();
+  // 6. conditional: document photo upload, or partner referral consent
+  if (route === 'refer') {
+    await page.getByRole('checkbox').first().check();
   }
   await next(page);
   await page.waitForTimeout(150);
@@ -143,7 +136,7 @@ export async function fillVisible(page, { text = 'Test Person', phone = '0912345
  * on step 1 the radios *are* the languages, so a generic click silently switches the form.
  */
 export async function setLang(page, lang = 'am') {
-  const name = lang === 'am' ? LABELS.amharic : LABELS.english;
+  const name = lang === 'am' ? LABELS.amharic : lang === 'om' ? LABELS.oromo : lang === 'ti' ? LABELS.tigrinya : LABELS.english;
   await page.getByRole('radio', { name }).first().check().catch(async () => {
     await page.getByRole('radio', { name }).first().click({ force: true }).catch(() => {});
   });

@@ -42,7 +42,7 @@ for (const [id, s] of Object.entries(forms)) {
   const drift = [];
   const shared = ['readAloud', 'speak', 'choose', 'next', 'back', 'edit', 'optional', 'weHeard', 'accept', 'retry', 'typeInstead'];
   for (const key of shared) {
-    for (const lang of ['am', 'en']) {
+    for (const lang of ['am', 'en', 'om', 'ti']) {
       const seen = new Map();
       for (const [id, s] of Object.entries(forms)) {
         const v = s.ui?.[key]?.[lang];
@@ -65,10 +65,10 @@ for (const [id, s] of Object.entries(forms)) {
   for (const st of s.steps) for (const r of st.validation ?? []) used.add(r.rule);
   const missing = [...used].filter((r) => !s.errors?.[r]);
   ok(missing.length === 0, `${id}: every validation rule has a written message`, missing.join(', ') || `${used.size} rules covered`);
-  const halfWritten = Object.entries(s.errors ?? {}).filter(([, v]) => !v?.am || !v?.en).map(([k]) => k);
+  const halfWritten = Object.entries(s.errors ?? {}).filter(([, v]) => !v?.am || !v?.en || !v?.om || !v?.ti).map(([k]) => k);
   ok(halfWritten.length === 0, `${id}: no error message is missing a language`, halfWritten.join(', '));
   const placeholders = Object.entries(s.errors ?? {})
-    .flatMap(([k, v]) => [`${k}.am`, `${k}.en`].filter((_, i) => /\{\w+\}/.test(i ? v.en : v.am)))
+    .flatMap(([k, v]) => ['am', 'en', 'om', 'ti'].filter((l) => /\{\w+\}/.test(v?.[l])).map((l) => `${k}.${l}`))
     .filter((n) => !/minLength|maxLength|minValue|maxValue/.test(n));
   ok(placeholders.length === 0, `${id}: only the messages whose rules supply a number use {placeholders}`, placeholders.join(', ') || 'clean');
 }
@@ -76,8 +76,8 @@ for (const [id, s] of Object.entries(forms)) {
 /* ---------- every screen explains itself ---------- */
 for (const [id, s] of Object.entries(forms)) {
   if (EXEMPT[id]) continue;
-  ok(Boolean(s.intro?.am && s.intro?.en), `${id}: there is a welcome line, in both languages`);
-  ok(Boolean(s.introSimple?.am && s.introSimple?.en), `${id}: and a short form of it for simple words`);
+  ok(Boolean(s.intro?.am && s.intro?.en && s.intro?.om && s.intro?.ti), `${id}: there is a welcome line, in all languages`);
+  ok(Boolean(s.introSimple?.am && s.introSimple?.en && s.introSimple?.om && s.introSimple?.ti), `${id}: and a short form of it for simple words`);
   const silent = s.steps.filter((st) => st.type !== 'review' && st.type !== 'submit' && !st.hint && !st.body && !st.why);
   ok(silent.length === 0, `${id}: no screen asks for something without explaining why`, silent.map((x) => x.id).join(', ') || 'all explained');
   // Something that collects personal data owes the person a reason, not just a label.
@@ -107,13 +107,13 @@ for (const [id, s] of Object.entries(forms)) {
     for (const [simpleKey, baseKey] of [['simple', 'legend'], ['simple', 'label'], ['simpleHint', 'hint'], ['simpleBody', 'body'], ['simpleWhy', 'why']]) {
       const a = st[simpleKey], b = st[baseKey];
       if (!a || !b) continue;
-      for (const lang of ['am', 'en']) {
+      for (const lang of ['am', 'en', 'om', 'ti']) {
         if (a[lang] && b[lang] && a[lang].trim() === b[lang].trim()) pointlesslyIdentical.push(`${st.id}.${simpleKey}.${lang}`);
       }
     }
     for (const o of st.options ?? []) {
       if (!o.simple) continue;
-      for (const lang of ['am', 'en']) if (o.simple[lang] && o.label?.[lang] && o.simple[lang].trim() === o.label[lang].trim()) pointlesslyIdentical.push(`${st.id}/${o.value}.simple.${lang}`);
+      for (const lang of ['am', 'en', 'om', 'ti']) if (o.simple[lang] && o.label?.[lang] && o.simple[lang].trim() === o.label[lang].trim()) pointlesslyIdentical.push(`${st.id}/${o.value}.simple.${lang}`);
     }
   }
   ok(pointlesslyIdentical.length === 0, `${id}: every simple twin is actually different (no duplicate clips)`, pointlesslyIdentical.join(', ') || 'all differ');
@@ -131,7 +131,7 @@ for (const [id, s] of Object.entries(forms)) {
   if (EXEMPT[id]) continue;
   const statusOk = s.contentStatus === 'reviewed' || String(s.contentStatus ?? '').includes('unreviewed');
   ok(statusOk, `${id}: the review status is honest (reviewed, or something-unreviewed)`, String(s.contentStatus));
-  ok(Boolean(s.contentReview?.am && s.contentReview?.en), `${id}: and it says who reviewed it, when`);
+  ok(Boolean(s.contentReview?.am && s.contentReview?.en && s.contentReview?.om && s.contentReview?.ti), `${id}: and it says who reviewed it, when`);
 }
 
 console.log(fail ? `\nFAIL — ${fail} problem(s)` : '\nPASS — 0 problem(s)');

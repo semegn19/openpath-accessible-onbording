@@ -1,0 +1,25 @@
+Roha handoff validation
+20 contract/traceability checks passed.
+
+PASS: host A metadata schema
+PASS: host B metadata schema
+PASS: capability schema
+PASS: intent 1 and current target reference
+PASS: intent 2 and current target reference
+PASS: intent 3 and current target reference
+PASS: intent 4 and current target reference
+PASS: unique resource IDs and existing parents
+PASS: reject field values in exported metadata
+PASS: reject executable/locator additions to map
+PASS: reject out-of-range text scaling
+PASS: reject model-supplied approval flag
+PASS: reject extra executable intent payload
+PASS: reject stale map reference
+PASS: reject unknown target reference
+PASS: reject intent not declared for target
+PASS: reject verified capability without evidence
+PASS: reject unsupported offline-ready assertion
+PASS: every feature has spec/test/status traceability
+PASS: proposed API parses and external contract references exist
+
+Runtime SDK, automatic discovery, actual speech/wake, offline caching, host integrations, real device testing and WCAG conformance are NOT verified by this checker.

@@ -1,10 +1,12 @@
-# OpenPath API — zero dependencies, so there is no npm install in this image.
+# Roha API; PostgreSQL driver is pinned in the lockfile.
 #
 # BUILD FROM THE REPO ROOT:     docker build -f api/Dockerfile .
 FROM node:20-alpine
 
 WORKDIR /api
-COPY api/server.mjs api/openapi.yaml ./
+COPY api/package.json api/package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+COPY api/ ./
 
 # The API validates against the same schema files the form renders from.
 COPY schema/ /schema/

@@ -1,7 +1,19 @@
 import type { Lang, LText } from './types';
+import { SOMALI_TRANSLATIONS } from './locales/somali';
 
-export const t = (v: LText | undefined, lang: Lang, fallback = ''): string =>
-  v ? (v[lang] || v.en || fallback) : fallback;
+export const t = (v: LText | undefined, lang: Lang, fallback = ''): string => {
+  if (!v) return fallback;
+  if (lang === 'so') {
+    if (v.so) return v.so;
+    const en = v.en;
+    if (en) {
+      if (SOMALI_TRANSLATIONS[en]) return SOMALI_TRANSLATIONS[en];
+      const trimmed = en.trim();
+      if (SOMALI_TRANSLATIONS[trimmed]) return SOMALI_TRANSLATIONS[trimmed];
+    }
+  }
+  return v[lang] || v.en || fallback;
+};
 
 export const tpl = (s: string, vars: Record<string, string | number>): string =>
   s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));

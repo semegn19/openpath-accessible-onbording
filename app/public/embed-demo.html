@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenPath Integration Level 1 — Drop-in Embed Demo</title>
+  <link rel="stylesheet" href="fonts.css">
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --card: #ffffff;
+      --navy: #002b56;
+      --accent: #5648b7;
+      --border: #d0d7de;
+      --text: #212529;
+      --muted: #5f6670;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', 'Noto Sans Ethiopic', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 1.5rem 1rem 3rem;
+    }
+    .demo-header {
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 43, 86, 0.08);
+      border: 1px solid var(--border);
+    }
+    .badge {
+      display: inline-block;
+      background: #eaf0f6;
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    h1 { font-size: 1.45rem; color: var(--navy); margin-bottom: 0.5rem; }
+    p { color: var(--muted); margin-bottom: 1rem; font-size: 0.95rem; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+    button.btn {
+      background: var(--navy);
+      color: #fff;
+      border: 2px solid var(--navy);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+      transition: background 0.15s ease;
+    }
+    button.btn:hover { background: #335578; }
+    button.btn-outline {
+      background: transparent;
+      color: var(--navy);
+    }
+    button.btn-outline:hover { background: #eaf0f6; }
+    .code-box {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin-top: 0.75rem;
+    }
+    .log-box {
+      max-width: 900px;
+      margin: 1.5rem auto 0;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .log-title { font-weight: 700; font-size: 0.9rem; color: var(--navy); margin-bottom: 0.5rem; }
+    #events-log {
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.8rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem;
+      list-style: none;
+    }
+    #events-log li { padding: 0.2rem 0; border-bottom: 1px solid #edf2f7; }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 43, 86, 0.06);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="demo-header">
+    <span class="badge">Integration Level 1 · Script Tag Embed</span>
+    <h1>Savanna Partner Portal — Host Integration Demo</h1>
+    <p>
+      This page simulates an external portal embedding OpenPath with a single <code>&lt;script&gt;</code> tag.
+      It features auto-resizing (zero inner scrollbars), microphone permissions delegation, and bidirectional <code>postMessage</code> event communication.
+    </p>
+
+    <div class="controls">
+      <button class="btn btn-outline" onclick="changeLang('am')">ቋንቋ፦ አማርኛ</button>
+      <button class="btn btn-outline" onclick="changeLang('om')">Afaan Oromoo</button>
+      <button class="btn btn-outline" onclick="changeLang('ti')">ትግርኛ</button>
+      <button class="btn btn-outline" onclick="changeLang('en')">English</button>
+      <button class="btn" onclick="toggleSimple()">Toggle Simple Words</button>
+    </div>
+
+    <details>
+      <summary style="cursor: pointer; font-weight: 600; color: var(--accent);">How to embed this on any website (HTML code)</summary>
+      <pre class="code-box"><code>&lt;!-- 1. Target container on your host page --&gt;
+&lt;div id="openpath-signup"&gt;&lt;/div&gt;
+
+&lt;!-- 2. One script tag to load and run --&gt;
+&lt;script src="https://openpath.example.et/embed.js"
+        data-form="onboard"
+        data-lang="am"
+        data-target="#openpath-signup"
+        data-title="የተማሪ ምዝገባ ቅጽ"&gt;
+&lt;/script&gt;</code></pre>
+    </details>
+  </header>
+
+  <!-- File protocol advisory banner if opened directly via filesystem -->
+  <div id="file-protocol-banner" style="display:none; max-width:900px; margin:0 auto 1.5rem; background:#fff8e6; color:#78350f; border:1px solid #fcd34d; padding:1rem 1.25rem; border-radius:10px; font-size:0.95rem;">
+    <strong>ℹ️ Opened via <code>file://</code> protocol:</strong> Browsers restrict features (service workers, local SPA routes) when opening raw HTML files directly from disk. The widget below is connected to your local dev server at <code>http://localhost:5173</code>. For the best interactive experience, open <a href="http://localhost:5173/embed-demo.html" style="color:#002b56; font-weight:700; text-decoration:underline;">http://localhost:5173/embed-demo.html</a> in your browser.
+  </div>
+  <script>
+    if (window.location.protocol === 'file:') {
+      var b = document.getElementById('file-protocol-banner');
+      if (b) b.style.display = 'block';
+    }
+  </script>
+
+  <!-- The embedded OpenPath form container -->
+  <main class="container" id="openpath-embed-container"></main>
+
+  <!-- Real-time event log from the embedded widget -->
+  <section class="log-box">
+    <div class="log-title">Host Event Log (Bi-directional postMessage v1)</div>
+    <ul id="events-log">
+      <li>Listening for events from OpenPath widget...</li>
+    </ul>
+  </section>
+
+  <!-- Listen to OpenPath events -->
+  <script>
+    var logList = document.getElementById('events-log');
+    function logEvent(type, detail) {
+      var li = document.createElement('li');
+      var time = new Date().toLocaleTimeString();
+      li.textContent = '[' + time + '] ' + type + ': ' + JSON.stringify(detail);
+      logList.insertBefore(li, logList.firstChild);
+    }
+
+    ['ready', 'resize', 'step', 'submitted', 'queued'].forEach(function(evType) {
+      window.addEventListener('openpath:' + evType, function(e) {
+        logEvent('openpath:' + evType, e.detail);
+      });
+    });
+
+    var simpleActive = false;
+    function toggleSimple() {
+      simpleActive = !simpleActive;
+      var iframe = document.querySelector('#openpath-embed-container iframe');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          source: 'openpath-host',
+          v: 1,
+          type: 'set-prefs',
+          prefs: { simple: simpleActive }
+        }, '*');
+      }
+    }
+
+    function changeLang(l) {
+      var iframe = document.querySelector('#openpath-embed-container iframe');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          source: 'openpath-host',
+          v: 1,
+          type: 'set-lang',
+          lang: l
+        }, '*');
+      }
+    }
+  </script>
+
+  <!-- Load OpenPath via the Level 1 script tag -->
+  <script src="./embed.js"
+          data-form="onboard"
+          data-lang="am"
+          data-target="#openpath-embed-container"
+          data-title="የOpenPath የተማሪ ምዝገባ">
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "roha-api",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node tests/assistant.mjs",
+    "test:database": "node tests/database.mjs",
+    "migrate": "node migrate.mjs",
+    "test:replicas": "node tests/replicas.mjs",
+    "test:backup": "node tests/backup.mjs",
+    "import:data": "node storage-cli.mjs import",
+    "rotate:key": "node storage-cli.mjs rotate",
+    "test:storage": "node tests/storage-tools.mjs"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}

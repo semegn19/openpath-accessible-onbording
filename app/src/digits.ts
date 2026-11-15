@@ -12,30 +12,32 @@
  *     Never guess at a phone number.
  */
 
+import type { Lang } from './types';
+
 const AM: Record<string, number> = {
   'ዜሮ': 0, 'ዘሮ': 0, 'ዚሮ': 0,
-  'አንድ': 1, 'አንዳንድ': 1,
-  'ሁለት': 2, 'ሁለቱ': 2,
-  'ሶስት': 3, 'ሦስት': 3, 'ሶስቱ': 3,
-  'አራት': 4, 'አራቱ': 4,
-  'አምስት': 5, 'አምስቱ': 5,
-  'ስድስት': 6, 'ስድስቱ': 6,
-  'ሰባት': 7, 'ሰባቱ': 7,
-  'ስምንት': 8, 'ስምንቱ': 8,
-  'ዘጠኝ': 9, 'ዘጠኙ': 9,
-  'አስር': 10, 'አስራ': 10,
-  'አስራ አንድ': 11, 'አስራ ሁለት': 12, 'አስራ ሶስት': 13, 'አስራ አራት': 14,
-  'አስራ አምስት': 15, 'አስራ ስድስት': 16, 'አስራ ሰባት': 17, 'አስራ ስምንት': 18, 'አስራ ዘጠኝ': 19,
-  'ሃያ': 20, 'ሀያ': 20, 'ሃያ አንድ': 21,
-  'ሰላሳ': 30, 'ሠላሳ': 30, 'ሰላሳ አንድ': 31,
-  'አርባ': 40, 'አርባ አንድ': 41,
-  'ሃምሳ': 50, 'ሀምሳ': 50,
-  'ስልሳ': 60, 'ስድሳ': 60,
-  'ሰባ': 70,
+  'አንድ': 1, 'አንዳንድ': 1, 'ሓደ': 1,
+  'ሁለት': 2, 'ሁለቱ': 2, 'ክልተ': 2,
+  'ሶስት': 3, 'ሦስት': 3, 'ሶስቱ': 3, 'ሰለስተ': 3,
+  'አራት': 4, 'አራቱ': 4, 'ኣርባዕተ': 4,
+  'አምስት': 5, 'አምስቱ': 5, 'ሓሙሽተ': 5,
+  'ስድስት': 6, 'ስድስቱ': 6, 'ሽድሽተ': 6,
+  'ሰባት': 7, 'ሰባቱ': 7, 'ሸውዓተ': 7,
+  'ስምንት': 8, 'ስምንቱ': 8, 'ሸሞንተ': 8,
+  'ዘጠኝ': 9, 'ዘጠኙ': 9, 'ትሽዓተ': 9,
+  'አስር': 10, 'አስራ': 10, 'ዓሰርተ': 10,
+  'አስራ አንድ': 11, 'አስራ ሁለት': 12, 'አስራ ሶስት': 13, 'አስራ አራት': 14, 'ዓሰርተ ሓደ': 11, 'ዓሰርተ ክልተ': 12, 'ዓሰርተ ሰለስተ': 13, 'ዓሰርተ ኣርባዕተ': 14,
+  'አስራ አምስት': 15, 'አስራ ስድስት': 16, 'አስራ ሰባት': 17, 'አስራ ስምንት': 18, 'አስራ ዘጠኝ': 19, 'ዓሰርተ ሓሙሽተ': 15, 'ዓሰርተ ሽድሽተ': 16, 'ዓሰርተ ሸውዓተ': 17, 'ዓሰርተ ሸሞንተ': 18, 'ዓሰርተ ትሽዓተ': 19,
+  'ሃያ': 20, 'ሀያ': 20, 'ሃያ አንድ': 21, 'ዕስራ': 20, 'ዕስራን ሓደን': 21,
+  'ሰላሳ': 30, 'ሠላሳ': 30, 'ሰላሳ አንድ': 31, 'ሰላሳን ሓደን': 31,
+  'አርባ': 40, 'አርባ አንድ': 41, 'ኣርብዓ': 40, 'ኣርብዓን ሓደን': 41,
+  'ሃምሳ': 50, 'ሀምሳ': 50, 'ሓምሳ': 50,
+  'ስልሳ': 60, 'ስድሳ': 60, 'ስሳ': 60,
+  'ሰባ': 70, 'ሰብዓ': 70,
   'ሰማንያ': 80,
-  'ዘጠና': 90,
-  'መቶ': 100,
-  'ሺህ': 1000, 'ሺ': 1000,
+  'ዘጠና': 90, 'ተስዓ': 90,
+  'መቶ': 100, 'ሚእቲ': 100,
+  'ሺህ': 1000, 'ሺ': 1000, 'ሽሕ': 1000,
 };
 
 const EN: Record<string, number> = {
@@ -47,6 +49,42 @@ const EN: Record<string, number> = {
   hundred: 100, thousand: 1000,
 };
 
+const OM: Record<string, number> = {
+  zeeroo: 0, duudaa: 0,
+  tokko: 1, tokkicha: 1,
+  lama: 2, lachanuu: 2,
+  sadii: 3, sadi: 3,
+  afur: 4,
+  shan: 5,
+  "ja'a": 6, jaa: 6, jaha: 6,
+  torba: 7,
+  saddeet: 8, sadet: 8,
+  sagal: 9,
+  kudhan: 10, kurna: 10,
+  kudhatokko: 11, kudhalama: 12, kudhasadii: 13, kudhafur: 14,
+  kudhashan: 15, "kudhaja'a": 16, kudhatorba: 17, kudhasaddeet: 18, kudhasagal: 19,
+  digdama: 20, soddoma: 30, afurtama: 40, shantama: 50, jaatama: 60,
+  torbaatama: 70, saddeettama: 80, sagaltama: 90,
+  dhibba: 100, kuma: 1000,
+};
+
+const SO: Record<string, number> = {
+  eber: 0, eberka: 0, zero: 0,
+  kow: 1, koow: 1,
+  laba: 2,
+  saddex: 3, seddex: 3,
+  afar: 4,
+  shan: 5,
+  lix: 6,
+  toddobo: 7, todobo: 7,
+  siddeed: 8, sideed: 8,
+  sagaal: 9,
+  toban: 10,
+  labaatan: 20, soddon: 30, afartan: 40, konton: 50, lixdan: 60,
+  toddobaatan: 70, siddeetan: 80, sagaashan: 90,
+  boqol: 100, kun: 1000,
+};
+
 const tokenise = (text: string): string[] =>
   text
     .toLowerCase()
@@ -56,11 +94,11 @@ const tokenise = (text: string): string[] =>
     .split(' ')
     .filter(Boolean);
 
-export function spokenToDigits(text: string, lang: 'am' | 'en'): string {
+export function spokenToDigits(text: string, lang: Lang): string {
   const raw = text.trim();
   if (!raw) return raw;
 
-  const words = lang === 'am' ? AM : EN;
+  const words = (lang === 'am' || lang === 'ti') ? AM : lang === 'om' ? OM : lang === 'so' ? SO : EN;
   const tokens = tokenise(raw);
   if (!tokens.length) return raw;
 

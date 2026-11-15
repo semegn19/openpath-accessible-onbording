@@ -6,16 +6,22 @@
   "defaultLang": "am",
   "langs": [
     "am",
-    "en"
+    "en",
+    "om",
+    "ti"
   ],
   "calendar": "EC",
   "title": {
     "am": "የድርጅት ምዝገባ",
-    "en": "Employer sign-up"
+    "en": "Employer sign-up",
+    "om": "Galmee dhaabbataa",
+    "ti": "ምዝገባ ትካል"
   },
   "intro": {
-    "am": "ስለ ድርጅትዎ ጥቂት ጥያቄዎችን ይመልሳሉ። ጊዜ ገደብ የለም።",
-    "en": "Answer a few questions about your workplace. There is no time limit."
+    "am": "ስለ ድርጅትዎ ጥቂት ጥያቄዎችን ይመልሳሉ። የጊዜ ገደብ የለም።",
+    "en": "Answer a few questions about your workplace. There is no time limit.",
+    "om": "Waa'ee iddoo hojii keessanii gaaffilee muraasa deebisaa. Daangaan yeroo hin jiru.",
+    "ti": "ትካልኩም ዘቕርቦም ናይ ስራሕ ቦታ ምምዕርራያት መዝግቡ። ናይ ግዜ ደረት የለን።"
   },
   "settings": {
     "progress": true,
@@ -29,19 +35,27 @@
       "type": "language",
       "legend": {
         "am": "ቋንቋ ይምረጡ",
-        "en": "Choose your language"
+        "en": "Choose your language",
+        "om": "Afaan keessan filadhaa",
+        "ti": "ቋንቋኹም ምረጹ"
       },
       "label": {
         "am": "ቋንቋ ይምረጡ",
-        "en": "Choose your language"
+        "en": "Choose your language",
+        "om": "Afaan keessan filadhaa",
+        "ti": "ቋንቋኹም ምረጹ"
       },
       "simple": {
         "am": "ቋንቋ",
-        "en": "Pick your language"
+        "en": "Pick your language",
+        "om": "Afaan filadhaa",
+        "ti": "ቋንቋ"
       },
       "hint": {
         "am": "ይህን በማንኛውም ጊዜ መቀየር ይችላሉ።",
-        "en": "You can change this at any time."
+        "en": "You can change this at any time.",
+        "om": "Kana yeroo kamiyyuu jijjiiruu dandeessu.",
+        "ti": "ነዚ ኣብ ዝኾነ እዋን ክትቅይርዎ ትኽእሉ ኢኹም።"
       },
       "icon": "chat",
       "required": true,
@@ -59,17 +73,41 @@
           "value": "am",
           "label": {
             "am": "አማርኛ",
-            "en": "Amharic"
+            "en": "Amharic",
+            "om": "Afaan Amaaraa",
+            "ti": "ኣምሓርኛ"
           },
           "icon": "letter-am"
         },
         {
+          "value": "om",
+          "label": {
+            "am": "ኦሮምኛ",
+            "en": "Afaan Oromoo",
+            "om": "Afaan Oromoo",
+            "ti": "ኦሮምኛ"
+          },
+          "icon": "letter-om"
+        },
+        {
           "value": "en",
           "label": {
-            "am": "English",
-            "en": "English"
+            "am": "እንግሊዝኛ",
+            "en": "English",
+            "om": "Afaan Ingilizii",
+            "ti": "እንግሊዝኛ"
           },
           "icon": "letter-en"
+        },
+        {
+          "value": "ti",
+          "label": {
+            "am": "ትግርኛ",
+            "en": "Tigrinya",
+            "om": "Tigriffaa",
+            "ti": "ትግርኛ"
+          },
+          "icon": "letter-ti"
         }
       ]
     },
@@ -78,19 +116,27 @@
       "type": "checkbox",
       "legend": {
         "am": "ቅጹ እንዴት እንዲሠራልዎት ይመርጣሉ?",
-        "en": "How would you like this form to work for you?"
+        "en": "How would you like this form to work for you?",
+        "om": "Waraqaan kun akkamitti akka isiniif hojjetu barbaaddu?",
+        "ti": "እዚ ቅጥዒ ብኸመይ ክሰርሓልኩም ትመርጹ?"
       },
       "simple": {
         "am": "ቅጹ እንዲመችዎ ይምረጡ",
-        "en": "Make this easier to use"
+        "en": "Make this easier to use",
+        "om": "Itti fayyadama salphisaa",
+        "ti": "ቅጥዒ ንምቕላል"
       },
       "hint": {
         "am": "የሚመርጡት ነገር ቅጹን ወዲያውኑ ይለውጣል። በኋላም መቀየር ይችላሉ።",
-        "en": "What you choose changes this form straight away. You can change it later."
+        "en": "What you choose changes this form straight away. You can change it later.",
+        "om": "Wanti filattan waraqaa kana yeruma sana jijjiira. Boodas jijjiiruu dandeessu.",
+        "ti": "ዝመረጽክምዎ ነገር ነዚ ቅጥዒ ብኡብኡ ይቕይሮ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም።"
       },
       "why": {
         "am": "ቅጹን በሚመችዎት መንገድ እንዲያነቡ ይረዳል።",
-        "en": "This helps you read the form in the way that suits you."
+        "en": "This helps you read the form in the way that suits you.",
+        "om": "Kun waraqaa kana karaa isiniif mijatutti akka dubbistan isin gargaara.",
+        "ti": "እዚ ነዚ ቅጥዒ ብዝጥዕመኩም መንገዲ ንኸተንብብዎ ይሕግዝ።"
       },
       "icon": "hands",
       "required": false,
@@ -103,20 +149,26 @@
           "value": "read-aloud",
           "label": {
             "am": "ጥያቄዎች እንዲነበቡልኝ",
-            "en": "Read the questions to me"
+            "en": "Read the questions to me",
+            "om": "Gaaffileen akka naaf dubbifaman",
+            "ti": "ሕቶታት ክንበቡለይ"
           },
           "icon": "speaker",
           "applies": "readAloud",
           "simple": {
             "am": "ጥያቄዎቹን ያንብብልኝ",
-            "en": "Read questions aloud"
+            "en": "Read questions aloud",
+            "om": "Naaf dubbisi",
+            "ti": "ኣንብበለይ"
           }
         },
         {
           "value": "large-text",
           "label": {
             "am": "ትልቅ ጽሑፍ",
-            "en": "Bigger text"
+            "en": "Bigger text",
+            "om": "Barreeffama guddaa",
+            "ti": "ዓቢ ጽሑፍ"
           },
           "icon": "text-large",
           "applies": "big"
@@ -125,7 +177,9 @@
           "value": "simple-words",
           "label": {
             "am": "ቀላል ቃላት",
-            "en": "Simple words"
+            "en": "Simple words",
+            "om": "Jechoota salphaa",
+            "ti": "ቀለልቲ ቃላት"
           },
           "icon": "simple",
           "applies": "simple"
@@ -133,7 +187,9 @@
       ],
       "simpleHint": {
         "am": "የሚፈልጉትን እርዳታ ይምረጡ። በኋላም መቀየር ይችላሉ።",
-        "en": "Pick any help you need. You can change this later."
+        "en": "Pick any help you need. You can change this later.",
+        "om": "Gargaarsa isin barbaachisu filadhaa. Boodas jijjiiruu dandeessu.",
+        "ti": "ዘድልየኩም ሓገዝ ምረጹ። ጸኒሕኩም'ውን ክትቅይርዎ ትኽእሉ ኢኹም።"
       }
     },
     {
@@ -141,11 +197,15 @@
       "type": "text",
       "label": {
         "am": "የድርጅቱ ስም",
-        "en": "Company name"
+        "en": "Company name",
+        "om": "Maqaa dhaabbataa",
+        "ti": "ናይ ትካል ስም"
       },
       "simple": {
         "am": "ድርጅት",
-        "en": "Company"
+        "en": "Company",
+        "om": "Dhaabbata",
+        "ti": "ትካል"
       },
       "icon": "building",
       "required": true,
@@ -165,15 +225,21 @@
       "autocomplete": "organization",
       "hint": {
         "am": "ሙሉ ስም፣ በምዝገባ ሰነድዎ ላይ እንዳለው።",
-        "en": "The full name, as it is on your registration document."
+        "en": "The full name, as it is on your registration document.",
+        "om": "Maqaa guutuu, akkuma sanada galmee irratti jiru.",
+        "ti": "ምሉእ ስም፣ ኣብ ሰነድ ምዝገባኹም ከም ዘሎ።"
       },
       "simpleHint": {
         "am": "የድርጅቱ ሙሉ ስም።",
-        "en": "The full name."
+        "en": "The full name.",
+        "om": "Maqaa guutuu dhaabbataa.",
+        "ti": "ምሉእ ስም ናይቲ ትካል"
       },
       "why": {
         "am": "ተማሪዎች ይህን ስም ያያሉ።",
-        "en": "Learners will see this name."
+        "en": "Learners will see this name.",
+        "om": "Barattoonni maqaa kana argu.",
+        "ti": "ተማሃሮ ነዚ ስም ክርእይዎ እዮም።"
       }
     },
     {
@@ -181,15 +247,21 @@
       "type": "text",
       "label": {
         "am": "የሥራው ዓይነት",
-        "en": "Job title"
+        "en": "Job title",
+        "om": "Gosa hojii",
+        "ti": "ናይ ስራሕ መዓርግ"
       },
       "simple": {
         "am": "ሥራ",
-        "en": "Job"
+        "en": "Job",
+        "om": "Hojii",
+        "ti": "ስራሕ"
       },
       "hint": {
         "am": "ምሳሌ፦ የሽያጭ ሠራተኛ",
-        "en": "Example: Sales assistant"
+        "en": "Example: Sales assistant",
+        "om": "Fakkeenyaaf: Gargaaraa gurgurtaa",
+        "ti": "ንኣብነት፦ ናይ ሽያጥ ሓጋዚ"
       },
       "icon": "work",
       "required": true,
@@ -204,11 +276,15 @@
       ],
       "simpleHint": {
         "am": "ምሳሌ፦ የሽያጭ ሠራተኛ።",
-        "en": "Example: sales assistant."
+        "en": "Example: sales assistant.",
+        "om": "Fakkeenyaaf: gargaaraa gurgurtaa.",
+        "ti": "ንኣብነት፦ ናይ ሽያጥ ሓጋዚ።"
       },
       "why": {
         "am": "ተማሪዎች በሥራው ስም ይፈልጋሉ።",
-        "en": "Learners search for jobs by this title."
+        "en": "Learners search for jobs by this title.",
+        "om": "Barattoonni hojii mataduree kanaan barbaadu.",
+        "ti": "ተማሃሮ በዚ መዓርግ ስራሕ ይደልዩ።"
       }
     },
     {
@@ -216,15 +292,21 @@
       "type": "radio",
       "legend": {
         "am": "የሥራው ክፍል",
-        "en": "Job category"
+        "en": "Job category",
+        "om": "Damee hojii",
+        "ti": "ናይ ስራሕ ዓውዲ"
       },
       "simple": {
         "am": "ክፍል",
-        "en": "Category"
+        "en": "Category",
+        "om": "Damee",
+        "ti": "ናይ ስራሕ ክፍሊ"
       },
       "hint": {
         "am": "አንዱን ይምረጡ።",
-        "en": "Choose one from the list."
+        "en": "Choose one from the list.",
+        "om": "Tarree keessaa tokko filadhaa.",
+        "ti": "ካብቲ ዝርዝር ሓደ ምረጹ።"
       },
       "icon": "list",
       "required": false,
@@ -239,7 +321,9 @@
           "value": "office",
           "label": {
             "am": "ቢሮ እና አስተዳደር",
-            "en": "Office and admin"
+            "en": "Office and admin",
+            "om": "Hojii waajjiraa fi bulchiinsaa",
+            "ti": "ቢሮን ምምሕዳርን"
           },
           "icon": "desk"
         },
@@ -247,7 +331,9 @@
           "value": "sales",
           "label": {
             "am": "ሽያጭ",
-            "en": "Sales"
+            "en": "Sales",
+            "om": "Gurgurtaa",
+            "ti": "ሽያጥ"
           },
           "icon": "work"
         },
@@ -255,7 +341,9 @@
           "value": "teaching",
           "label": {
             "am": "ማስተማር",
-            "en": "Teaching"
+            "en": "Teaching",
+            "om": "Barsiisummaa",
+            "ti": "ትምህርቲ"
           },
           "icon": "book"
         },
@@ -263,7 +351,9 @@
           "value": "it",
           "label": {
             "am": "ቴክኖሎጂ",
-            "en": "Technology"
+            "en": "Technology",
+            "om": "Teeknooloojii",
+            "ti": "ቴክኖሎጂ"
           },
           "icon": "screen"
         },
@@ -271,7 +361,9 @@
           "value": "hospitality",
           "label": {
             "am": "ሆቴል እና መስተንግዶ",
-            "en": "Hospitality"
+            "en": "Hospitality",
+            "om": "Keessummeessummaa",
+            "ti": "ሆቴልን መስተንግዶን"
           },
           "icon": "building"
         },
@@ -279,14 +371,18 @@
           "value": "other",
           "label": {
             "am": "ሌላ",
-            "en": "Other"
+            "en": "Other",
+            "om": "Kan biraa",
+            "ti": "ካልእ"
           },
           "icon": "doc"
         }
       ],
       "why": {
         "am": "ተማሪዎች በዘርፋቸው ውስጥ ያለውን ሥራ እንዲያገኙ ይረዳል።",
-        "en": "It helps learners find the jobs that match their field."
+        "en": "It helps learners find the jobs that match their field.",
+        "om": "Barattoonni hojii damee isaaniitiin wal simu akka argatan gargaara.",
+        "ti": "ተማሃሮ ምስ ዓውዶም ዝሰማማዕ ስራሕ ንኽረኽቡ ይሕግዞም።"
       }
     },
     {
@@ -294,19 +390,27 @@
       "type": "checkbox",
       "legend": {
         "am": "ድርጅትዎ ምን ይሰጣል?",
-        "en": "What does your workplace offer?"
+        "en": "What does your workplace offer?",
+        "om": "Iddoon hojii keessan maaliin mijeessa?",
+        "ti": "ናይ ስራሕ ቦታኹም እንታይ ዓይነት ምምዕርራይ የቕርብ?"
       },
       "simple": {
         "am": "እርዳታ",
-        "en": "Support"
+        "en": "Support",
+        "om": "Gargaarsa",
+        "ti": "ትካልኩም እንታይ ይህብ?"
       },
       "hint": {
         "am": "የማይሰጡትን አይምረጡ። ባዶ መተው ይችላሉ።",
-        "en": "Only choose what you offer. You can leave this empty."
+        "en": "Only choose what you offer. You can leave this empty.",
+        "om": "Waan qabdan qofa filadhaa. Duwwaa dhiisuu dandeessu.",
+        "ti": "እትህብዎ ጥራይ ምረጹ። ባዶ ክትሓድግዎ'ውን ትኽእሉ ኢኹም።"
       },
       "why": {
-        "am": "ተማሪዎች ሥራ ከመመልከታቸው በፊት ምን እንደሚገኝ ያውቃሉ።",
-        "en": "Learners see this before they apply, so nobody has to disclose a disability to ask."
+        "am": "ተማሪዎች ሥራ ከማመልከታቸው በፊት ምን እንደሚገኝ ያውቃሉ።",
+        "en": "Learners see this before they apply, so nobody has to disclose a disability to ask.",
+        "om": "Barattoonni osoo hin galmaayin dura kana argu, kanaaf namni tokkollee waa'ee miidhamasaa dubbachuun isa hin dhibu.",
+        "ti": "ተማሃሮ ቅድሚ ምምልካቶም ነዚ ይርእይዎ፣ ስለዚ ዋላ ሓደ ሰብ ጉድኣት ኣካል ከይገለጸ ሓገዝ ይረክብ።"
       },
       "icon": "help",
       "required": false,
@@ -321,7 +425,9 @@
           "value": "step-free",
           "label": {
             "am": "ደረጃ የሌለው መግቢያ",
-            "en": "Step-free entrance"
+            "en": "Step-free entrance",
+            "om": "Seensa sadarkaa hin qabne",
+            "ti": "ደረጃ ዘይብሉ ምእተዊ (ንመንኰርኰር ምቹእ)"
           },
           "icon": "door"
         },
@@ -329,7 +435,9 @@
           "value": "remote",
           "label": {
             "am": "ከቤት መሥራት",
-            "en": "Remote work"
+            "en": "Remote work",
+            "om": "Mana taa'anii hojjechuu",
+            "ti": "ካብ ገዛ ምስራሕ ይከኣል እዩ"
           },
           "icon": "home"
         },
@@ -337,7 +445,9 @@
           "value": "flexible",
           "label": {
             "am": "ተለዋዋጭ ሰዓት",
-            "en": "Flexible hours"
+            "en": "Flexible hours",
+            "om": "Sa'aatii jijjiiramaa",
+            "ti": "ተለዋዋጢ ሰዓታት"
           },
           "icon": "clock"
         },
@@ -345,38 +455,50 @@
           "value": "screen-reader",
           "label": {
             "am": "የስክሪን አንባቢ ሶፍትዌር",
-            "en": "Screen-reader software"
+            "en": "Screen-reader software",
+            "om": "Sooftiweerii iskiriinii dubbisu",
+            "ti": "ናይ ስክሪን ኣንባቢ ሶፍትዌር"
           },
           "icon": "speaker",
           "simple": {
             "am": "የስክሪን አንባቢ",
-            "en": "Screen reader"
+            "en": "Screen reader",
+            "om": "Iskiriinii dubbisaa",
+            "ti": "ስክሪን ኣንባቢ"
           }
         },
         {
           "value": "sign-language",
           "label": {
             "am": "የምልክት ቋንቋ አስተርጓሚ",
-            "en": "Sign language interpreter"
+            "en": "Sign language interpreter",
+            "om": "Turjumaana afaan mallattoo",
+            "ti": "ናይ ምልክት ቋንቋ ኣተርጓሚ"
           },
           "icon": "hands",
           "simple": {
             "am": "አስተርጓሚ",
-            "en": "Interpreter"
+            "en": "Interpreter",
+            "om": "Turjumaana",
+            "ti": "ናይ ምልክት ቋንቋ"
           }
         },
         {
           "value": "adapted-desk",
           "label": {
             "am": "ምቹ የሥራ ጠረጴዛ",
-            "en": "Adapted desk"
+            "en": "Adapted desk",
+            "om": "Minjaala mijataa",
+            "ti": "ምቹእ መንበር ወይ ጠረጴዛ"
           },
           "icon": "desk"
         }
       ],
       "simpleWhy": {
         "am": "ተማሪዎች ሥራውን ከማመልከታቸው በፊት ያለውን እርዳታ ያያሉ።",
-        "en": "Learners see this before they apply, so you can get help without saying you have a disability."
+        "en": "Learners see this before they apply, so you can get help without saying you have a disability.",
+        "om": "Barattoonni osoo hin galmaayin dura gargaarsa jiru argu.",
+        "ti": "ተማሃሮ ቅድሚ ምምልካቶም ነዚ ይርእይዎ፣ ጉድኣት ኣካል ከይገለጽኩም ሓገዝ ክትረኽቡ ትኽእሉ ኢኹም።"
       }
     },
     {
@@ -384,15 +506,21 @@
       "type": "tel",
       "label": {
         "am": "የመገኛ ስልክ ቁጥር",
-        "en": "Contact phone"
+        "en": "Contact phone",
+        "om": "Bilbila qunnamtii",
+        "ti": "ናይ ርክብ ስልኪ ቍጽሪ ጽሓፉ"
       },
       "simple": {
         "am": "ስልክ",
-        "en": "Phone"
+        "en": "Phone",
+        "om": "Bilbila",
+        "ti": "ናይ ርክብ ስልኪ"
       },
       "hint": {
         "am": "ምሳሌ፦ 0912 345 678",
-        "en": "Example: 0912 345 678"
+        "en": "Example: 0912 345 678",
+        "om": "Fakkeenyaaf: 0912 345 678",
+        "ti": "ንኣብነት፦ 0912 345 678"
       },
       "icon": "phone",
       "inputmode": "tel",
@@ -410,11 +538,15 @@
       "autocomplete": "tel",
       "why": {
         "am": "ተማሪዎች ስለ ሥራው ለመጠየቅ ሊደውሉ ይችላሉ።",
-        "en": "Learners may call this number to ask about the job."
+        "en": "Learners may call this number to ask about the job.",
+        "om": "Barattoonni waa'ee hojii kanaa gaafachuuf bilbila kanatti bilbila ta'a.",
+        "ti": "ተማሃሮ ብዛዕባ እቲ ስራሕ ንምሕታት በዚ ስልኪ ክድውሉ ይኽእሉ እዮም።"
       },
       "simpleWhy": {
         "am": "ተማሪዎች ስለ ሥራው እንዲጠይቁ።",
-        "en": "So learners can ask about the job."
+        "en": "So learners can ask about the job.",
+        "om": "Barattoonni waa'ee hojii akka gaafataniif.",
+        "ti": "ተማሃሮ ብዛዕባ እቲ ስራሕ ንምሕታት ይጠቅም።"
       }
     },
     {
@@ -422,12 +554,16 @@
       "type": "review",
       "label": {
         "am": "መረጃዎን ይመልከቱ",
-        "en": "Check your information"
+        "en": "Check your information",
+        "om": "Odeeffannoo keessan mirkaneeffadhaa",
+        "ti": "ሓበሬታኹም ርኣዩ"
       },
       "icon": "check",
       "hint": {
         "am": "የፈለጉትን ማስተካከል ይችላሉ።",
-        "en": "You can change anything here."
+        "en": "You can change anything here.",
+        "om": "Asirratti waan kamiyyuu jijjiiruu dandeessu.",
+        "ti": "ንዝኾነ ዝመለስክምዎ ነገር ንምቕያር ኣብ ልዕሊኡ ጠውቑ።"
       }
     },
     {
@@ -435,12 +571,16 @@
       "type": "submit",
       "label": {
         "am": "ማረጋገጫ",
-        "en": "Confirmation"
+        "en": "Confirmation",
+        "om": "Mirkaneessa",
+        "ti": "መረጋገጺ"
       },
       "icon": "check",
       "submitLabel": {
         "am": "ላክ",
-        "en": "Send"
+        "en": "Send",
+        "om": "Ergi",
+        "ti": "ምዝገባ ዛዝም"
       },
       "required": true,
       "pii": "none",
@@ -455,120 +595,174 @@
           "value": "confirm-true",
           "label": {
             "am": "የሰጠሁት መረጃ እውነት ነው።",
-            "en": "The information I gave is true."
+            "en": "The information I gave is true.",
+            "om": "Odeeffannoon ani kenne dhugaa dha.",
+            "ti": "ዝሃብክዎ ሓበሬታ ሓቂ ምዃኑ አረጋግጽ።"
           },
           "required": true,
           "simple": {
             "am": "መረጃዬ እውነት ነው።",
-            "en": "The details I gave are true."
+            "en": "The details I gave are true.",
+            "om": "Odeeffannoon koo dhugaa dha.",
+            "ti": "እዚ ክፍቲ ስራሕ ተበጻሒ ኮይኑ ንኽወጽእ ተሰማሚዐ ኣለኹ።"
           }
         }
       ],
       "readAloud": true,
       "simple": {
         "am": "ለመላክ ዝግጁ ነዎት?",
-        "en": "Ready to send?"
+        "en": "Ready to send?",
+        "om": "Erguuf qophiidhaa?",
+        "ti": "ክትውድኡ ድሉዋት ዲኹም?"
       }
     }
   ],
   "errors": {
     "required": {
       "am": "ይህን መሙላት ያስፈልጋል።",
-      "en": "This needs an answer."
+      "en": "This needs an answer.",
+      "om": "Iddoon kun guutamuu qaba.",
+      "ti": "እዚ ቦታ ክምላእ ኣለዎ።"
     },
     "phone-et": {
       "am": "ስልክ ቁጥሩ ትክክል አይመስልም። ምሳሌ፦ 0912345678",
-      "en": "That phone number does not look right. Example: 0912345678"
+      "en": "That phone number does not look right. Example: 0912345678",
+      "om": "Mee lakkoofsa bilbilaa Itoophiyaa sirrii galchaa (fakkeenyaaf 0911234567).",
+      "ti": "እቲ ናይ ስልኪ ቍጽሪ ትኽክል ኣይመስልን። ንኣብነት፦ 0912345678"
     },
     "maxLength": {
       "am": "በጣም ረጅም ነው።",
-      "en": "That is too long."
+      "en": "That is too long.",
+      "om": "Qubee {n} caaluu hin qabu.",
+      "ti": "ካብ {n} ፊደላት ክበዝሕ የብሉን።"
     },
     "exclusiveOption": {
       "am": "ይህን ከመረጡ ሌላ መምረጥ አያስፈልግም።",
-      "en": "If you choose this, you do not need to choose anything else."
+      "en": "If you choose this, you do not need to choose anything else.",
+      "om": "Yoo kana filattan kanneen biroo dhiisaa.",
+      "ti": "ነዚ እንተመሪጽኩም ካልእ ክትመርጹ ኣየድልየኩምን እዩ።"
     },
     "minValue": {
       "am": "ቁጥሩ በጣም ትንሽ ነው።",
-      "en": "That number is too small."
+      "en": "That number is too small.",
+      "om": "Yoo xiqqaate {n} ta'uu qaba.",
+      "ti": "ብውሑዱ {n} ክኸውን ኣለዎ።"
     },
     "maxValue": {
       "am": "ቁጥሩ በጣም ትልቅ ነው።",
-      "en": "That number is too large."
+      "en": "That number is too large.",
+      "om": "{n} caaluu hin qabu.",
+      "ti": "ካብ {n} ክበዝሕ የብሉን።"
     },
     "email": {
       "am": "ኢሜይሉ ትክክል አይመስልም።",
-      "en": "That email does not look right."
+      "en": "That email does not look right.",
+      "om": "Mee teessoo imeelii sirrii galchaa (fakkeenyaaf name@example.com).",
+      "ti": "ትኽክለኛ ኢሜይል ኣድራሻ የእትዉ (ንኣብነት name@example.com)።"
     },
     "minLength": {
       "am": "ቢያንስ {n} ፊደሎች ያስፈልጋሉ።",
-      "en": "Please write at least {n} letters."
+      "en": "Please write at least {n} letters.",
+      "om": "Yoo xiqqaate qubee {n} barreessaa.",
+      "ti": "ብውሑዱ {n} ፊደላት ጽሓፉ።"
     }
   },
   "contentReview": {
     "am": "የመጀመሪያዎቹ መስመሮች በአማርኛ ተናጋሪ ተረጋግጠዋል። በ13 ኅዳር የተጨመሩት አዲስ መስመሮች ገና አልተረጋገጡም።",
-    "en": "The original lines were reviewed by a native Amharic speaker. Lines added 13 Nov are awaiting review."
+    "en": "The original lines were reviewed by a native Amharic speaker. Lines added 13 Nov are awaiting review.",
+    "om": "Sararoonni jalqabaa mirkanaa'aniiru. Sararoonni haaraan qorannoo eegaa jiru.",
+    "ti": "ቀዳሞት መስመራት ተረጋጊጾም እዮም። ሓደሽቲ መስመራት ምጽራይ ይጽበዩ ኣለዉ።"
   },
   "ui": {
     "next": {
       "am": "ቀጣይ",
-      "en": "Next"
+      "en": "Next",
+      "om": "Itti-aansi",
+      "ti": "ቀጻሊ"
     },
     "back": {
       "am": "ተመለስ",
-      "en": "Back"
+      "en": "Back",
+      "om": "Duubatti",
+      "ti": "ንድሕሪት"
     },
     "edit": {
       "am": "አስተካክል",
-      "en": "Change"
+      "en": "Change",
+      "om": "Gulaali",
+      "ti": "ኣዐሪ"
     },
     "readAloud": {
       "am": "ያዳምጡ",
-      "en": "Read the question"
+      "en": "Read the question",
+      "om": "Dhaggeeffadhaa",
+      "ti": "ስምዑ"
     },
     "speak": {
       "am": "በድምጽ ይመልሱ",
-      "en": "Speak your answer"
+      "en": "Speak your answer",
+      "om": "Sagaleedhaan deebisi",
+      "ti": "ብድምጺ መልሱ"
     },
     "weHeard": {
       "am": "የሰማነው፦",
-      "en": "We heard:"
+      "en": "We heard:",
+      "om": "Wanti dhageenye:",
+      "ti": "ዝሰማዕናዮ፦"
     },
     "accept": {
       "am": "ትክክል ነው",
-      "en": "That is right"
+      "en": "That is right",
+      "om": "Sirrii dha",
+      "ti": "ትኽክል እዩ"
     },
     "retry": {
       "am": "እንደገና ሞክር",
-      "en": "Try again"
+      "en": "Try again",
+      "om": "Irra deebi'ii yaali",
+      "ti": "ደጊምካ ፈትን"
     },
     "typeInstead": {
       "am": "በጽሑፍ መጻፍ",
-      "en": "Type instead"
+      "en": "Type instead",
+      "om": "Barreessi",
+      "ti": "ብጽሑፍ ምረጽ"
     },
     "optional": {
       "am": "ባይሞሉም ይቻላል",
-      "en": "Optional"
+      "en": "Optional",
+      "om": "Dirqama miti",
+      "ti": "ግዴታ ኣይኮነን"
     },
     "errorSummary": {
       "am": "እባክዎ እነዚህን ያስተካክሉ",
-      "en": "Please fix these"
+      "en": "Please fix these",
+      "om": "Mee kanneen sirreessaa:",
+      "ti": "ብኽብረትኩም ነዚኣቶም ኣዐርዩ፦"
     },
     "notShared": {
       "am": "ይህ መረጃ ወደ ማንም አይላክም።",
-      "en": "This is not sent to anyone."
+      "en": "This is not sent to anyone.",
+      "om": "Eenyuufuu hin qoodamu",
+      "ti": "ንሓደ'ኳ ኣይክፈልን እዩ"
     },
     "stepOf": {
       "am": "ደረጃ {n} ከ {total}",
-      "en": "Step {n} of {total}"
+      "en": "Step {n} of {total}",
+      "om": "Sadarkaa {n} {total} keessaa",
+      "ti": "ደረጃ {n} ካብ {total}"
     },
     "choose": {
       "am": "አንዱን ይምረጡ",
-      "en": "Choose one"
+      "en": "Choose one",
+      "om": "Filadhaa",
+      "ti": "ምረጹ"
     }
   },
   "introSimple": {
     "am": "ያለምንም ችኮላ ቀስ ብለው ይሙሉ።",
-    "en": "Take your time. No rush."
+    "en": "Take your time. No rush.",
+    "om": "Suuta jedhaa guutaa. Jarjarri hin jiru.",
+    "ti": "ብዘይ ህጹጽነት ቀስ ኢልኩም ምልእዎ።"
   }
 }

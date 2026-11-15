@@ -1,4 +1,4 @@
-export type Lang = 'am' | 'en';
+export type Lang = 'am' | 'en' | 'om' | 'ti' | 'so';
 export type LText = Partial<Record<Lang, string>> & { en: string };
 
 export type FieldType =
@@ -43,6 +43,7 @@ export interface Step {
   optional?: boolean;
   voice?: boolean;
   readAloud?: boolean;
+  audio?: Partial<Record<Lang, string>>;
   pii?: 'none' | 'personal' | 'sensitive';
   localOnly?: boolean;
   inputmode?: string;
@@ -60,6 +61,7 @@ export interface Schema {
   id: string;
   version: string;
   kind?: string;
+  generates?: string;
   defaultLang: Lang;
   langs: Lang[];
   calendar?: string;

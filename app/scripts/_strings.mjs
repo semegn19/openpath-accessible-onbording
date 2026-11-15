@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const FORMS = ['savanna-onboard-v1', 'savanna-job-v1', 'employer-accommodations-v1'];
-export const LANGS = ['am', 'en'];
+export const LANGS = ['am', 'en', 'om', 'ti'];
 
 /** FNV-1a 32-bit. Identical to clipName() in src/audio.ts — change both or neither. */
 export const hash = (s) => {

@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Roha proposed intent v2 - never execution authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "utteranceId",
+    "mapId",
+    "mapVersion",
+    "intent",
+    "targetId",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0"
+    },
+    "utteranceId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+    },
+    "mapId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+    },
+    "mapVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "intent": {
+      "enum": [
+        "text_scale",
+        "simple_mode",
+        "contrast",
+        "reduced_motion",
+        "read",
+        "explain",
+        "focus",
+        "navigate",
+        "search",
+        "filter",
+        "propose_answer",
+        "choose_file",
+        "review",
+        "request_submission",
+        "request_support",
+        "pause",
+        "resume",
+        "undo",
+        "reset_preferences"
+      ]
+    },
+    "targetId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "text_scale"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "percent"
+            ],
+            "properties": {
+              "percent": {
+                "type": "integer",
+                "enum": [
+                  100,
+                  125,
+                  150,
+                  175,
+                  200
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "contrast"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "theme"
+            ],
+            "properties": {
+              "theme": {
+                "enum": [
+                  "default",
+                  "high-contrast"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "simple_mode",
+              "reduced_motion"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "enabled"
+            ],
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "search",
+              "filter"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "maxLength": 500
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "propose_answer"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "maxLength": 4000
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "intent": {
+            "enum": [
+              "read",
+              "explain",
+              "focus",
+              "navigate",
+              "choose_file",
+              "review",
+              "request_submission",
+              "request_support",
+              "pause",
+              "resume",
+              "undo",
+              "reset_preferences"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "maxProperties": 0
+          }
+        }
+      }
+    }
+  ]
+}

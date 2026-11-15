@@ -5,6 +5,7 @@ import { Icon } from './icons';
 import { c } from './copy';
 
 const EC_MONTHS = ['መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'];
+const EC_MONTHS_OM = ['Fulbaana', 'Onkololeessa', 'Sadaasa', 'Muddee', 'Amajjii', 'Guraandhala', 'Bitooteessa', 'Ebla', 'Caamsaa', 'Waxabajjii', 'Adooleessa', 'Hagayya', 'Phaagumee'];
 
 const isGroup = (type: Step['type']) => type === 'radio' || type === 'checkbox' || type === 'language';
 
@@ -89,6 +90,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
               onChange={() => onChange(arr.includes(o.value) ? arr.filter((x) => x !== o.value) : [...arr, o.value])}
               aria-describedby={describedBy || undefined}
               aria-invalid={error ? true : undefined}
+              aria-errormessage={error ? errorId : undefined}
             />
             <span className="op-option-label">{optionText(o, lang, simple)}</span>
           </label>
@@ -119,6 +121,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
           />
         );
       }
@@ -133,6 +136,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
           />
         );
       case 'select':
@@ -145,6 +149,7 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             onChange={(e) => setStr(e.target.value)}
             aria-describedby={describedBy || undefined}
             aria-invalid={error ? true : undefined}
+            aria-errormessage={error ? errorId : undefined}
           >
             <option value="">{t(schema.ui?.choose, lang)}</option>
             {(step.options ?? []).map((o: Option) => (
@@ -152,23 +157,86 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
             ))}
           </select>
         );
-      case 'file':
+      case 'file': {
+        const fileVal = typeof value === 'object' && value !== null ? (value as { name?: string; data?: string; size?: number }) : typeof value === 'string' && value ? { name: value } : undefined;
+        const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file) {
+            onChange(undefined);
+            return;
+          }
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const img = new Image();
+              img.onload = () => {
+                const maxDim = 400;
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                  if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                  } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                  }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                const sizeKb = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
+                onChange({
+                  name: file.name,
+                  type: 'image/jpeg',
+                  size: sizeKb,
+                  data: compressedDataUrl,
+                });
+              };
+              img.src = reader.result as string;
+            };
+            reader.readAsDataURL(file);
+          } else {
+            onChange({
+              name: file.name,
+              size: Math.round(file.size / 1024),
+            });
+          }
+        };
+
         return (
-          <div>
+          <div className="op-file-wrap">
             <input
               id={baseId}
               className="op-input"
               type="file"
               aria-labelledby={headingId}
               accept={step.accept}
-              onChange={(e) => setStr(e.target.files?.[0]?.name ?? '')}
+              onChange={onFileChange}
               aria-describedby={describedBy || undefined}
+              aria-invalid={error ? true : undefined}
+              aria-errormessage={error ? errorId : undefined}
             />
-            <p className="op-hint">
-              {c('file.demoNote', lang)}
-            </p>
+            {fileVal?.data ? (
+              <div className="op-file-preview" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <img src={fileVal.data} alt="" aria-hidden="true" style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ccc' }} />
+                <div>
+                  <div style={{ fontWeight: 600 }}>{fileVal.name}</div>
+                  <div className="op-hint" style={{ marginTop: 0 }}>
+                    {c('file.compressed', lang)} {fileVal.size ? `(${fileVal.size} KB)` : ''}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="op-hint">
+                {c('file.demoNote', lang)}
+              </p>
+            )}
           </div>
         );
+      }
       case 'date-ec-gc': {
         const v = (value as { year?: string; month?: string; day?: string; yearOnly?: boolean } | undefined) ?? {};
         const set = (patch: Partial<typeof v>) => onChange({ ...v, ...patch });
@@ -176,22 +244,25 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           <div className="op-date">
             <label className="op-sr" htmlFor={`${baseId}-year`}>{c('date.year', lang)}</label>
             <input id={`${baseId}-year`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.year', lang)}
-              value={v.year ?? ''} onChange={(e) => set({ year: e.target.value })} aria-describedby={describedBy || undefined} />
+              value={v.year ?? ''} onChange={(e) => set({ year: e.target.value })}
+              aria-describedby={describedBy || undefined} aria-invalid={error ? true : undefined} aria-errormessage={error ? errorId : undefined} />
             {!v.yearOnly && (
               <>
                 <label className="op-sr" htmlFor={`${baseId}-month`}>{c('date.month', lang)}</label>
                 <input id={`${baseId}-month`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.month', lang)}
-                  value={v.month ?? ''} onChange={(e) => set({ month: e.target.value })} aria-describedby={describedBy || undefined} />
+                  value={v.month ?? ''} onChange={(e) => set({ month: e.target.value })}
+                  aria-describedby={describedBy || undefined} aria-invalid={error ? true : undefined} aria-errormessage={error ? errorId : undefined} />
                 <label className="op-sr" htmlFor={`${baseId}-day`}>{c('date.day', lang)}</label>
                 <input id={`${baseId}-day`} className="op-input op-input-sm" inputMode="numeric" placeholder={c('date.day', lang)}
-                  value={v.day ?? ''} onChange={(e) => set({ day: e.target.value })} aria-describedby={describedBy || undefined} />
+                  value={v.day ?? ''} onChange={(e) => set({ day: e.target.value })}
+                  aria-describedby={describedBy || undefined} aria-invalid={error ? true : undefined} aria-errormessage={error ? errorId : undefined} />
               </>
             )}
             <label className="op-check">
               <input type="checkbox" checked={!!v.yearOnly} onChange={(e) => set({ yearOnly: e.target.checked, month: undefined, day: undefined })} />
               <span>{c('date.yearOnly', lang)}</span>
             </label>
-            <p className="op-hint">{c('date.hint', lang)}{lang === 'am' ? '' : ` (${EC_MONTHS[0]}…)`}</p>
+            <p className="op-hint">{c('date.hint', lang)}{lang === 'am' || lang === 'ti' ? '' : ` (${lang === 'om' ? EC_MONTHS_OM[0] : EC_MONTHS[0]}…)`}</p>
           </div>
         );
       }
@@ -227,28 +298,42 @@ export function Field({ headingId, step, schema, lang, simple, value, errorRule,
           )}
           {hint && <p id={hintId} className="op-hint">{hint}</p>}
           <div className="op-options">
-            {(step.options ?? []).map((o) => {
-              const arr = Array.isArray(value) ? (value as string[]) : [];
-              const single = step.type === 'radio' || step.type === 'language';
-              const checked = single ? value === o.value : arr.includes(o.value);
-              return (
-                <label key={o.value} className="op-option">
-                  <input
-                    type={step.type === 'checkbox' ? 'checkbox' : 'radio'}
-                    name={step.id}
-                    value={o.value}
-                    checked={checked}
-                    onChange={() => (step.type === 'checkbox' ? toggleInArray(o.value, o.exclusive, exclusiveValue) : onChange(o.value))}
-                    aria-describedby={describedBy || undefined}
-                    aria-invalid={error ? true : undefined}
-                  />
-                  <span className="op-option-label" lang={o.lang ?? undefined}>
-                    {o.icon && <Icon name={o.icon} />}
-                    {optionText(o, lang, simple)}
-                  </span>
-                </label>
-              );
-            })}
+            {(() => {
+              const baseOpts = step.options ?? [];
+              const opts = step.type === 'language' && !baseOpts.some((o) => o.value === 'so')
+                ? [
+                    ...baseOpts,
+                    {
+                      value: 'so',
+                      label: { en: 'Soomaali' },
+                      icon: 'letter-so',
+                    },
+                  ]
+                : baseOpts;
+              return opts.map((o) => {
+                const arr = Array.isArray(value) ? (value as string[]) : [];
+                const single = step.type === 'radio' || step.type === 'language';
+                const checked = single ? value === o.value : arr.includes(o.value);
+                return (
+                  <label key={o.value} className="op-option">
+                    <input
+                      type={step.type === 'checkbox' ? 'checkbox' : 'radio'}
+                      name={step.id}
+                      value={o.value}
+                      checked={checked}
+                      onChange={() => (step.type === 'checkbox' ? toggleInArray(o.value, o.exclusive, exclusiveValue) : onChange(o.value))}
+                      aria-describedby={describedBy || undefined}
+                      aria-invalid={error ? true : undefined}
+                      aria-errormessage={error ? errorId : undefined}
+                    />
+                    <span className="op-option-label" lang={o.lang ?? undefined}>
+                      {o.icon && <Icon name={o.icon} />}
+                      {optionText(o, lang, simple)}
+                    </span>
+                  </label>
+                );
+              });
+            })()}
           </div>
         </fieldset>
       ) : (

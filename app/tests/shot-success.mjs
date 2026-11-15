@@ -6,7 +6,7 @@ const b = await chromium.launch();
 const c = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 const p = await c.newPage();
 await goto(p, URL);
-await answer(p, { prefs: ['read-aloud'], assistance: 'call-me' });   // a preference AND a request
+await answer(p, { prefs: ['read-aloud'] });
 await submitFromReview(p);
 await p.waitForTimeout(1500);
 await p.screenshot({ path: 'screenshots/4-success.png' });
