@@ -249,6 +249,16 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       return { intent: 'chat', targetId: 'page.main', payload: {}, message: msg };
     }
 
+    // Statement / Consent screen (e.g. referral agreement to share name/phone)
+    if (/(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን\s*ሰጥቻለሁ|ይሰጥ|አዎ\s*(?:ተስማምቻለሁ|እስማማለሁ|ይሰጥ)?|i\s*agree|agree|consent|walii\s*nan\s*gala|ተሰማሚዐ)/iu.test(utt)) {
+      return {
+        intent: 'propose_answer',
+        targetId: 'page.main',
+        payload: { value: 'agree-share' },
+        message: isAm ? 'ስምምነትዎ ተረጋግጧል።' : 'Consent confirmed.'
+      };
+    }
+
     // Step 5: ID route options (Refer, Fayda, Kebele, Refugee, Other)
     if (/(?:ሰነድ|መታወቂያ|ፎቶ)\s*(?:የለኝም|የለም)|የለኝም|የለም|የብለይን|hin\s*qabu|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|tumsa|refer|partner|no\s*id|no\s*document|don'?t\s*have/iu.test(utt)) {
       return { intent: 'propose_answer', targetId: 'page.main', payload: { value: 'refer' }, message: isAm ? '«ሰነድ የለኝም» ተመርጧል።' : '"Refer me to a partner" selected.' };

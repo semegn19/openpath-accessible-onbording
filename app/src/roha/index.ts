@@ -800,20 +800,37 @@ export class RohaSDK {
       if (topLangBtn) { try { topLangBtn.click(); } catch {} }
     }
 
-    try {
-      const proto = window.HTMLInputElement.prototype;
-      const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
-      if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
-      if (setChecked) {
-        setChecked.call(input, false);
-        setChecked.call(input, true);
-      } else input.checked = true;
-    } catch {}
+    if (input.type === 'checkbox') {
+      if (!input.checked) {
+        input.click();
+        if (!input.checked) {
+          try {
+            const proto = window.HTMLInputElement.prototype;
+            const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
+            if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
+            if (setChecked) setChecked.call(input, true);
+            else input.checked = true;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          } catch {}
+        }
+      }
+    } else {
+      try {
+        const proto = window.HTMLInputElement.prototype;
+        const setChecked = Object.getOwnPropertyDescriptor(proto, 'checked')?.set;
+        if ((input as any)._valueTracker) (input as any)._valueTracker.setValue('');
+        if (setChecked) {
+          setChecked.call(input, false);
+          setChecked.call(input, true);
+        } else input.checked = true;
+      } catch {}
 
-    try { targetLabel.click(); } catch {}
-    try { input.click(); } catch {}
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
+      try { targetLabel.click(); } catch {}
+      try { input.click(); } catch {}
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     const labelSpan = targetLabel.querySelector('.op-option-label') || targetLabel;
     const rawText = (labelSpan.textContent || targetLabel.textContent || '').trim();
@@ -821,9 +838,10 @@ export class RohaSDK {
     const cleanChosen = rawText.replace(/^[A-Za-z0-9ሀ-ፐ]\s*[\.\)፦\-:]\s*/u, '').trim() || fallbackText || input.value;
     // For spoken announcements, shorten parenthetical text: e.g. "ሰነድ የለኝም (በአጋር ድርጅት በኩል እገዛ እፈልጋለሁ)" -> "ሰነድ የለኝም"
     const spokenChosen = cleanChosen.replace(/\s*\(.*?\)\s*/g, ' ').replace(/\s+/g, ' ').trim() || cleanChosen;
-    const msg = isAm
-      ? `«${spokenChosen}» ተመርጧል።`
-      : `"${spokenChosen}" selected.`;
+    const isConsent = input.type === 'checkbox' && (input.value === 'agree-share' || targetLabel.classList.contains('op-check') || cleanChosen.includes('ተስማምቻለሁ') || cleanChosen.includes('ይሰጥ'));
+    const msg = isConsent
+      ? (isAm ? 'ስምምነትዎ ተረጋግጧል።' : 'Consent confirmed.')
+      : (isAm ? `«${spokenChosen}» ተመርጧል።` : `"${spokenChosen}" selected.`);
 
     this.announce(msg);
     this.readExecutor.speak(msg, this.locale);
@@ -863,6 +881,18 @@ export class RohaSDK {
       if (referLabel) {
         const inp = referLabel.querySelector<HTMLInputElement>('input');
         if (inp) return this.selectOptionAndAdvance(referLabel, inp);
+      }
+    }
+
+    // Specific check for consent / agree-share
+    if (/(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን|ይሰጥ|agree|consent)/iu.test(clean)) {
+      const agreeLabel = optionLabels.find(l => {
+        const inp = l.querySelector<HTMLInputElement>('input');
+        return inp?.value === 'agree-share' || /ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|agree|consent/i.test(l.textContent || '');
+      });
+      if (agreeLabel) {
+        const inp = agreeLabel.querySelector<HTMLInputElement>('input');
+        if (inp) return this.selectOptionAndAdvance(agreeLabel, inp);
       }
     }
 
@@ -961,6 +991,35 @@ export class RohaSDK {
     if (!raw) return false;
     const lower = raw.toLowerCase();
     const isAm = this.locale === 'am' || /[\u1200-\u137F]/.test(raw);
+
+    // 0. Consent & Agreement for statement/consent screens (e.g. referral agreement to share name/phone)
+    const isConsentPhrase = /^(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን\s*ሰጥቻለሁ|አዎ\s*(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ)?|እሺ\s*(?:ተስማምቻለሁ|እስማማለሁ)?|ይሰጥ|አዎ\s*ይሰጥ|i\s*agree|agree|i\s*consent|consent|yes\s*(?:i\s*agree)?|walii\s*nan\s*gala|walii\s*galeera|ተሰማሚዐ\s*ኣለኹ)\b/iu.test(lower) ||
+      /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነቴን|ይሰጥ|i\s*agree|i\s*consent|walii\s*nan\s*gala|ተሰማሚዐ)/iu.test(lower) ||
+      (/(?:አዎ|እሺ|yes|ok|okay)\b/iu.test(lower) && Boolean(document.querySelector('#op-main label.op-check input[type="checkbox"], #op-main .op-options input[type="checkbox"]')));
+
+    if (isConsentPhrase) {
+      const consentLabel = document.querySelector<HTMLElement>('#op-main label.op-check, #op-main .op-options label');
+      const consentCheckbox = consentLabel?.querySelector<HTMLInputElement>('input[type="checkbox"]') ||
+        document.querySelector<HTMLInputElement>('#op-main input[type="checkbox"]');
+      if (consentCheckbox && consentLabel) {
+        return this.selectOptionAndAdvance(consentLabel, consentCheckbox, isAm ? 'ስምምነት' : 'Consent');
+      }
+    }
+
+    // 0b. Refusal / Decline on consent screens
+    if (/(?:አልስማማም|አልፈልግም|አይሆንም|አልፈቅድም|disagree|decline|don'?t\s*agree)\b/iu.test(lower)) {
+      const consentCheckbox = document.querySelector<HTMLInputElement>('#op-main label.op-check input[type="checkbox"], #op-main input[type="checkbox"]');
+      if (consentCheckbox) {
+        const msg = isAm
+          ? 'ስምምነት ካልሰጡ ወደ ኋላ ተመልሰን ሌላ አማራጭ መምረጥ እንችላለን። ወደ ኋላ እየተመለስን ነው።'
+          : 'If you do not agree, we can go back and choose another option. Going back.';
+        this.announce(msg);
+        this.readExecutor.speak(msg, this.locale);
+        const backBtn = document.querySelector<HTMLButtonElement>('#op-main button.op-btn-back, button.op-btn-back');
+        if (backBtn) setTimeout(() => backBtn.click(), 400);
+        return true;
+      }
+    }
 
     // 1. Next step / Proceed
     if (/^(?:ቀጣይ|ቀጥል|ወደፊት|ሂድ|next|continue|forward|proceed)\b/iu.test(lower) ||
@@ -1109,7 +1168,7 @@ export class RohaSDK {
       const valMatch = Boolean(val && val.length >= 2 && lower.includes(val));
 
       // Clean label text: remove punctuation and whitespace
-      const cleanLabel = labelText.replace(/[\(\)\[\],.፣፤፥/\\-]/g, ' ').replace(/\s+/g, ' ').trim();
+      const cleanLabel = labelText.replace(/[\(\)\[\],.፣፤፥።፡/\\-]/g, ' ').replace(/\s+/g, ' ').trim();
       const directMatch = cleanUtt.length >= 2 && (cleanLabel.includes(cleanUtt) || cleanUtt.includes(cleanLabel));
 
       // Specific semantic recognition for Step 5 options
@@ -1119,6 +1178,8 @@ export class RohaSDK {
       const isOther = (val === 'other' || cleanLabel.includes('ሌላ')) && /ሌላ|other|another|ፓስፖርት|መንጃ/iu.test(lower) && !/(?:የለኝም|አጋር|እገዛ)/iu.test(lower);
       const isRefer = (val === 'refer' || cleanLabel.includes('አጋር') || cleanLabel.includes('የለኝም')) &&
         /(?:የለኝም|አጋር|እገዛ|እርዳታ|በአጋር|ድርጅት|እፈልጋለሁ|refer|partner|no\s*id|no\s*document|don'?t\s*have)/iu.test(lower);
+      const isAgree = (val === 'agree-share' || cleanLabel.includes('ተስማምቻለሁ') || cleanLabel.includes('ይሰጥ')) &&
+        /(?:ተስማምቻለሁ|እስማማለሁ|ፈቅጃለሁ|ስምምነት|ስምምነቴን|ይሰጥ|agree|consent)/iu.test(lower);
 
       const isAmharicOption = /አማርኛ|amharic/i.test(labelText) || val === 'am';
       const isEnglishOption = /english|እንግሊዝኛ/i.test(labelText) || val === 'en';
@@ -1134,7 +1195,7 @@ export class RohaSDK {
         return lower.includes(w) || (root.length >= 3 && !stopWords.includes(root) && lower.includes(root));
       });
 
-      if (directMatch || valMatch || isRefer || isFayda || isKebele || isRefugee || isOther ||
+      if (directMatch || valMatch || isAgree || isRefer || isFayda || isKebele || isRefugee || isOther ||
           wordMatch || (isAmharicOption && mentionsAmharic) || (isEnglishOption && mentionsEnglish)) {
         return this.selectOptionAndAdvance(label, input);
       }
