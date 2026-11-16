@@ -149,7 +149,8 @@ export const SOMALI_TRANSLATIONS: Record<string, string> = {
   // Learner & Employer forms
   'Learner sign-up': 'Diiwaangelinta Ardayga',
   'First choose your language and any help you need. Then answer a few questions. There is no time limit.': 'Marka hore dooro luqaddaada iyo caawimaad kasta oo aad u baahan tahay. Kadibna ka jawaab dhowr su\'aalood. Ma jiro waqti xaddidan.',
-  'Employer sign-up': 'Diiwaangelinta Loo-shaqeeyaha',
+  'Employer job form': 'Foomka shaqada ee loo-shaqeeyaha',
+  'Employer sign-up': 'Foomka shaqada ee loo-shaqeeyaha',
   'Answer a few questions about your workplace. There is no time limit.': 'Ka jawaab dhowr su\'aalood oo ku saabsan goobtaada shaqada. Ma jiro waqti xaddidan.',
   'Company name': 'Magaca shirkadda',
   'Company': 'Shirkad',

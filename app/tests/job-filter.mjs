@@ -140,6 +140,82 @@ const severe = violations.filter((v) => ['critical', 'serious'].includes(v.impac
 ok(severe.length === 0, 'axe audit shows 0 serious/critical violations on /job listing page',
    severe.length ? severe.map((v) => v.id).join(', ') : 'clean');
 
+console.log('\n--- 6. Employer Job Submission Appears on /job ---');
+const empPage = await context.newPage();
+await empPage.goto(URL.replace('/job', '/employer'), { waitUntil: 'networkidle' });
+
+const brandText = (await empPage.locator('.op-brand').innerText()).trim();
+ok(brandText === 'የአሰሪ የሥራ ቅጽ' || brandText === 'Employer job form', 'Employer form has updated title', brandText);
+
+const empNext = async () => {
+  const btn = empPage.locator('.op-shell form button[type="submit"], .op-shell .op-nav button[type="submit"]').first();
+  await btn.click();
+  await empPage.waitForTimeout(200);
+};
+
+// 1. Language -> Next
+await empNext();
+
+// 2. Accessibility prefs -> Next
+await empNext();
+
+// 3. Company name
+await empPage.locator('.op-shell form .op-input').fill('Digital Bridge Ethiopia');
+await empNext();
+
+// 4. Role
+await empPage.locator('.op-shell form .op-input').fill('Inclusive Workplace Lead');
+await empNext();
+
+// 5. Job category
+await empPage.locator('.op-shell form input[type="radio"]').first().check();
+await empNext();
+
+// 6. Workplace accommodations
+const accInputs = empPage.locator('.op-shell form .op-choice input[type="checkbox"]');
+if (await accInputs.count() > 0) {
+  await accInputs.nth(0).check();
+  if (await accInputs.count() > 1) await accInputs.nth(1).check();
+}
+await empNext();
+
+// 7. Contact phone
+await empPage.locator('.op-shell form .op-input').fill('0911223344');
+await empNext();
+
+// 8. Review -> Next
+await empNext();
+
+// 9. Submit (check required confirmation checkbox, then submit)
+const confirmBox = empPage.locator('.op-shell form input[type="checkbox"]');
+if (await confirmBox.count() > 0) {
+  await confirmBox.first().check();
+}
+await empNext();
+await empPage.waitForTimeout(600);
+
+// Verify receipt screen and View Jobs link
+const viewJobsBtn = empPage.locator('.op-btn-view-jobs, a[href="/job"]');
+ok(await viewJobsBtn.count() >= 1, 'receipt offers link to view job board');
+
+// Navigate to /job
+await viewJobsBtn.click();
+await empPage.waitForTimeout(400);
+
+// Verify new employer job appears on /job
+const empJobCard = empPage.locator('.op-job-card', { hasText: 'Digital Bridge Ethiopia' });
+ok(await empJobCard.count() === 1, 'newly submitted employer job appears on /job listing');
+const empRole = (await empJobCard.locator('.op-job-title').innerText()).trim();
+ok(empRole.includes('Inclusive Workplace Lead'), 'job title matches submitted role', empRole);
+
+// Verify clicking Register on the employer job selects it
+const empApplyBtn = empJobCard.locator('.op-btn-apply');
+await empApplyBtn.click();
+await empPage.waitForTimeout(300);
+
+const empSelectedTitle = await empPage.locator('.op-selected-job-title').innerText();
+ok(empSelectedTitle.includes('Inclusive Workplace Lead'), 'selected job banner shows employer job', empSelectedTitle);
+
 await browser.close();
 
 console.log(`\n${fail ? 'FAIL' : 'PASS'} — ${fail} problem(s)`);

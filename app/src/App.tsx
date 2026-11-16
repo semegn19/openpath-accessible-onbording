@@ -15,7 +15,15 @@ import { flush, type SendState } from './api';
 import * as outbox from './outbox';
 
 import { c } from './copy';
-import { JobListingPage, SelectedJobBanner, type LocalizedJob, JOBS_LIST } from './JobFilter';
+import {
+  JobListingPage,
+  SelectedJobBanner,
+  type LocalizedJob,
+  JOBS_LIST,
+  getLocalEmployerJobs,
+  saveLocalEmployerJob,
+  mergeJobList,
+} from './JobFilter';
 import onboard from './schemas/savanna-onboard-v1.json';
 import job from './schemas/savanna-job-v1.json';
 import employer from './schemas/employer-accommodations-v1.json';
@@ -49,7 +57,10 @@ function Shell({ schema }: { schema: Schema }) {
   const [selectedJob, setSelectedJob] = useState<LocalizedJob | null>(() => {
     if (typeof window !== 'undefined') {
       const jobId = new URLSearchParams(window.location.search).get('jobId');
-      if (jobId) return JOBS_LIST.find((j) => j.id === jobId) || null;
+      if (jobId) {
+        const pool = mergeJobList(getLocalEmployerJobs(), JOBS_LIST);
+        return pool.find((j) => j.id === jobId) || null;
+      }
     }
     return null;
   });
@@ -67,7 +78,10 @@ function Shell({ schema }: { schema: Schema }) {
       if (p.get('apply') === '1') {
         setJobView('form');
         const jobId = p.get('jobId');
-        if (jobId) setSelectedJob(JOBS_LIST.find((j) => j.id === jobId) || null);
+        if (jobId) {
+          const pool = mergeJobList(getLocalEmployerJobs(), JOBS_LIST);
+          setSelectedJob(pool.find((j) => j.id === jobId) || null);
+        }
       } else if (isJobSchema) {
         setJobView('listing');
       }
@@ -593,6 +607,14 @@ function Shell({ schema }: { schema: Schema }) {
 
           {send.state === 'sent' && <p>{c('status.thanks', lang)}</p>}
 
+          {schema.id === 'employer-accommodations-v1' && (
+            <div className="op-nav op-employer-receipt-nav">
+              <a href="/job" className="op-btn op-btn-primary op-btn-view-jobs">
+                {c('jobFilter.viewJobs', lang)}
+              </a>
+            </div>
+          )}
+
           {send.state === 'queued' && send.reason !== 'full' && (
             <div className="op-nav">
               <button
@@ -772,6 +794,9 @@ function Shell({ schema }: { schema: Schema }) {
                     (payload as Record<string, unknown>).selectedJobId = selectedJob.id;
                     (payload as Record<string, unknown>).selectedJobTitle = t(selectedJob.title as any, lang);
                   }
+                  if (schema.id === 'employer-accommodations-v1') {
+                    saveLocalEmployerJob(payload as Record<string, unknown>);
+                  }
 
                   // 1. Write it down. 2. Then try to send it. Never the other way round.
                   const entry = outbox.enqueue(schema.id, payload);
@@ -787,6 +812,9 @@ function Shell({ schema }: { schema: Schema }) {
                     const mine = r.sent.find((q) => q.ref === entry.ref);
                     const left = r.still.find((q) => q.ref === entry.ref);
                     if (mine) {
+                      if (schema.id === 'employer-accommodations-v1') {
+                        saveLocalEmployerJob(payload as Record<string, unknown>, mine.id);
+                      }
                       setSend({ state: 'sent', id: mine.id, receivedAt: mine.receivedAt, stripped: mine.stripped });
                       setReceipt(outbox.lastReceipt(schema.id) ?? null);
                       postToParent('submitted', { id: mine.id, reference: entry.ref, formId: schema.id });

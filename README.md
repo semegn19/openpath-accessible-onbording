@@ -87,7 +87,7 @@ Three forms, three URLs, one engine. Each page stands alone — linkable, bookma
 |---|---|---|
 | **Learner sign-up** | `/onboard` | a student joining Savanna, with or without an ID document |
 | **Apply for a job** | `/job` | the career gateway, same engine |
-| **Employer sign-up** | `/employer` | an employer committing to accommodations |
+| **Employer job form** | `/employer` | an employer committing to accommodations |
 
 ### The flow (learner sign-up)
 

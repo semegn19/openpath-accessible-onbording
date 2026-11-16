@@ -518,11 +518,23 @@ async function handleRequest(req, res) {
       } catch {}
     }
     const employerJobs = [];
-    for (const [id, sub] of store.entries()) {
-      if (sub.formId === 'employer-accommodations-v1' && sub.answers) {
+    let submissions = [];
+    if (database) {
+      try {
+        submissions = await database.listSubmissions('employer-accommodations-v1');
+      } catch {
+        submissions = [];
+      }
+    } else {
+      submissions = [...store.values()]
+        .filter((sub) => sub.formId === 'employer-accommodations-v1')
+        .reverse();
+    }
+    for (const sub of submissions) {
+      if (sub && sub.answers) {
         const a = sub.answers;
         employerJobs.push({
-          id: `emp-${id}`,
+          id: `emp-${sub.id}`,
           title: {
             am: a.role || 'ክፍት የሥራ ቦታ',
             en: a.role || 'Open Position',
@@ -547,7 +559,7 @@ async function handleRequest(req, res) {
         });
       }
     }
-    const allJobs = [...seedJobs, ...employerJobs];
+    const allJobs = [...employerJobs, ...seedJobs];
     return send(res, 200, { jobs: allJobs, count: allJobs.length });
   }
 

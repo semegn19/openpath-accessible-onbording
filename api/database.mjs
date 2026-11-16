@@ -40,6 +40,10 @@ export async function connectDatabase(connectionString) {
       return result.rows[0]?.record;
     },
     async getSubmission(id) { return (await pool.query('SELECT record FROM roha_submissions WHERE id=$1',[id])).rows[0]?.record; },
+    async listSubmissions(formId) {
+      const result = await pool.query('SELECT record FROM roha_submissions WHERE form_id=$1 ORDER BY received_at DESC', [formId]);
+      return result.rows.map(r => r.record);
+    },
     async getConfig() { return (await pool.query('SELECT encrypted FROM roha_ai_config WHERE id=1')).rows[0]?.encrypted; },
     async setConfig(box, revision) {
       const result = revision === 0

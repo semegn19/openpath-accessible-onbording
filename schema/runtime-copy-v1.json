@@ -537,6 +537,41 @@
       "en": "No jobs match all selected accommodations. Try removing some filters.",
       "om": "Hojiin mijaawina hunda guutu hin argamne. Calaltuu muraasa hir'isaatii yaalaa.",
       "ti": "ንኹሉ ዝመረጽክምዎ መመዓራረዪ ዘማልእ ስራሕ ኣይተረኽበን። ገለ መጻረዪታት ኣውጺእኩም ፈትኑ።"
+    },
+    "jobFilter.defaultJobTitle": {
+      "am": "ክፍት የሥራ ቦታ",
+      "en": "Open Position",
+      "om": "Hojii Banaa",
+      "ti": "ክፍቲ ስራሕ",
+      "so": "Boos furan"
+    },
+    "jobFilter.defaultCompany": {
+      "am": "አሠሪ ድርጅት",
+      "en": "Employer",
+      "om": "Hojjachiisaa",
+      "ti": "ቀጣሪ",
+      "so": "Loo-shaqeeye"
+    },
+    "jobFilter.defaultLocation": {
+      "am": "አዲስ አበባ",
+      "en": "Addis Ababa",
+      "om": "Finfinnee",
+      "ti": "ኣዲስ ኣበባ",
+      "so": "Addis Ababa"
+    },
+    "jobFilter.defaultDescription": {
+      "am": "በአሠሪው የተመዘገበ ክፍት የሥራ ቦታ።",
+      "en": "Verified employer opportunity with accommodation commitments.",
+      "om": "Hojii banaa qacaraadhaan galmaa'e.",
+      "ti": "ብቀጣሪ ዝተመዝገበ ክፍቲ ናይ ስራሕ ዕድል።",
+      "so": "Fursad shaqo oo loo-shaqeeye xaqiijiyay oo leh ballanqaadyo taageero goobta shaqada."
+    },
+    "jobFilter.viewJobs": {
+      "am": "ክፍት የሥራ ቦታዎችን ይመልከቱ",
+      "en": "View job listings",
+      "om": "Tarree hojiiwwan banaa ilaalaa",
+      "ti": "ክፍቲ ናይ ስራሕ ዕድላት ርኣዩ",
+      "so": "Eeg liiska shaqooyinka"
     }
   }
 }

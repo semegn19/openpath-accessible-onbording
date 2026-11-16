@@ -31,6 +31,84 @@ export const ACCOMMODATION_OPTIONS: AccommodationOption[] = accStep?.options ?? 
 
 export const JOBS_LIST: LocalizedJob[] = (jobsData as unknown as { jobs: LocalizedJob[] }).jobs ?? [];
 
+const EMPLOYER_JOBS_KEY = 'openpath:employer-jobs';
+
+export function getLocalEmployerJobs(): LocalizedJob[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(EMPLOYER_JOBS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalEmployerJob(payload: Record<string, unknown>, id?: string): LocalizedJob {
+  const current = getLocalEmployerJobs();
+  const existingId = id ? (id.startsWith('emp-') ? id : `emp-${id}`) : `emp-local-${Date.now()}`;
+
+  const role = typeof payload.role === 'string' && payload.role.trim() ? payload.role.trim() : c('jobFilter.defaultJobTitle', 'en');
+  const company = typeof payload.company === 'string' && payload.company.trim() ? payload.company.trim() : c('jobFilter.defaultCompany', 'en');
+  const category = typeof payload['job-category'] === 'string' ? payload['job-category'] : 'other';
+  const accommodations = Array.isArray(payload.accommodations) ? (payload.accommodations as string[]) : [];
+
+  const newJob: LocalizedJob = {
+    id: existingId,
+    title: {
+      am: typeof payload.role === 'string' && payload.role.trim() ? payload.role.trim() : c('jobFilter.defaultJobTitle', 'am'),
+      en: role,
+      om: typeof payload.role === 'string' && payload.role.trim() ? payload.role.trim() : c('jobFilter.defaultJobTitle', 'om'),
+      ti: typeof payload.role === 'string' && payload.role.trim() ? payload.role.trim() : c('jobFilter.defaultJobTitle', 'ti'),
+      so: typeof payload.role === 'string' && payload.role.trim() ? payload.role.trim() : c('jobFilter.defaultJobTitle', 'so'),
+    },
+    company,
+    category,
+    accommodations,
+    location: {
+      am: c('jobFilter.defaultLocation', 'am'),
+      en: c('jobFilter.defaultLocation', 'en'),
+      om: c('jobFilter.defaultLocation', 'om'),
+      ti: c('jobFilter.defaultLocation', 'ti'),
+      so: c('jobFilter.defaultLocation', 'so'),
+    },
+    description: {
+      am: c('jobFilter.defaultDescription', 'am'),
+      en: c('jobFilter.defaultDescription', 'en'),
+      om: c('jobFilter.defaultDescription', 'om'),
+      ti: c('jobFilter.defaultDescription', 'ti'),
+      so: c('jobFilter.defaultDescription', 'so'),
+    },
+  };
+
+  const filtered = current.filter((j) => j.id !== existingId && !(j.company === company && j.title?.en === role));
+  const updated = [newJob, ...filtered];
+  try {
+    localStorage.setItem(EMPLOYER_JOBS_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('openpath:employer-jobs-updated'));
+  } catch {}
+  return newJob;
+}
+
+export function mergeJobList(priorityJobs: LocalizedJob[], secondaryJobs: LocalizedJob[]): LocalizedJob[] {
+  const seenIds = new Set<string>();
+  const seenKeys = new Set<string>();
+  const result: LocalizedJob[] = [];
+
+  for (const job of [...priorityJobs, ...secondaryJobs]) {
+    if (!job || !job.id) continue;
+    const titleEn = typeof job.title === 'object' && job.title ? job.title.en || '' : '';
+    const key = `${job.company}:${titleEn}`;
+    if (!seenIds.has(job.id) && !seenKeys.has(key)) {
+      seenIds.add(job.id);
+      seenKeys.add(key);
+      result.push(job);
+    }
+  }
+  return result;
+}
+
 export function SelectedJobBanner({
   lang,
   selectedJob,
@@ -70,6 +148,21 @@ export function JobListingPage({
   onSelectJobAndApply: (job: LocalizedJob) => void;
 }): React.JSX.Element {
   const [selectedAccs, setSelectedAccs] = useState<string[]>([]);
+  const [allJobs, setAllJobs] = useState<LocalizedJob[]>(() => {
+    return mergeJobList(getLocalEmployerJobs(), JOBS_LIST);
+  });
+
+  React.useEffect(() => {
+    const refresh = () => {
+      setAllJobs(mergeJobList(getLocalEmployerJobs(), JOBS_LIST));
+    };
+    window.addEventListener('openpath:employer-jobs-updated', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('openpath:employer-jobs-updated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
 
   const toggleAcc = (accValue: string) => {
     setSelectedAccs((prev) =>
@@ -81,11 +174,11 @@ export function JobListingPage({
 
   // Client-side accommodation matching: Zero disability disclosure to servers or employers
   const matchedJobs = useMemo(() => {
-    if (selectedAccs.length === 0) return JOBS_LIST;
-    return JOBS_LIST.filter((job) =>
-      selectedAccs.every((needed) => job.accommodations.includes(needed))
+    if (selectedAccs.length === 0) return allJobs;
+    return allJobs.filter((job) =>
+      selectedAccs.every((needed) => job.accommodations && job.accommodations.includes(needed))
     );
-  }, [selectedAccs]);
+  }, [allJobs, selectedAccs]);
 
   const countMessage = c('jobFilter.matchesCount', lang).replace(
     '{count}',
@@ -223,7 +316,7 @@ export function JobListingPage({
         <button
           type="button"
           className="op-btn op-btn-primary op-btn-continue"
-          onClick={() => onSelectJobAndApply(matchedJobs[0] || JOBS_LIST[0])}
+          onClick={() => onSelectJobAndApply(matchedJobs[0] || allJobs[0] || JOBS_LIST[0])}
         >
           {c('jobFilter.nextToRegister', lang)}
         </button>
