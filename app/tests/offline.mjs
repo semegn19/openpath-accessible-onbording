@@ -45,7 +45,7 @@ const api = spawn('node', ['../api/server.mjs'], {
   env: {
     ...process.env, PORT: String(API_PORT), DATA_DIR: dataDir,
     SCHEMA_DIR: fileURLToPath(new URL('../../schema', import.meta.url)),
-    RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0',
+    RATE_LIMIT_PER_MIN: '1000', TRUST_PROXY: '0', DATA_KEY: '',
   },
   stdio: 'ignore',
 });

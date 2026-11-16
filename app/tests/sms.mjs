@@ -70,6 +70,7 @@ ok(smsRes.ok && smsData.ok && smsData.sms?.ok, 'POST /api/sms/send-resume dispat
 console.log('\n=== 4. Browser Resume from SMS Token ===');
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await page.setExtraHTTPHeaders({ 'x-simulate-sms': 'true' });
 
 // Open the form with resume URL
 await page.goto(`${SITE}/onboard?resume=${cpData.token}`, { waitUntil: 'networkidle' });

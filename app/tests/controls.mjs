@@ -47,7 +47,7 @@ for (const form of FORMS) {
 
   const seen = [];
   let reachedReceipt = false;
-  for (let step = 0; step < 14; step++) {
+  for (let step = 0; step < 20; step++) {
     const info = await page.evaluate(() => {
       const root = document.querySelector('.op-root');
       const btns = [...(root?.querySelectorAll('button') ?? [])];

@@ -219,7 +219,7 @@ export function JobListingPage({
       </div>
 
       {/* Action to proceed to register / apply */}
-      <div className="op-job-listing-footer">
+      <div className="op-nav op-job-listing-footer">
         <button
           type="button"
           className="op-btn op-btn-primary op-btn-continue"

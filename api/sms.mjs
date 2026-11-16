@@ -7,6 +7,12 @@
 const SMSETHIOPIA_ENDPOINT = 'https://smsethiopia.com/api/sms/send';
 const ESMS_ENDPOINT = 'https://sms.esmsafrica.io/api/messages/send';
 
+const DUMMY_TEST_NUMBERS = new Set([
+  '+251912345678', '251912345678',
+  '+251900000000', '251900000000',
+  '+251911111111', '251911111111',
+]);
+
 export function normalizePhone(raw) {
   if (!raw) return '';
   const digits = String(raw).replace(/[^\d+]/g, '');
@@ -57,7 +63,7 @@ export async function sendSms({
   }
 
   // If simulation is enabled, do not make any upstream requests or burn credits
-  if (simulate) {
+  if (simulate || DUMMY_TEST_NUMBERS.has(recipient)) {
     return {
       ok: true,
       status: 'simulated',

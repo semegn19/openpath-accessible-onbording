@@ -41,6 +41,34 @@ for (const envPath of [join(here, '.env'), join(here, '..', '.env')]) {
 }
 
 const checkpoints = new Map();
+const CHECKPOINTS_FILE = join(here, 'data', 'checkpoints.jsonl');
+
+function formSlug(formId) {
+  if (!formId) return 'onboard';
+  if (formId.includes('job')) return 'job';
+  if (formId.includes('employer')) return 'employer';
+  return 'onboard';
+}
+
+function saveCheckpoint(cp) {
+  checkpoints.set(cp.token, cp);
+  try {
+    mkdirSync(dirname(CHECKPOINTS_FILE), { recursive: true });
+    appendFileSync(CHECKPOINTS_FILE, JSON.stringify(cp) + '\n');
+  } catch { /* ignore */ }
+}
+
+function initCheckpoints() {
+  if (!existsSync(CHECKPOINTS_FILE)) return;
+  for (const line of readFileSync(CHECKPOINTS_FILE, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const cp = JSON.parse(line);
+      if (cp.token) checkpoints.set(cp.token, cp);
+    } catch { /* ignore */ }
+  }
+}
+initCheckpoints();
 
 const PORT = Number(process.env.PORT ?? 8080);
 const DATA_DIR = process.env.DATA_DIR ?? join(here, 'data');
@@ -710,9 +738,9 @@ async function handleRequest(req, res) {
       savedAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
     };
-    checkpoints.set(token, checkpoint);
+    saveCheckpoint(checkpoint);
     const origin = body.origin || 'http://localhost:5173';
-    const slug = checkpoint.formId.replace(/-v\d+$/, '').replace(/^savanna-/, '');
+    const slug = formSlug(checkpoint.formId);
     const resumeUrl = `${origin}/${slug}?resume=${token}`;
     return send(res, 200, { ok: true, token, resumeUrl, checkpoint });
   }
@@ -747,12 +775,12 @@ async function handleRequest(req, res) {
         savedAt: new Date().toISOString(),
         expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
       };
-      checkpoints.set(token, cp);
+      saveCheckpoint(cp);
     }
     const phone = body.phone || cp?.phone || cp?.answers?.phone;
     if (!phone) return error(res, 400, 'missing-phone', 'No phone number for SMS resume link.');
     const origin = body.origin || 'http://localhost:5173';
-    const slug = (cp?.formId || 'savanna-onboard-v1').replace(/-v\d+$/, '').replace(/^savanna-/, '');
+    const slug = formSlug(cp?.formId || body.formId);
     const resumeUrl = `${origin}/${slug}?resume=${token}`;
     const lang = body.lang || cp?.answers?.language || 'am';
     const text = formatResumeMessage(resumeUrl, lang);

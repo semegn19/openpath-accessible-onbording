@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Lang, Schema, Step } from './types';
 import { t, tpl, errorText } from './i18n';
 import { useForm, useCancelSpeechOnKey } from './useForm';
+import { normalizePhoneET } from './validation';
 import { Field, questionText, hintText, whyText, bodyText, optionText } from './fields';
 import { ErrorSummary, ReviewScreen, SettingsBar, reviewText } from './screens';
 import { ReadAloudButton, speak } from './speech';
@@ -221,6 +222,16 @@ function Shell({ schema }: { schema: Schema }) {
   const announcedNet = useRef<boolean | null>(null);
   const [smsSent, setSmsSent] = useState(false);
   const lastSmsPhone = useRef<string>('');
+  const checkpointToken = useRef<string | null>(null);
+  const lastSyncHash = useRef<string>('');
+  const isRestoring = useRef(Boolean(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('resume')));
+
+  // Identify phone field dynamically across schemas ('phone', 'job-phone', 'contact')
+  const telStep = schema.steps.find((s) => s.type === 'tel');
+  const telStepIndex = telStep ? steps.findIndex((s) => s.id === telStep.id) : -1;
+  const phoneValue = (telStep ? values[telStep.id] : (values.phone || values['job-phone'] || values.contact)) as string | undefined;
+  const isPhoneValid = Boolean(phoneValue && normalizePhoneET(String(phoneValue)));
+  const passedPhoneStep = telStepIndex >= 0 && index > telStepIndex;
 
   // Restore from URL query token if ?resume=<token>
   useEffect(() => {
@@ -228,32 +239,33 @@ function Shell({ schema }: { schema: Schema }) {
     const params = new URLSearchParams(window.location.search);
     const resumeToken = params.get('resume');
     if (!resumeToken) return;
+    checkpointToken.current = resumeToken;
     fetch(`/api/checkpoints/${encodeURIComponent(resumeToken)}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.ok && data.checkpoint) {
           const cp = data.checkpoint;
           f.restoreCheckpoint(cp.answers, cp.currentStep);
+          setSmsSent(true);
+          const p = cp.phone || cp.answers?.phone || cp.answers?.['job-phone'] || cp.answers?.contact;
+          if (p) lastSmsPhone.current = String(p);
+          lastSyncHash.current = `${cp.currentStep ?? 0}:${Object.keys(cp.answers || {}).length}:${JSON.stringify(cp.answers || {})}`;
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        isRestoring.current = false;
+      });
   }, []);
 
-  // When connection drops on an unfinished form with a phone number, send SMS resume link
-  useEffect(() => {
-    if (online) {
-      setSmsSent(false);
-      return;
-    }
-    const phone = f.values.phone as string | undefined;
-    if (!phone || f.submitted) return;
-    setSmsSent(true);
-    if (lastSmsPhone.current === phone) return;
+  // Dispatch SMS resume link and persist checkpoint token
+  const sendResumeSms = useCallback((phone: string) => {
     lastSmsPhone.current = phone;
     const payload = JSON.stringify({
+      token: checkpointToken.current || undefined,
       phone,
-      answers: f.values,
-      currentStep: f.index,
+      answers: values,
+      currentStep: index,
       stepId: step?.id,
       formId: schema.id,
       lang,
@@ -268,8 +280,71 @@ function Shell({ schema }: { schema: Schema }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) {
+          setSmsSent(true);
+          if (data.token) {
+            checkpointToken.current = data.token;
+            try {
+              localStorage.setItem(`op_cp_${schema.id}`, data.token);
+            } catch { /* ignore */ }
+          }
+        }
+      })
+      .catch(() => {});
+  }, [values, index, step?.id, schema.id, lang]);
+
+  // Online SMS trigger: as soon as phone is validated and either advanced past or typed
+  useEffect(() => {
+    if (!online || f.submitted || !isPhoneValid || !phoneValue || isRestoring.current) return;
+
+    if (passedPhoneStep && lastSmsPhone.current !== phoneValue) {
+      sendResumeSms(phoneValue);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (lastSmsPhone.current !== phoneValue) {
+        sendResumeSms(phoneValue);
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [online, passedPhoneStep, isPhoneValid, phoneValue, f.submitted, sendResumeSms]);
+
+  // Offline drop trigger: guarantee banner shows confirmation and attempt fallback send
+  useEffect(() => {
+    if (online) return;
+    if (isPhoneValid && !f.submitted) {
+      setSmsSent(true);
+      if (phoneValue && lastSmsPhone.current !== phoneValue) {
+        sendResumeSms(phoneValue);
+      }
+    }
+  }, [online, isPhoneValid, phoneValue, f.submitted, sendResumeSms]);
+
+  // Background checkpoint synchronization as subsequent answers are filled while online
+  useEffect(() => {
+    if (!online || !checkpointToken.current || f.submitted || isRestoring.current) return;
+    const hash = `${index}:${Object.keys(values).length}:${JSON.stringify(values)}`;
+    if (lastSyncHash.current === hash) return;
+    lastSyncHash.current = hash;
+    fetch('/api/checkpoints', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: checkpointToken.current,
+        formId: schema.id,
+        phone: phoneValue,
+        answers: values,
+        currentStep: index,
+        stepId: step?.id,
+        origin: window.location.origin,
+      }),
     }).catch(() => {});
-  }, [online, f.values.phone, f.submitted, f.index, step?.id, schema.id, lang]);
+  }, [online, index, values, step?.id, schema.id, phoneValue, f.submitted]);
 
   useEffect(() => {
     if (announcedNet.current === online) return;
