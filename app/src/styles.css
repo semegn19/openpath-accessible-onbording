@@ -76,10 +76,10 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   top: 0;
   z-index: 20;
   max-height: 40dvh;          /* on a short window (or 200% zoom) the bar scrolls itself, not the page */
-  overflow-y: auto;
+  overflow-y: hidden;
   background: var(--op-surface);
   border-bottom: 1px solid var(--op-line);
-  padding: 0.5rem max(0.75rem, calc((100% - 46rem) / 2));
+  padding: 0.45rem max(0.75rem, calc((100% - 60rem) / 2));
   box-shadow: var(--op-shadow);
 }
 
@@ -96,19 +96,47 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
 
 .op-settings {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
-.op-lang, .op-toggles { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.op-settings::-webkit-scrollbar {
+  display: none;
+}
+
+.op-lang {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.op-toggles {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  border-left: 1px solid var(--op-line);
+  padding-left: 0.6rem;
+}
+
 .op-settings .op-btn-chip {
   min-height: 48px;
-  min-width: 48px;
+  min-width: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.35rem 0.75rem;
-  font-size: 0.95rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.92rem;
+  white-space: nowrap;
   background: var(--op-surface);
   color: var(--op-primary);
   border: 2px solid var(--op-border);
@@ -737,9 +765,10 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
     grid-column: 2 !important;
     grid-row: 1 !important;
     position: sticky !important;
-    top: 1rem !important;
-    margin: 1.5rem 0 !important;
-    max-height: calc(100vh - 2rem) !important;
+    top: calc(var(--op-bar-h, 60px) + 1rem) !important;
+    margin-top: calc(var(--op-bar-h, 60px) + 4.5rem) !important;
+    margin-bottom: 1.5rem !important;
+    max-height: calc(100vh - var(--op-bar-h, 60px) - 2rem) !important;
     overflow-y: auto !important;
   }
 }

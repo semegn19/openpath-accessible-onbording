@@ -180,8 +180,10 @@
   margin-top: 0.2rem;
 }
 .roha-aside .roha-consent-label input[type="checkbox"] {
-  min-height: 20px;
-  min-width: 20px;
+  min-height: 24px;
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
   margin-top: 2px;
   cursor: pointer;
   flex-shrink: 0;
@@ -206,9 +208,10 @@
     grid-column: 2 !important;
     grid-row: 1 !important;
     position: sticky !important;
-    top: 1rem !important;
-    margin: 1.5rem 0 !important;
-    max-height: calc(100vh - 2rem) !important;
+    top: calc(var(--op-bar-h, 60px) + 1rem) !important;
+    margin-top: calc(var(--op-bar-h, 60px) + 4.5rem) !important;
+    margin-bottom: 1.5rem !important;
+    max-height: calc(100vh - var(--op-bar-h, 60px) - 2rem) !important;
     overflow-y: auto !important;
   }
 }
