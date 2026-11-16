@@ -14,7 +14,7 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
   const adminToken = env.ROHA_ADMIN_TOKEN || '';
   const key = env.DATA_KEY ? Buffer.from(env.DATA_KEY, 'base64') : null;
   const enabled = adminToken.length >= 32 && key?.length === 32;
-  const origin = env.ROHA_ADMIN_ORIGIN || 'http://localhost:5173';
+  const origin = env.ROHA_ADMIN_ORIGIN || env.APP_URL || (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:5173');
   const secure = new URL(origin).protocol === 'https:';
   if (env.NODE_ENV === 'production' && enabled && !secure) throw new Error('ROHA_ADMIN_ORIGIN must use HTTPS in production');
   const approved = new Set((env.ROHA_AI_ENDPOINTS || '').split(',').map(s => s.trim()).filter(Boolean));
@@ -559,8 +559,6 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       if (!response.ok) {
         const errText = await response.text().catch(() => '');
         console.error(`[AI Provider Error] ${config.provider} returned HTTP ${response.status}:`, errText);
-        const fallback = generateContextualFallback(ctx);
-        if (fallback) return validate(fallback, ctx);
         throw failure(response.status === 429 ? 429 : 502, 'provider-unavailable');
       }
       let bytes = 0; const parts = [];
@@ -574,7 +572,7 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
       return validate(cleanJson ? JSON.parse(cleanJson) : data, ctx);
     } catch (e) {
       stats.failures++;
-      if (e.status && e.status !== 502) throw e;
+      if (e.status) throw e;
       const fallback = generateContextualFallback(ctx);
       if (fallback) return validate(fallback, ctx);
       throw failure(502, 'provider-unavailable');
@@ -636,6 +634,7 @@ export function createAssistant({ directory, env = process.env, fetchImpl = fetc
         if (!allowedOrigins.has(req.headers.origin) && !isLocalDev) throw failure(403, 'origin-not-allowed');
         const input = await json(req); const ctx = context(input); const config = await load();
         if (config.provider === 'disabled') throw failure(503, 'ai-disabled');
+        if (input.configRevision !== config.revision) throw failure(409, 'configuration-changed');
         console.log(`[Roha AI] User utterance: "${input.utterance}"`);
         if (!await reserve('ai-minute', 60) || !await reserve('ai-day', config.requestsPerDay, 86400000)) throw failure(429, 'usage-limit');
         const intent = await interpret(config, ctx);

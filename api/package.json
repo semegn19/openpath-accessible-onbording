@@ -2,10 +2,12 @@
   "name": "roha-api",
   "private": true,
   "type": "module",
+  "main": "server.mjs",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
+    "start": "node server.mjs",
     "test": "node tests/assistant.mjs",
     "test:database": "node tests/database.mjs",
     "migrate": "node migrate.mjs",

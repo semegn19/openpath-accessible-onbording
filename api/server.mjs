@@ -408,7 +408,8 @@ server.headersTimeout = 15000;
 server.maxRequestsPerSocket = 1000;
 async function handleRequest(req, res) {
   const url = new URL(req.url ?? '/', 'http://localhost');
-  const path = url.pathname.replace(/\/+$/, '') || '/';
+  const rawPath = url.pathname.replace(/\/+$/, '') || '/';
+  const path = rawPath.startsWith('/api') ? rawPath : `/api${rawPath}`;
   if (await assistant.handle(req, res, path)) return;
   // Behind nginx every request appears to come from the proxy, which would turn a per-IP
   // limit into one global bucket. Take the first hop X-Forwarded-For when we are proxied.
@@ -751,7 +752,7 @@ async function handleRequest(req, res) {
       expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
     };
     saveCheckpoint(checkpoint);
-    const origin = body.origin || 'http://localhost:5173';
+    const origin = body.origin || process.env.APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
     const slug = formSlug(checkpoint.formId);
     const resumeUrl = `${origin}/${slug}?resume=${token}`;
     return send(res, 200, { ok: true, token, resumeUrl, checkpoint });
@@ -791,7 +792,7 @@ async function handleRequest(req, res) {
     }
     const phone = body.phone || cp?.phone || cp?.answers?.phone;
     if (!phone) return error(res, 400, 'missing-phone', 'No phone number for SMS resume link.');
-    const origin = body.origin || 'http://localhost:5173';
+    const origin = body.origin || process.env.APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
     const slug = formSlug(cp?.formId || body.formId);
     const resumeUrl = `${origin}/${slug}?resume=${token}`;
     const lang = body.lang || cp?.answers?.language || 'am';
