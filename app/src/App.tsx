@@ -544,9 +544,11 @@ function Shell({ schema }: { schema: Schema }) {
   if (f.submitted) {
     return (
       <div className="op-shell" data-big={settings.big || undefined}>
-        <div className="op-band">
-          <p className="op-brand">{t(schema.title, lang)}</p>
-        </div>
+        <header className="op-band op-settingsbar">
+          <div className="op-brand-wrap">
+            <p className="op-brand">{t(schema.title, lang)}</p>
+          </div>
+        </header>
         <main className="op-root op-done">
           {(() => {
             const isPartner = f.submitted && (f.submitted as Record<string, unknown>)['id-route'] === 'refer';
@@ -685,18 +687,17 @@ function Shell({ schema }: { schema: Schema }) {
       <a className="op-skip" href="#op-main">
         {c('nav.skip', lang)}
       </a>
-      <header className="op-band">
-        <p className="op-brand">{t(schema.title, lang)}</p>
-      </header>
-
-      <div className="op-settingsbar">
+      <header className="op-band op-settingsbar">
+        <div className="op-brand-wrap">
+          <p className="op-brand">{t(schema.title, lang)}</p>
+        </div>
         <SettingsBar
           lang={lang} setLang={(l: Lang) => setSettings({ ...settings, lang: l })}
           simple={settings.simple} setSimple={(b) => setSettings({ ...settings, simple: b })}
           big={settings.big} setBig={(b) => setSettings({ ...settings, big: b })}
           autoRead={settings.readAloud} setAutoRead={(b) => setSettings({ ...settings, readAloud: b })}
         />
-      </div>
+      </header>
 
       <p className="op-sr" role="status" aria-live="polite">{announce}</p>
 

@@ -2097,13 +2097,19 @@ export class RohaSDK {
       <div id="roha-full-card" class="roha-card">
         <div class="roha-header">
           <h2 class="roha-title">${text('roha.title')}</h2>
-          <button id="roha-wake-trigger" type="button" class="roha-wake-pill" style="display:inline-flex;align-items:center;gap:4px;font-size:0.75rem;padding:3px 8px;border-radius:12px;background:#eef2ff;color:#1e40af;font-weight:600;letter-spacing:0.02em;border:none;cursor:pointer;" title="${this.t({
+          <button id="roha-wake-trigger" type="button" class="roha-wake-pill" aria-label="${this.t({
+            en: 'Say Roha or click to wake assistant',
+            am: 'ሮሃ ይበሉ ወይም ረዳቱን ለማንቃት እዚህ ይጫኑ',
+            om: 'Roha jedhaa ykn as tuqaa',
+            ti: 'ሮሃ በሉ ወይ ረዳኢ ንምብራኽ ኣብዚ ጠውቁ',
+            so: 'Dheh Roha ama riix halkan',
+          })}" title="${this.t({
             en: 'Say "Roha" or click to wake',
             am: '"ሮሃ" ይበሉ ወይም እዚህ ይጫኑ',
             om: '"Roha" jedhaa ykn as tuqaa',
             ti: '"ሮሃ" በሉ ወይ ኣብዚ ጠውቁ',
             so: 'Dheh "Roha" ama riix halkan',
-          })}">🎙️ ${this.t({
+          })}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg> ${this.t({
             en: 'Say "Roha"',
             am: '"ሮሃ" ይበሉ',
             om: '"Roha" jedhaa',

@@ -70,6 +70,31 @@
   justify-content: space-between;
   gap: 0.5rem;
 }
+.roha-aside .roha-wake-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  min-height: 36px;
+  min-width: 44px;
+  padding: 6px 12px;
+  border-radius: 18px;
+  background: #eef2ff;
+  color: #1e40af;
+  font-weight: 600;
+  border: 1.5px solid #a5b4fc;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.roha-aside .roha-wake-pill:hover {
+  background: #e0e7ff;
+  border-color: #6366f1;
+}
+.roha-aside .roha-wake-pill:focus-visible {
+  outline: 3px solid #1e40af;
+  outline-offset: 2px;
+}
 .roha-aside .roha-title {
   font-size: 1.35rem;
   margin: 0;
@@ -194,24 +219,39 @@
   body.roha-layout {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem) !important;
+    grid-template-rows: auto 1fr !important;
     align-items: start !important;
-    gap: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    column-gap: 1.5rem !important;
+    row-gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  body.roha-layout > #root {
-    grid-column: 1 !important;
+  body.roha-layout > #root,
+  body.roha-layout .op-shell {
+    display: contents !important;
+  }
+  body.roha-layout .op-settingsbar,
+  .op-settingsbar {
+    grid-column: 1 / -1 !important;
     grid-row: 1 !important;
-    min-width: 0 !important;
+    width: 100% !important;
+  }
+  body.roha-layout .op-root,
+  .op-root {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin: 1.5rem auto 1.5rem auto !important;
+    max-width: 46rem !important;
+    width: calc(100% - 2rem) !important;
   }
   body.roha-layout > .roha-aside,
   .roha-aside {
     grid-column: 2 !important;
-    grid-row: 1 !important;
+    grid-row: 2 !important;
     position: sticky !important;
-    top: calc(var(--op-bar-h, 60px) + 1rem) !important;
-    margin-top: calc(var(--op-bar-h, 60px) + 4.5rem) !important;
-    margin-bottom: 1.5rem !important;
-    max-height: calc(100vh - var(--op-bar-h, 60px) - 2rem) !important;
+    top: calc(var(--op-bar-h, 60px) + 1.5rem) !important;
+    margin: 1.5rem 1.5rem 1.5rem 0 !important;
+    max-height: calc(100vh - var(--op-bar-h, 60px) - 3rem) !important;
     overflow-y: auto !important;
   }
 }
