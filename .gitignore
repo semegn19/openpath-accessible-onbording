@@ -11,12 +11,6 @@ app/api/data/
 .cache/
 .npm/
 
-# Generated from schema/ by `npm run sync:schemas` on predev/prebuild.
-# Committing them gives every form two sources of truth and makes merge
-# conflicts in a generated file something a human has to resolve.
-app/src/schemas/
-app/src/audio-index.json
-
 # Local deployment secrets and credentials; commit only .env.example.
 .env
 .env.local

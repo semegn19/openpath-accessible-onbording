@@ -55,6 +55,15 @@ function LandingPortal() {
   const lang = settings.lang;
 
   useEffect(() => {
+    document.documentElement.lang = lang;
+    document.title = `${c('landing.title', lang)} — OpenPath`;
+    const roha = (window as any).Roha;
+    if (roha && typeof roha.setLanguage === 'function') {
+      roha.setLanguage(lang);
+    }
+  }, [lang]);
+
+  useEffect(() => {
     const bar = document.querySelector('.op-settingsbar');
     if (!bar) return;
     const sync = () =>
@@ -281,6 +290,10 @@ function Shell({ schema }: { schema: Schema }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
+    const roha = (window as any).Roha;
+    if (roha && typeof roha.setLanguage === 'function') {
+      roha.setLanguage(lang);
+    }
   }, [lang]);
 
   /* ---------------------------------------------------------------- connection
