@@ -8,7 +8,7 @@
     "predev": "npm run sync:schemas",
     "dev": "vite --host 0.0.0.0 --port 5173",
     "prebuild": "npm run sync:schemas",
-    "build": "tsc --noEmit && vite build && npm run build:roha",
+    "build": "tsc --noEmit && vite build && npm run build:roha && node scripts/postbuild-routes.mjs",
     "build:roha": "esbuild src/roha/index.ts --bundle --minify --format=iife --global-name=RohaBundle --outfile=dist/roha.js && node -e \"const fs=require('fs');fs.copyFileSync('dist/roha.js','public/roha.js');\" && esbuild src/admin/main.ts --bundle --minify --outfile=dist/roha-admin.js && node -e \"const fs=require('fs');fs.copyFileSync('dist/roha-admin.js','public/roha-admin.js');\"",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "test:roha": "node tests/roha_runtime.spec.mjs",
