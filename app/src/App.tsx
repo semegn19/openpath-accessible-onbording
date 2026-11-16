@@ -55,6 +55,20 @@ function LandingPortal() {
   const lang = settings.lang;
 
   useEffect(() => {
+    document.body.classList.add('op-landing-body');
+    document.body.classList.remove('roha-layout');
+    const roha = (window as any).Roha;
+    if (roha && typeof roha.unmount === 'function') {
+      roha.unmount();
+    }
+    const aside = document.querySelector('.roha-aside');
+    if (aside) aside.remove();
+    return () => {
+      document.body.classList.remove('op-landing-body');
+    };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = lang;
     document.title = `${c('landing.title', lang)} — OpenPath`;
     const roha = (window as any).Roha;
@@ -295,6 +309,14 @@ function Shell({ schema }: { schema: Schema }) {
       roha.setLanguage(lang);
     }
   }, [lang]);
+
+  useEffect(() => {
+    const roha = (window as any).Roha;
+    if (roha && typeof roha.mount === 'function' && !document.querySelector('.roha-aside')) {
+      const rootEl = (document.querySelector('#op-main') as HTMLElement) || document.body;
+      roha.mount({ root: rootEl, language: lang });
+    }
+  }, []);
 
   /* ---------------------------------------------------------------- connection
    * Three things share one idea: the device is the source of truth until the server says

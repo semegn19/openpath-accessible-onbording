@@ -2363,6 +2363,10 @@ if (typeof window !== 'undefined') {
     const autoMount = currentScript ? currentScript.getAttribute('data-roha-auto') !== 'false' : true;
 
     if (autoMount && !document.querySelector('roha-agent, roha-assistant')) {
+      const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : '';
+      if (path === '' || path === '/index.html') {
+        return;
+      }
       const declaredLanguage = currentScript?.getAttribute('data-roha-language');
       const language = declaredLanguage === 'en' || declaredLanguage === 'am' ? declaredLanguage : undefined;
       const endpoint = currentScript?.getAttribute('data-roha-api');
