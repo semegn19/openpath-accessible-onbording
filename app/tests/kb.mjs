@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 const b = await chromium.launch();
 const c = await b.newContext({ viewport: { width: 390, height: 844 } });
 const p = await c.newPage();
-await p.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle' });
+await p.goto('http://127.0.0.1:5173/onboard', { waitUntil: 'networkidle' });
 await p.evaluate(() => localStorage.clear());
 await p.reload({ waitUntil: 'networkidle' });
 const names = [];

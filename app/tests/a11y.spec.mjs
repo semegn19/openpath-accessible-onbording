@@ -2,7 +2,7 @@
 import { chromium } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
 
-const URL = process.env.URL || 'http://127.0.0.1:5173/';
+const URL = process.env.URL || 'http://127.0.0.1:5173/onboard';
 const results = [];
 let failures = 0;
 
@@ -25,6 +25,12 @@ async function audit(label) {
 
 const h1 = () => page.locator('h1').first().innerText();
 const next = () => page.getByRole('button', { name: /ቀጣይ|Next/ }).click();
+
+const ORIGIN = process.env.ORIGIN || (new globalThis.URL(URL)).origin;
+await page.goto(ORIGIN + '/', { waitUntil: 'networkidle' });
+console.log('\n=== 0 landing portal ===');
+console.log('  h1:', (await h1()).trim());
+await audit('0 landing portal');
 
 await page.goto(URL, { waitUntil: 'networkidle' });
 console.log('\n=== 1 language ===');

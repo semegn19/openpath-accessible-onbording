@@ -2,7 +2,7 @@
 import { chromium } from 'playwright';
 import { answer, goto, next, submitFromReview, walkTo, stepNo as stepNumberOf, setLang } from './_flow.mjs';
 
-const BASE = process.env.URL || 'http://127.0.0.1:5173/';
+const BASE = process.env.URL || 'http://127.0.0.1:5173/onboard';
 const b = await chromium.launch();
 const c = await b.newContext({ viewport: { width: 390, height: 844 } });
 const p = await c.newPage();

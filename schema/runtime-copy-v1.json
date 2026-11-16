@@ -572,6 +572,69 @@
       "om": "Tarree hojiiwwan banaa ilaalaa",
       "ti": "ክፍቲ ናይ ስራሕ ዕድላት ርኣዩ",
       "so": "Eeg liiska shaqooyinka"
+    },
+    "landing.title": {
+      "am": "ክፍት መንገድ (OpenPath) — የተደራሽነት መግቢያ",
+      "en": "OpenPath — Accessible Gateway",
+      "om": "OpenPath — Balbala Dhaqqabummaa",
+      "ti": "ክፉት መንገዲ (OpenPath) — መእተዊ ተበፃሕነት",
+      "so": "OpenPath — Albaabka Helitaanka"
+    },
+    "landing.desc": {
+      "am": "ለሁሉም ተደራሽ የሆነ የተማሪ ምዝገባ፣ የሥራ ድጋፍ ማዛመጃ እና የአሰሪዎች ቅጽ።",
+      "en": "Accessible learner onboarding, workplace accommodation matching, and employer accommodation forms.",
+      "om": "Galmee barattootaa dhaqqabamaa, walsimsiisa deeggarsa hojii fi foormii deeggarsa qacarrummaa.",
+      "ti": "ንኹሉ ዝበጽሕ ምዝገባ ተምሃሮ፣ ምትእስሳር ድጋፍ ስራሕን ናይ ኣስራሕቲ ፎርምን።",
+      "so": "Diiwaangelinta ardayda ee la heli karo, isku-habeynta taageerada shaqada, iyo foomamka taageerada loo-shaqeeyaha."
+    },
+    "landing.onboardTitle": {
+      "am": "የተማሪ ምዝገባ",
+      "en": "Learner Onboarding",
+      "om": "Galmee Barattootaa",
+      "ti": "ምዝገባ ተምሃሮ",
+      "so": "Diiwaangelinta Ardayda"
+    },
+    "landing.onboardDesc": {
+      "am": "በቀላል ቃላት፣ በድምጽ እና በ5 የማንነት ማረጋገጫ አማራጮች የተዘጋጀ ምዝገባ።",
+      "en": "Accessible sign-up with simple words, voice input, and 5 identity verification routes.",
+      "om": "Galmee jechoota salphaa, sagalee fi filannoowwan eenyummaa 5 of keessaa qabu.",
+      "ti": "ብቀለልቲ ቃላት፣ ብድምጽን ብ5 ናይ መንነት መረጋገጺ ኣማራጺታትን ዝተዳለወ ምዝገባ።",
+      "so": "Diiwaangelin lagu diyaariyey erayo fudud, cod, iyo 5 ikhtiyaar oo xaqiijinta aqoonsiga ah."
+    },
+    "landing.jobTitle": {
+      "am": "የሥራ ዕድሎችና የሥራ ቦታ ድጋፍ (Career Gateway)",
+      "en": "Career Gateway & Job Matching",
+      "om": "Carraawwan Hojii fi Deeggarsa Bakka Hojii",
+      "ti": "ዕድላት ስራሕን ናይ ስራሕ ቦታ ድጋፍን",
+      "so": "Fursadaha Shaqada & Isku-habeynta Taageerada"
+    },
+    "landing.jobDesc": {
+      "am": "ያለ አካል ጉዳት ይፋ ማውጣት በሥራ ቦታ ድጋፍ ዓይነት ማጣራትና ማመልከት።",
+      "en": "Filter jobs by workplace accommodations and apply without disability disclosure.",
+      "om": "Waan miidhamummaa ifa osoo hin baasin deeggarsa bakka hojiitiin calaluun iyyadhaa.",
+      "ti": "ናይ ኣካል ጉዳት ቅሉዕ ከይገበርካ ብዓይነት ድጋፍ ስራሕ ቦታ ብምምራጽ ምምልካት።",
+      "so": "Kala shaandhee shaqooyinka taageerada goobta shaqada adigoon shaacin naafanimada."
+    },
+    "landing.employerTitle": {
+      "am": "የአሰሪ የሥራ ቅጽ (Employer Accommodations)",
+      "en": "Employer Job Form",
+      "om": "Foormii Hojii Qacarrummaa",
+      "ti": "ናይ ኣስራሒ ፎርም ስራሕ",
+      "so": "Foomka Shaqada Loo-shaqeeyaha"
+    },
+    "landing.employerDesc": {
+      "am": "ድርጅትዎ ለሥራተኞች የሚሰጣቸውን ተደራሽ ድጋፎች በመግለጽ ክፍት ሥራዎችን ይለጥፉ።",
+      "en": "Post opportunities with declared workplace accommodations to connect with talent.",
+      "om": "Deeggarsa dhaabbanni keessan kennu ibsuun carraawwan hojii banaa maxxansaa.",
+      "ti": "ትካልኩም ዝህቦም ናይ ተበፃሕነት ድጋፋት ብምግላጽ ክፍቲ ስራሕቲ ዘርግሑ።",
+      "so": "Ku dhawaaq fursadaha shaqo adigoo qeexaya taageerooyinka goobta shaqada ee la heli karo."
+    },
+    "landing.open": {
+      "am": "ይክፈቱ",
+      "en": "Open",
+      "om": "Bani",
+      "ti": "ክፈት",
+      "so": "Fur"
     }
   }
 }

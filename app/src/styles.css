@@ -81,6 +81,23 @@ body {
   white-space: nowrap;
 }
 
+.op-brand-link {
+  text-decoration: none;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s ease;
+}
+.op-brand-link:hover {
+  opacity: 0.9;
+  text-decoration: underline;
+}
+.op-brand-link:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .op-skip {
   position: absolute;
   left: -9999px;
@@ -782,6 +799,110 @@ html { scroll-padding-top: calc(var(--op-bar-h, 112px) + 8px); }
   text-align: center;
   padding: 2rem 1rem;
   color: var(--op-text-muted);
+}
+
+/* ---- landing portal page ------------------------------------------------ */
+.op-root.op-landing {
+  max-width: 52rem;
+  padding: 1.75rem;
+}
+
+.op-landing-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--op-line);
+  padding-bottom: 1.5rem;
+}
+
+.op-landing-header .op-h1 {
+  font-size: 1.65rem;
+  margin-bottom: 0.6rem;
+}
+
+.op-landing-header .op-intro {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--op-text);
+  margin-bottom: 1rem;
+}
+
+.op-landing-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.op-landing-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.op-landing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--op-surface);
+  border: 2px solid var(--op-border);
+  border-radius: var(--op-radius);
+  padding: 1.35rem 1.6rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  min-height: 52px;
+}
+
+.op-landing-card:hover {
+  border-color: var(--op-primary);
+  box-shadow: 0 4px 14px rgba(0, 43, 86, 0.12);
+  transform: translateY(-2px);
+}
+
+.op-landing-card:focus-visible {
+  outline: 3px solid var(--op-focus);
+  outline-offset: 3px;
+}
+
+.op-landing-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.op-landing-card-badge {
+  background: var(--op-primary-tint);
+  color: var(--op-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+
+.op-landing-card-action {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--op-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.op-landing-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--op-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.op-landing-card-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--op-muted);
+  line-height: 1.55;
 }
 
 /* ---- Roha side layout for medium-large and desktop screens ----------------- */

@@ -45,9 +45,12 @@ for (const [path, brand, firstQuestion] of PAGES) {
   await axe(`page ${path}`);
 }
 
-// bare domain → a real page URL, not a bare "/"
+// bare domain lands on the portal landing page
 await p.goto(ORIGIN + '/', { waitUntil: 'networkidle' });
-ok((await p.evaluate(() => location.pathname)) === '/onboard', 'bare domain → /onboard', await p.evaluate(() => location.pathname));
+ok((await p.evaluate(() => location.pathname)) === '/', 'bare domain lands on /', await p.evaluate(() => location.pathname));
+const cards = await p.locator('.op-landing-card').all();
+ok(cards.length === 3, 'landing page offers 3 gateway cards', String(cards.length));
+await axe('page / (landing portal)');
 
 // an old #/job link that someone already shared keeps working, and is cleaned up
 await p.goto(ORIGIN + '/#/job', { waitUntil: 'networkidle' });

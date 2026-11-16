@@ -35,11 +35,113 @@ export const PAGES: { slug: Slug; schema: Schema }[] = [
   { slug: 'employer', schema: employer as unknown as Schema },
 ];
 
-/** One page per form, one engine behind all three: /onboard, /job, /employer. */
+/** One page per form, one engine behind all three: /onboard, /job, /employer, plus / landing portal. */
 export default function App() {
-  const slug = useSlug('onboard');
+  const slug = useSlug('home');
+  if (slug === 'home') {
+    return <LandingPortal />;
+  }
   const page = PAGES.find((p) => p.slug === slug) ?? PAGES[0];
   return <Shell key={page.schema.id} schema={page.schema} />;
+}
+
+function LandingPortal() {
+  const [settings, setSettings] = useState<{ lang: Lang; simple: boolean; big: boolean; readAloud: boolean }>({
+    lang: 'am',
+    simple: false,
+    big: false,
+    readAloud: false,
+  });
+  const lang = settings.lang;
+
+  useEffect(() => {
+    const bar = document.querySelector('.op-settingsbar');
+    if (!bar) return;
+    const sync = () =>
+      document.documentElement.style.setProperty('--op-bar-h', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(bar);
+    window.addEventListener('resize', sync);
+    return () => { ro.disconnect(); window.removeEventListener('resize', sync); };
+  }, [lang, settings.big]);
+
+  const cards = [
+    {
+      href: '/onboard',
+      title: c('landing.onboardTitle', lang),
+      desc: c('landing.onboardDesc', lang),
+      icon: 'spark' as const,
+      badge: '01',
+    },
+    {
+      href: '/job',
+      title: c('landing.jobTitle', lang),
+      desc: c('landing.jobDesc', lang),
+      icon: 'check' as const,
+      badge: '02',
+    },
+    {
+      href: '/employer',
+      title: c('landing.employerTitle', lang),
+      desc: c('landing.employerDesc', lang),
+      icon: 'document' as const,
+      badge: '03',
+    },
+  ];
+
+  return (
+    <div className="op-shell" data-big={settings.big || undefined}>
+      <a className="op-skip" href="#op-main">{c('nav.skip', lang)}</a>
+      <header className="op-band op-settingsbar">
+        <div className="op-brand-wrap">
+          <p className="op-brand">{c('landing.title', lang)}</p>
+        </div>
+        <SettingsBar
+          lang={lang} setLang={(l: Lang) => setSettings({ ...settings, lang: l })}
+          simple={settings.simple} setSimple={(b) => setSettings({ ...settings, simple: b })}
+          big={settings.big} setBig={(b) => setSettings({ ...settings, big: b })}
+          autoRead={settings.readAloud} setAutoRead={(b) => setSettings({ ...settings, readAloud: b })}
+        />
+      </header>
+      <main className="op-root op-landing" id="op-main" tabIndex={-1}>
+        <div className="op-landing-header">
+          <h1 className="op-h1">{c('landing.title', lang)}</h1>
+          <p className="op-intro">{c('landing.desc', lang)}</p>
+          <div className="op-landing-actions">
+            <ReadAloudButton
+              schema={onboard as unknown as Schema}
+              lang={lang}
+              text={`${c('landing.title', lang)}. ${c('landing.desc', lang)}.`}
+            />
+          </div>
+        </div>
+
+        <div className="op-landing-grid" role="list">
+          {cards.map((card) => (
+            <a
+              key={card.href}
+              href={card.href}
+              className="op-landing-card"
+              role="listitem"
+            >
+              <div className="op-landing-card-top">
+                <span className="op-landing-card-badge">{card.badge}</span>
+                <span className="op-landing-card-action">
+                  {c('landing.open', lang)} &rarr;
+                </span>
+              </div>
+              <h2 className="op-landing-card-title">
+                <Icon name={card.icon} />
+                <span>{card.title}</span>
+              </h2>
+              <p className="op-landing-card-desc">{card.desc}</p>
+            </a>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
 }
 
 function postToParent(type: string, payload: Record<string, unknown> = {}) {
@@ -546,7 +648,9 @@ function Shell({ schema }: { schema: Schema }) {
       <div className="op-shell" data-big={settings.big || undefined}>
         <header className="op-band op-settingsbar">
           <div className="op-brand-wrap">
-            <p className="op-brand">{t(schema.title, lang)}</p>
+            <a href="/" className="op-brand op-brand-link">
+              {t(schema.title, lang)}
+            </a>
           </div>
         </header>
         <main className="op-root op-done">
@@ -689,7 +793,9 @@ function Shell({ schema }: { schema: Schema }) {
       </a>
       <header className="op-band op-settingsbar">
         <div className="op-brand-wrap">
-          <p className="op-brand">{t(schema.title, lang)}</p>
+          <a href="/" className="op-brand op-brand-link">
+            {t(schema.title, lang)}
+          </a>
         </div>
         <SettingsBar
           lang={lang} setLang={(l: Lang) => setSettings({ ...settings, lang: l })}

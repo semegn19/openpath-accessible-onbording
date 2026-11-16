@@ -3,13 +3,14 @@
  *  to the clean path so the address bar shows one canonical URL. */
 import { useEffect, useState } from 'react';
 
-export const SLUGS = ['onboard', 'job', 'employer'] as const;
+export const SLUGS = ['home', 'onboard', 'job', 'employer'] as const;
 export type Slug = (typeof SLUGS)[number];
 
 const isSlug = (v: string): v is Slug => (SLUGS as readonly string[]).includes(v);
 
 export function readSlug(current: Slug): Slug {
-  const segment = window.location.pathname.replace(/\/+$/, '').split('/').pop() ?? '';
+  const path = window.location.pathname.replace(/\/+$/, '');
+  const segment = path.split('/').pop() ?? '';
   if (isSlug(segment)) return segment;
 
   // Backward compatibility for links shared before routing moved off the hash.
@@ -19,11 +20,9 @@ export function readSlug(current: Slug): Slug {
     return fromHash;
   }
 
-  // A bare domain lands on the first form, and the URL becomes a real page.
-  // Any other unknown path keeps whatever page is already open rather than guessing.
-  if (!segment) {
-    window.history.replaceState(null, '', `/${current}${window.location.search}`);
-    return current;
+  // Bare domain lands on the portal landing page
+  if (!segment || path === '') {
+    return 'home';
   }
   return current;
 }
